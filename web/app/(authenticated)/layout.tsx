@@ -144,7 +144,7 @@ function AlertBell() {
               ))}
             </div>
           )}
-          <Link href="/dashboard#flight-alerts" onClick={() => setOpen(false)} style={{
+          <Link href="/alerts" onClick={() => setOpen(false)} style={{
             display: 'block',
             padding: '12px 16px',
             textAlign: 'center',

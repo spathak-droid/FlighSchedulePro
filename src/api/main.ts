@@ -18,8 +18,19 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api/v1');
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.some((o) => origin === o || origin === o.replace(/\/$/, ''))) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
