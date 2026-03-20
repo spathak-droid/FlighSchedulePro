@@ -60,3 +60,7 @@ drizzle/meta/
 .specify
 CompanyDocs
 Claude.md
+.agents
+specs
+SKILL.md
+CLAUDE.md
