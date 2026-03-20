@@ -54,7 +54,6 @@ Policies
 
 ## Tech Stack
 
-
 | Layer               | Technology                                             |
 | ------------------- | ------------------------------------------------------ |
 | **API**             | TypeScript, NestJS (Fastify), Node.js 20 LTS           |
@@ -64,7 +63,6 @@ Policies
 | **AI**              | Claude Haiku 4.5 (OpenRouter), GPT-4.1-nano (fallback) |
 | **Deployment**      | Railway (Docker containers)                            |
 | **Package Manager** | pnpm 9                                                 |
-
 
 ---
 
@@ -154,7 +152,6 @@ Starts PostgreSQL 16 and Redis 7 locally with default credentials matching `env.
 
 ## Environment Variables
 
-
 | Variable                  | Description                           | Required              |
 | ------------------------- | ------------------------------------- | --------------------- |
 | `DATABASE_URL`            | PostgreSQL connection string          | Yes                   |
@@ -172,7 +169,6 @@ Starts PostgreSQL 16 and Redis 7 locally with default credentials matching `env.
 | `OPENAI_API_KEY`          | OpenAI API key (fallback)             | For AI features       |
 | `FRONTEND_URL`            | Frontend URL for CORS                 | Production            |
 | `RESEND_API_KEY`          | Resend API key for emails             | For notifications     |
-
 
 ---
 
@@ -205,12 +201,10 @@ pnpm db:push          # Push schema to database
 
 The app is deployed as two services on [Railway](https://railway.app):
 
-
 | Service     | Dockerfile       | Port | URL                                 |
 | ----------- | ---------------- | ---- | ----------------------------------- |
 | **fsp-app** | `Dockerfile`     | 3001 | `fsp-app-production.up.railway.app` |
 | **fsp-web** | `Dockerfile.web` | 3000 | `fsp-web-production.up.railway.app` |
-
 
 ### Manual Deploy
 
@@ -306,11 +300,9 @@ All FSP calls go through a rate-limited client (~100 req/min per operator). Set 
 
 **Test credentials** (mock mode):
 
-
 | Email               | Password  |
 | ------------------- | --------- |
 | `sarah@skywest.edu` | any value |
-
 
 Or use the **Test Login** button on the login page.
 
