@@ -1,0 +1,66 @@
+factory
+*.log
+*.claude
+*.specify
+*.spec
+*.spec.md
+*.spec.yaml
+*.spec.json
+*.spec.yml
+*.spec.xml
+*.spec.html
+*.spec.css
+*.spec.js
+*.spec.ts
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# QA evidence (ephemeral, not committed)
+/tmp/qa-evidence/
+/tmp/qa-screenshots/
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.tmp
+
+# Testing
+coverage/
+test-results/
+test-screenshots/
+
+# Docker
+pgdata/
+
+# Drizzle
+drizzle/meta/
+.claude
+.specify
+CompanyDocs
+Claude.md
+.agents
+specs
+SKILL.md
+CLAUDE.md
