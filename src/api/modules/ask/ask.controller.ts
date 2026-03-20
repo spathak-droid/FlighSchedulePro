@@ -21,7 +21,11 @@ export class AskController {
   @Post()
   async ask(
     @Req() req: AuthenticatedRequest,
-    @Body() body: { question: string; conversationHistory?: { role: 'user' | 'assistant'; content: string }[] },
+    @Body()
+    body: {
+      question: string;
+      conversationHistory?: { role: 'user' | 'assistant'; content: string }[];
+    },
   ) {
     const result = await this.askService.ask(req.user.operatorId, {
       question: body.question,

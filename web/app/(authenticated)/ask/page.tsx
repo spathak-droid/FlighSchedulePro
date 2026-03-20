@@ -108,27 +108,71 @@ export default function AskPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)', maxWidth: 900, margin: '0 auto', width: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 72px)',
+        maxWidth: 900,
+        margin: '0 auto',
+        width: '100%',
+      }}
+    >
       {/* Messages area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 16px' }}>
         {messages.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 24 }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              gap: 24,
+            }}
+          >
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2rem', marginBottom: 8, opacity: 0.15 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   <path d="M8 10h.01" />
                   <path d="M12 10h.01" />
                   <path d="M16 10h.01" />
                 </svg>
               </div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>Ask Mode</h2>
+              <h2
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text)',
+                  marginBottom: 4,
+                }}
+              >
+                Ask Mode
+              </h2>
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
                 Ask anything about your students, aircraft, instructors, or schedule.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, width: '100%', maxWidth: 700 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: 10,
+                width: '100%',
+                maxWidth: 700,
+              }}
+            >
               {SUGGESTED_QUESTIONS.map((q, i) => (
                 <button
                   key={i}
@@ -146,7 +190,8 @@ export default function AskPage() {
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = 'var(--color-accent)';
-                    e.currentTarget.style.background = 'var(--color-surface-hover, var(--color-surface))';
+                    e.currentTarget.style.background =
+                      'var(--color-surface-hover, var(--color-surface))';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = 'var(--color-border)';
@@ -174,7 +219,8 @@ export default function AskPage() {
                     maxWidth: '85%',
                     padding: '12px 16px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    background: msg.role === 'user' ? 'var(--color-accent)' : 'var(--color-surface)',
+                    background:
+                      msg.role === 'user' ? 'var(--color-accent)' : 'var(--color-surface)',
                     color: msg.role === 'user' ? '#fff' : 'var(--color-text)',
                     border: msg.role === 'user' ? 'none' : '1px solid var(--color-border)',
                     fontSize: '0.9rem',
@@ -190,7 +236,14 @@ export default function AskPage() {
                   )}
                 </div>
                 {msg.model && (
-                  <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: 4, paddingLeft: 4 }}>
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'var(--color-text-muted)',
+                      marginTop: 4,
+                      paddingLeft: 4,
+                    }}
+                  >
                     {msg.model}
                   </span>
                 )}
@@ -223,7 +276,13 @@ export default function AskPage() {
       </div>
 
       {/* Input area */}
-      <div style={{ borderTop: '1px solid var(--color-border)', padding: '16px', background: 'var(--color-bg)' }}>
+      <div
+        style={{
+          borderTop: '1px solid var(--color-border)',
+          padding: '16px',
+          background: 'var(--color-bg)',
+        }}
+      >
         <form
           id="ask-form"
           onSubmit={handleSubmit}
@@ -281,7 +340,16 @@ export default function AskPage() {
               transition: 'background 0.15s',
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
@@ -297,12 +365,26 @@ export default function AskPage() {
           background: var(--color-text-muted);
           animation: askBounce 1.4s infinite ease-in-out;
         }
-        .ask-dot-1 { animation-delay: 0s; }
-        .ask-dot-2 { animation-delay: 0.2s; }
-        .ask-dot-3 { animation-delay: 0.4s; }
+        .ask-dot-1 {
+          animation-delay: 0s;
+        }
+        .ask-dot-2 {
+          animation-delay: 0.2s;
+        }
+        .ask-dot-3 {
+          animation-delay: 0.4s;
+        }
         @keyframes askBounce {
-          0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-          40% { opacity: 1; transform: scale(1); }
+          0%,
+          80%,
+          100% {
+            opacity: 0.3;
+            transform: scale(0.8);
+          }
+          40% {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
       `}</style>
     </div>
@@ -316,7 +398,10 @@ function formatMarkdown(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:0.85em">$1</code>')
+    .replace(
+      /`([^`]+)`/g,
+      '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:0.85em">$1</code>',
+    )
     .replace(/^### (.+)$/gm, '<h4 style="margin:12px 0 4px;font-size:0.95rem">$1</h4>')
     .replace(/^## (.+)$/gm, '<h3 style="margin:12px 0 4px;font-size:1rem">$1</h3>')
     .replace(/^# (.+)$/gm, '<h2 style="margin:12px 0 4px;font-size:1.1rem">$1</h2>')

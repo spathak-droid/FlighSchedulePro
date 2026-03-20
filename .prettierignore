@@ -5,3 +5,10 @@ build/
 coverage/
 drizzle/
 pnpm-lock.yaml
+.agents/
+.claude/
+.specify/
+CompanyDocs/
+specs/
+SKILL.md
+CLAUDE.md

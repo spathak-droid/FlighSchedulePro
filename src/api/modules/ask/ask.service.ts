@@ -108,9 +108,7 @@ export class AskService {
     if (opInstructors.length > 0) {
       sections.push('\n## Instructors');
       for (const i of opInstructors) {
-        sections.push(
-          `- ${i.fullName} (${i.instructorType})${i.isActive ? '' : ' [INACTIVE]'}`,
-        );
+        sections.push(`- ${i.fullName} (${i.instructorType})${i.isActive ? '' : ' [INACTIVE]'}`);
       }
     }
 
