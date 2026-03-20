@@ -387,11 +387,85 @@ export default function AskPage() {
           }
         }
       `}</style>
+      <style jsx global>{`
+        .app-content table tbody tr:hover {
+          background: rgba(0, 0, 0, 0.02);
+        }
+        .app-content table {
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid var(--color-border);
+        }
+        .app-content table th {
+          background: rgba(0, 0, 0, 0.03);
+        }
+      `}</style>
     </div>
   );
 }
 
 function formatMarkdown(text: string): string {
+  // Split into lines to handle tables as blocks
+  const lines = text.split('\n');
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    // Detect markdown table: a line with pipes, followed by a separator row (|---|...)
+    if (
+      i + 1 < lines.length &&
+      lines[i]!.includes('|') &&
+      /^\s*\|?\s*[-:]+[-|:\s]*$/.test(lines[i + 1]!)
+    ) {
+      // Collect all table rows
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i]!.includes('|')) {
+        tableLines.push(lines[i]!);
+        i++;
+      }
+
+      // Parse header
+      const headerCells = parsePipeCells(tableLines[0]!);
+      // Skip separator (tableLines[1])
+      const bodyRows = tableLines.slice(2);
+
+      let table =
+        '<div style="overflow-x:auto;margin:12px 0"><table style="width:100%;border-collapse:collapse;font-size:0.85rem">';
+      table += '<thead><tr>';
+      for (const cell of headerCells) {
+        table += `<th style="text-align:left;padding:10px 12px;border-bottom:2px solid var(--color-border);font-weight:600;white-space:nowrap">${inlineFormat(cell)}</th>`;
+      }
+      table += '</tr></thead><tbody>';
+
+      for (const row of bodyRows) {
+        const cells = parsePipeCells(row);
+        table += '<tr>';
+        for (let c = 0; c < headerCells.length; c++) {
+          table += `<td style="padding:8px 12px;border-bottom:1px solid var(--color-border)">${inlineFormat(cells[c] ?? '')}</td>`;
+        }
+        table += '</tr>';
+      }
+
+      table += '</tbody></table></div>';
+      result.push(table);
+    } else {
+      result.push(formatLine(lines[i]!));
+      i++;
+    }
+  }
+
+  return result.join('');
+}
+
+function parsePipeCells(line: string): string[] {
+  return line
+    .replace(/^\s*\|/, '')
+    .replace(/\|\s*$/, '')
+    .split('|')
+    .map((c) => c.trim());
+}
+
+function inlineFormat(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -401,10 +475,19 @@ function formatMarkdown(text: string): string {
     .replace(
       /`([^`]+)`/g,
       '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:0.85em">$1</code>',
-    )
-    .replace(/^### (.+)$/gm, '<h4 style="margin:12px 0 4px;font-size:0.95rem">$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3 style="margin:12px 0 4px;font-size:1rem">$1</h3>')
-    .replace(/^# (.+)$/gm, '<h2 style="margin:12px 0 4px;font-size:1.1rem">$1</h2>')
-    .replace(/^- (.+)$/gm, '<div style="padding-left:16px">• $1</div>')
-    .replace(/\n/g, '<br/>');
+    );
+}
+
+function formatLine(line: string): string {
+  const escaped = inlineFormat(line);
+  if (/^### /.test(line))
+    return `<h4 style="margin:12px 0 4px;font-size:0.95rem">${inlineFormat(line.slice(4))}</h4>`;
+  if (/^## /.test(line))
+    return `<h3 style="margin:12px 0 4px;font-size:1rem">${inlineFormat(line.slice(3))}</h3>`;
+  if (/^# /.test(line))
+    return `<h2 style="margin:12px 0 4px;font-size:1.1rem">${inlineFormat(line.slice(2))}</h2>`;
+  if (/^- /.test(line))
+    return `<div style="padding-left:16px">\u2022 ${inlineFormat(line.slice(2))}</div>`;
+  if (line.trim() === '') return '<br/>';
+  return escaped + '<br/>';
 }
