@@ -99,7 +99,8 @@ export default function QueuePage() {
 
   // Check simulation status on mount
   useEffect(() => {
-    api.get<{ data: SimulationStatus }>('/simulation/status')
+    api
+      .get<{ data: SimulationStatus }>('/simulation/status')
       .then((res) => {
         setSimRunning(res.data.running);
         setSimEventCount(res.data.eventCount);
@@ -158,7 +159,7 @@ export default function QueuePage() {
       gsap.fromTo(
         simPulseRef.current,
         { scale: 1, opacity: 1 },
-        { scale: 1.5, opacity: 0, duration: 1.5, repeat: -1, ease: 'power2.out' }
+        { scale: 1.5, opacity: 0, duration: 1.5, repeat: -1, ease: 'power2.out' },
       );
     }
   }, [simRunning]);
@@ -178,7 +179,7 @@ export default function QueuePage() {
       gsap.fromTo(
         bulkBarRef.current,
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' },
       );
     }
     prevHasSelection.current = hasSelection;
@@ -337,119 +338,142 @@ export default function QueuePage() {
 
   return (
     <div>
-        {/* Page header */}
-        <div style={styles.pageHeader}>
-          <div style={styles.pageTitleRow}>
-            <h1 style={styles.pageTitle}>Approval Queue</h1>
-            <span className="count-badge">{totalCount}</span>
-          </div>
-          <div style={styles.simControls}>
-            {/* Simulation status indicator */}
-            {simRunning && (
-              <div style={styles.simStatus}>
-                <span style={styles.simPulseWrapper}>
-                  <span ref={simPulseRef} style={styles.simPulseRing} />
-                  <span style={styles.simDot} />
-                </span>
-                <span style={styles.simStatusText}>
-                  Live — {simEventCount} event{simEventCount === 1 ? '' : 's'}
-                  {simLastEvent && (
-                    <span style={styles.simLastEvent}>
-                      {' '}· last: {EVENT_LABELS[simLastEvent] ?? simLastEvent}
-                    </span>
-                  )}
-                </span>
-              </div>
+      {/* Page header */}
+      <div style={styles.pageHeader}>
+        <div style={styles.pageTitleRow}>
+          <h1 style={styles.pageTitle}>Approval Queue</h1>
+          <span className="count-badge">{totalCount}</span>
+        </div>
+        <div style={styles.simControls}>
+          {/* Simulation status indicator */}
+          {simRunning && (
+            <div style={styles.simStatus}>
+              <span style={styles.simPulseWrapper}>
+                <span ref={simPulseRef} style={styles.simPulseRing} />
+                <span style={styles.simDot} />
+              </span>
+              <span style={styles.simStatusText}>
+                Live — {simEventCount} event{simEventCount === 1 ? '' : 's'}
+                {simLastEvent && (
+                  <span style={styles.simLastEvent}>
+                    {' '}
+                    · last: {EVENT_LABELS[simLastEvent] ?? simLastEvent}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+          <button
+            className={simRunning ? 'btn btn-danger btn-sm' : 'btn btn-sm'}
+            onClick={handleSimToggle}
+            disabled={simLoading}
+            style={simRunning ? styles.simButtonStop : styles.simButtonStart}
+          >
+            {simLoading ? (
+              <span className="spinner" style={{ width: 14, height: 14 }} />
+            ) : simRunning ? (
+              <>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+                Stop Simulation
+              </>
+            ) : (
+              <>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Start Simulation
+              </>
             )}
-            <button
-              className={simRunning ? 'btn btn-danger btn-sm' : 'btn btn-sm'}
-              onClick={handleSimToggle}
-              disabled={simLoading}
-              style={simRunning ? styles.simButtonStop : styles.simButtonStart}
-            >
-              {simLoading ? (
-                <span className="spinner" style={{ width: 14, height: 14 }} />
-              ) : simRunning ? (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect x="6" y="4" width="4" height="16" rx="1" />
-                    <rect x="14" y="4" width="4" height="16" rx="1" />
-                  </svg>
-                  Stop Simulation
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Start Simulation
-                </>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
+      </div>
 
-        {/* Simulation info banner */}
-        {simRunning && (
-          <div style={styles.simBanner}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>
-              Simulation active — generating cancellations, weather events, completions, and more every 20s.
-              Queue auto-refreshes every 5s. AI enrichment runs on each new suggestion.
-            </span>
-          </div>
-        )}
-
-        {/* Messages */}
-        {error && <div style={styles.errorBox}>{error}</div>}
-        {successMessage && <div style={styles.successBox}>{successMessage}</div>}
-
-        {/* Disruption banner */}
-        <DisruptionBanner />
-
-        {/* Filter bar */}
-        <div style={styles.filterSection}>
-          <FilterBar initialFilters={filters} onChange={handleFilterChange} />
+      {/* Simulation info banner */}
+      {simRunning && (
+        <div style={styles.simBanner}>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth="2"
+            style={{ flexShrink: 0 }}
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>
+            Simulation active — generating cancellations, weather events, completions, and more
+            every 20s. Queue auto-refreshes every 5s. AI enrichment runs on each new suggestion.
+          </span>
         </div>
+      )}
 
-        {/* Table */}
-        <SuggestionTable
-          suggestions={suggestions}
-          loading={loading}
-          selectedIds={selectedIds}
-          onToggleSelect={handleToggleSelect}
-          onToggleSelectAll={handleToggleSelectAll}
-          onApprove={handleApprove}
-          onDecline={handleDecline}
-          actionLoadingId={actionLoadingId}
-        />
+      {/* Messages */}
+      {error && <div style={styles.errorBox}>{error}</div>}
+      {successMessage && <div style={styles.successBox}>{successMessage}</div>}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={styles.pagination}>
-            <button
-              className="btn btn-outline btn-sm"
-              disabled={currentPage <= 1}
-              onClick={() => setFilters({ ...filters, page: currentPage - 1 })}
-            >
-              Previous
-            </button>
-            <span style={styles.pageInfo}>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className="btn btn-outline btn-sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setFilters({ ...filters, page: currentPage + 1 })}
-            >
-              Next
-            </button>
-          </div>
-        )}
+      {/* Disruption banner */}
+      <DisruptionBanner />
+
+      {/* Filter bar */}
+      <div style={styles.filterSection}>
+        <FilterBar initialFilters={filters} onChange={handleFilterChange} />
+      </div>
+
+      {/* Table */}
+      <SuggestionTable
+        suggestions={suggestions}
+        loading={loading}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onToggleSelectAll={handleToggleSelectAll}
+        onApprove={handleApprove}
+        onDecline={handleDecline}
+        actionLoadingId={actionLoadingId}
+      />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={styles.pagination}>
+          <button
+            className="btn btn-outline btn-sm"
+            disabled={currentPage <= 1}
+            onClick={() => setFilters({ ...filters, page: currentPage - 1 })}
+          >
+            Previous
+          </button>
+          <span style={styles.pageInfo}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="btn btn-outline btn-sm"
+            disabled={currentPage >= totalPages}
+            onClick={() => setFilters({ ...filters, page: currentPage + 1 })}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Bulk action toolbar — sticky bottom */}
       {hasSelection && (
@@ -464,7 +488,16 @@ export default function QueuePage() {
                 onClick={() => setShowBulkApproveModal(true)}
                 disabled={bulkLoading}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 Approve All
               </button>
               <button
@@ -472,13 +505,20 @@ export default function QueuePage() {
                 onClick={() => setShowBulkDeclineModal(true)}
                 disabled={bulkLoading}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
                 Decline All
               </button>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setSelectedIds(new Set())}
-              >
+              <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}>
                 Clear
               </button>
               {bulkLoading && <span className="spinner" />}
@@ -493,11 +533,20 @@ export default function QueuePage() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Confirm Bulk Approve</h3>
             <p style={styles.modalText}>
-              You are about to approve <strong style={{ color: 'var(--color-text)' }}>{selectedIds.size}</strong> suggestion
+              You are about to approve{' '}
+              <strong style={{ color: 'var(--color-text)' }}>{selectedIds.size}</strong> suggestion
               {selectedIds.size === 1 ? '' : 's'}. Each will create a reservation in FSP.
             </p>
             <p style={styles.modalWarning}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2"
+                style={{ flexShrink: 0 }}
+              >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -522,7 +571,8 @@ export default function QueuePage() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Decline Selected Suggestions</h3>
             <p style={styles.modalText}>
-              You are about to decline <strong style={{ color: 'var(--color-text)' }}>{selectedIds.size}</strong> suggestion
+              You are about to decline{' '}
+              <strong style={{ color: 'var(--color-text)' }}>{selectedIds.size}</strong> suggestion
               {selectedIds.size === 1 ? '' : 's'}.
             </p>
             <div style={{ marginBottom: '20px' }}>
@@ -548,7 +598,6 @@ export default function QueuePage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

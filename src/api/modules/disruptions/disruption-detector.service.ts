@@ -101,11 +101,13 @@ export class DisruptionDetectorService {
 
           const reservationIds = upcomingReservations.map((r) => r.id);
           const studentIds = [...new Set(upcomingReservations.map((r) => r.studentId))];
-          const aircraftIds = [...new Set(
-            upcomingReservations
-              .map((r) => r.aircraftId)
-              .filter((id): id is string => id != null),
-          )];
+          const aircraftIds = [
+            ...new Set(
+              upcomingReservations
+                .map((r) => r.aircraftId)
+                .filter((id): id is string => id != null),
+            ),
+          ];
 
           disruptions.push({
             id: '', // Will be assigned on insert
@@ -139,8 +141,8 @@ export class DisruptionDetectorService {
 
           this.logger.warn(
             `Weather disruption detected at ${location.code}: ${category} ` +
-            `(vis ${weather.visibility}sm, clouds ${weather.cloudCover}%) — ` +
-            `${reservationIds.length} reservations affected`,
+              `(vis ${weather.visibility}sm, clouds ${weather.cloudCover}%) — ` +
+              `${reservationIds.length} reservations affected`,
           );
         }
       } catch (error) {
@@ -167,33 +169,40 @@ export class DisruptionDetectorService {
     const operatorAircraft = await db
       .select()
       .from(aircraft)
-      .where(
-        and(
-          eq(aircraft.operatorId, operatorId),
-          eq(aircraft.isActive, true),
-        ),
-      );
+      .where(and(eq(aircraft.operatorId, operatorId), eq(aircraft.isActive, true)));
 
     for (const ac of operatorAircraft) {
       // Fetch real maintenance data from FSP API
       let maintenanceData: AircraftMaintenanceData | null = null;
       try {
         const times = await this.fspResourceService.getAircraftTimes(operatorId, ac.id, '');
-        const reminders = await this.fspResourceService.getMaintenanceReminders(operatorId, ac.id, '');
+        const reminders = await this.fspResourceService.getMaintenanceReminders(
+          operatorId,
+          ac.id,
+          '',
+        );
 
-        const hobbsHours = (times as Record<string, unknown>)?.totalHobbs as number ?? 0;
+        const hobbsHours = ((times as Record<string, unknown>)?.totalHobbs as number) ?? 0;
         // Find next 100-hr inspection from reminders, or estimate it
         const inspectionReminder = Array.isArray(reminders)
           ? reminders.find((r) =>
-              String((r as Record<string, unknown>).name ?? (r as Record<string, unknown>).type ?? '').toLowerCase().includes('100'))
+              String(
+                (r as Record<string, unknown>).name ?? (r as Record<string, unknown>).type ?? '',
+              )
+                .toLowerCase()
+                .includes('100'),
+            )
           : null;
         const nextInspectionDue = inspectionReminder
-          ? (inspectionReminder as Record<string, unknown>).dueHobbs as number ?? hobbsHours + 100
+          ? (((inspectionReminder as Record<string, unknown>).dueHobbs as number) ??
+            hobbsHours + 100)
           : Math.ceil(hobbsHours / 100) * 100;
 
         maintenanceData = { hobbsHours, nextInspectionDue };
       } catch {
-        this.logger.debug(`Could not fetch maintenance data for ${ac.registration ?? ac.id} — skipping`);
+        this.logger.debug(
+          `Could not fetch maintenance data for ${ac.registration ?? ac.id} — skipping`,
+        );
         continue;
       }
 
@@ -309,9 +318,9 @@ export class DisruptionDetectorService {
 
       const reservationIds = flights.map((f) => f.id);
       const studentIds = [...new Set(flights.map((f) => f.studentId))];
-      const aircraftIds = [...new Set(
-        flights.map((f) => f.aircraftId).filter((id): id is string => id != null),
-      )];
+      const aircraftIds = [
+        ...new Set(flights.map((f) => f.aircraftId).filter((id): id is string => id != null)),
+      ];
 
       disruptions.push({
         id: '',
@@ -388,7 +397,11 @@ export class DisruptionDetectorService {
           detectedAt: now,
           resolvedAt: null,
           isActive: true,
-          metadata: { instructorId: row.instructorId, weeklyFlights: row.count, utilization: Math.round(utilization * 100) },
+          metadata: {
+            instructorId: row.instructorId,
+            weeklyFlights: row.count,
+            utilization: Math.round(utilization * 100),
+          },
           createdAt: now,
         });
       }
@@ -429,19 +442,10 @@ export class DisruptionDetectorService {
         metadata: disruptionEvents.metadata,
       })
       .from(disruptionEvents)
-      .where(
-        and(
-          eq(disruptionEvents.operatorId, operatorId),
-          eq(disruptionEvents.isActive, true),
-        ),
-      );
+      .where(and(eq(disruptionEvents.operatorId, operatorId), eq(disruptionEvents.isActive, true)));
 
     // Deduplicate: don't insert if an active disruption with same type+key exists
-    const allNew = [
-      ...weatherDisruptions,
-      ...maintenanceDisruptions,
-      ...instructorDisruptions,
-    ];
+    const allNew = [...weatherDisruptions, ...maintenanceDisruptions, ...instructorDisruptions];
 
     const toInsert: typeof allNew = [];
 
@@ -546,12 +550,7 @@ export class DisruptionDetectorService {
     const rows = await db
       .select()
       .from(disruptionEvents)
-      .where(
-        and(
-          eq(disruptionEvents.operatorId, operatorId),
-          eq(disruptionEvents.isActive, true),
-        ),
-      )
+      .where(and(eq(disruptionEvents.operatorId, operatorId), eq(disruptionEvents.isActive, true)))
       .orderBy(disruptionEvents.detectedAt);
 
     return rows.map((row) => ({
@@ -576,7 +575,10 @@ export class DisruptionDetectorService {
   /**
    * Resolve a disruption by ID.
    */
-  async resolveDisruption(operatorId: number, disruptionId: string): Promise<DisruptionEvent | null> {
+  async resolveDisruption(
+    operatorId: number,
+    disruptionId: string,
+  ): Promise<DisruptionEvent | null> {
     const [updated] = await db
       .update(disruptionEvents)
       .set({

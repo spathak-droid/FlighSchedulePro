@@ -118,7 +118,10 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
 
   if (path.match(/\/myoperators\/\d+/) && method === 'GET') {
     const matchedId = parseInt(path.match(/\/myoperators\/(\d+)/)?.[1] ?? '0', 10);
-    return { status: 200, body: MOCK_ALL_OPERATOR_DETAILS[matchedId] ?? MOCK_ALL_OPERATOR_DETAILS[MOCK_OPERATOR_ID] };
+    return {
+      status: 200,
+      body: MOCK_ALL_OPERATOR_DETAILS[matchedId] ?? MOCK_ALL_OPERATOR_DETAILS[MOCK_OPERATOR_ID],
+    };
   }
 
   if (path.includes('/myoperators') && method === 'GET') {
@@ -253,7 +256,10 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
   if (path.match(/\/users\/[\w-]+\/availability$/) && method === 'GET') {
     const userId = extractUserIdFromAvailabilityPath(path);
     const avail = getAvailabilityForOperator(opId);
-    return { status: 200, body: avail[userId] ?? { userGuidId: userId, availabilities: [], availabilityOverrides: [] } };
+    return {
+      status: 200,
+      body: avail[userId] ?? { userGuidId: userId, availabilities: [], availabilityOverrides: [] },
+    };
   }
 
   // ── 9. Schedule Data ───────────────────────────────────────────────────
@@ -289,13 +295,15 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
 
   if (path.includes('/autoSchedule') && !path.includes('/settings') && method === 'POST') {
     logger.log('[MOCK] AutoSchedule execute');
-    const reqBody = body as { events?: Array<{ eventId: string; customer1Guid?: string }> } | undefined;
+    const reqBody = body as
+      | { events?: Array<{ eventId: string; customer1Guid?: string }> }
+      | undefined;
     return { status: 200, body: generateAutoScheduleResults(reqBody) };
   }
 
   if (path.includes('/settings/autoSchedule') && method === 'PUT') {
     logger.log('[MOCK] Update AutoSchedule settings');
-    return { status: 200, body: { ...MOCK_AUTOSCHEDULE_SETTINGS, ...(body as object ?? {}) } };
+    return { status: 200, body: { ...MOCK_AUTOSCHEDULE_SETTINGS, ...((body as object) ?? {}) } };
   }
 
   if (path.includes('/settings/autoSchedule') && method === 'GET') {
@@ -315,7 +323,7 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
 
   if (path.includes('/scheduleMatch/preferences') && method === 'POST') {
     logger.log('[MOCK] Update Find-a-Time preferences');
-    return { status: 200, body: { ...MOCK_FIND_TIME_PREFERENCES, ...(body as object ?? {}) } };
+    return { status: 200, body: { ...MOCK_FIND_TIME_PREFERENCES, ...((body as object) ?? {}) } };
   }
 
   if (path.includes('/scheduleMatch/preferences') && method === 'GET') {
@@ -405,7 +413,10 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
 
   if (path.includes('/reports') && method === 'GET') {
     const params = new URLSearchParams(path.split('?')[1] ?? '');
-    return { status: 200, body: generateStudentProgressReport(params.get('enrollmentId') ?? undefined) };
+    return {
+      status: 200,
+      body: generateStudentProgressReport(params.get('enrollmentId') ?? undefined),
+    };
   }
 
   if (path.includes('/enrollments/') && path.includes('/status-changed') && method === 'POST') {
@@ -436,7 +447,10 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
 
   if (path.match(/\/enrollments\/[\w-]+$/) && method === 'GET') {
     const enrollmentId = path.split('/enrollments/')[1]?.split('?')[0] ?? '';
-    return { status: 200, body: MOCK_ENROLLMENT_DETAILS[enrollmentId] ?? Object.values(MOCK_ENROLLMENT_DETAILS)[0] };
+    return {
+      status: 200,
+      body: MOCK_ENROLLMENT_DETAILS[enrollmentId] ?? Object.values(MOCK_ENROLLMENT_DETAILS)[0],
+    };
   }
 
   if (path.includes('/checkrideExamScores') && method === 'GET') {
@@ -457,7 +471,11 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
     const students = getStudentsForOperator(opId);
     return {
       status: 200,
-      body: students.map((s) => ({ id: s.id, name: s.fullName ?? `${s.firstName} ${s.lastName}`, email: s.email })),
+      body: students.map((s) => ({
+        id: s.id,
+        name: s.fullName ?? `${s.firstName} ${s.lastName}`,
+        email: s.email,
+      })),
     };
   }
 
@@ -487,7 +505,10 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
     const reservationId = path.split('/flightAlerts/')[1]?.split('/')[0] ?? '';
     logger.log(`[MOCK] Complete flight alert for reservation ${reservationId}`);
     const alert = MOCK_FLIGHT_ALERTS.find((a) => a.reservationId === reservationId);
-    return { status: 200, body: alert ? { ...alert, status: 'completed' } : { status: 'completed' } };
+    return {
+      status: 200,
+      body: alert ? { ...alert, status: 'completed' } : { status: 'completed' },
+    };
   }
 
   if (path.includes('/flightAlerts/overdue') && method === 'GET') {
@@ -509,7 +530,13 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
     logger.log(`[MOCK] Create flight alert for reservation ${reservationId}`);
     return {
       status: 200,
-      body: { id: `fa-new-${Date.now()}`, reservationId, operatorId: opId, status: 'pending', createdAt: new Date().toISOString() },
+      body: {
+        id: `fa-new-${Date.now()}`,
+        reservationId,
+        operatorId: opId,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      },
     };
   }
 
@@ -517,7 +544,7 @@ export function mockRoute(method: string, path: string, body?: unknown): MockRes
     const reservationId = path.split('/flightAlerts/')[1]?.split('?')[0] ?? '';
     logger.log(`[MOCK] Update flight alert for reservation ${reservationId}`);
     const alert = MOCK_FLIGHT_ALERTS.find((a) => a.reservationId === reservationId);
-    return { status: 200, body: alert ? { ...alert, ...(body as object ?? {}) } : body ?? {} };
+    return { status: 200, body: alert ? { ...alert, ...((body as object) ?? {}) } : (body ?? {}) };
   }
 
   if (path.includes('/flightAlerts') && method === 'GET') {

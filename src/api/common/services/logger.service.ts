@@ -86,10 +86,7 @@ export class StructuredLoggerService {
     }
   }
 
-  private buildEntry(
-    message: string,
-    meta?: Record<string, unknown>,
-  ): Record<string, unknown> {
+  private buildEntry(message: string, meta?: Record<string, unknown>): Record<string, unknown> {
     return {
       timestamp: new Date().toISOString(),
       message,

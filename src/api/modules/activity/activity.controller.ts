@@ -49,7 +49,11 @@ export class ActivityController {
     const feed = result.items.map((event) => ({
       id: event.id,
       eventType: event.eventType,
-      summary: this.buildSummary(event.eventType, event.actorId, event.data as Record<string, unknown>),
+      summary: this.buildSummary(
+        event.eventType,
+        event.actorId,
+        event.data as Record<string, unknown>,
+      ),
       actor: event.actorId,
       timestamp: event.createdAt.toISOString(),
       details: event.data as Record<string, unknown>,
@@ -76,22 +80,25 @@ export class ActivityController {
 
     switch (eventType) {
       case 'suggestion_approved':
-        return `${actor} approved a ${(data.type as string) ?? 'scheduling'} suggestion` +
-          (data.fspReservationId
-            ? ` (reservation ${data.fspReservationId})`
-            : '');
+        return (
+          `${actor} approved a ${(data.type as string) ?? 'scheduling'} suggestion` +
+          (data.fspReservationId ? ` (reservation ${data.fspReservationId})` : '')
+        );
 
       case 'suggestion_declined':
-        return `${actor} declined a ${(data.type as string) ?? 'scheduling'} suggestion` +
-          (data.reason ? ` — reason: ${data.reason}` : '');
+        return (
+          `${actor} declined a ${(data.type as string) ?? 'scheduling'} suggestion` +
+          (data.reason ? ` — reason: ${data.reason}` : '')
+        );
 
       case 'suggestion_approve_failed':
-        return `${actor} attempted to approve a suggestion but FSP validation failed` +
-          (data.reason ? ` (${data.reason})` : '');
+        return (
+          `${actor} attempted to approve a suggestion but FSP validation failed` +
+          (data.reason ? ` (${data.reason})` : '')
+        );
 
       case 'suggestion_created':
-        return `New suggestion created` +
-          (data.type ? ` (type: ${data.type})` : '');
+        return `New suggestion created` + (data.type ? ` (type: ${data.type})` : '');
 
       case 'policy_changed':
         return `${actor} updated scheduling policy`;

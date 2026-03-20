@@ -129,14 +129,8 @@ export class FspScheduleService {
    *
    * Endpoint: DELETE /scheduling/v1.0/operators/{operatorId}/reservations/{reservationId}
    */
-  async deleteReservation(
-    operatorId: number,
-    token: string,
-    reservationId: string,
-  ): Promise<void> {
-    this.logger.log(
-      `Deleting reservation ${reservationId} for operator ${operatorId}`,
-    );
+  async deleteReservation(operatorId: number, token: string, reservationId: string): Promise<void> {
+    this.logger.log(`Deleting reservation ${reservationId} for operator ${operatorId}`);
 
     await this.fspClient.coreDelete<void>(
       operatorId,
@@ -157,9 +151,7 @@ export class FspScheduleService {
     token: string,
     reservationId: string,
   ): Promise<FspReservationDetail> {
-    this.logger.debug(
-      `Fetching reservation detail ${reservationId} for operator ${operatorId}`,
-    );
+    this.logger.debug(`Fetching reservation detail ${reservationId} for operator ${operatorId}`);
 
     return this.fspClient.apiGet<FspReservationDetail>(
       operatorId,

@@ -91,7 +91,8 @@ export default function DisruptionBanner() {
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
           <span style={bannerStyles.summaryText}>
-            <strong>{disruptions.length}</strong> active disruption{disruptions.length !== 1 ? 's' : ''}
+            <strong>{disruptions.length}</strong> active disruption
+            {disruptions.length !== 1 ? 's' : ''}
             {criticalCount > 0 && (
               <span style={bannerStyles.criticalBadge}>{criticalCount} critical</span>
             )}
@@ -150,42 +151,29 @@ export default function DisruptionBanner() {
                           : '#d97706',
                   }}
                 />
-                <span style={bannerStyles.detailType}>
-                  {d.type.toUpperCase()}
-                </span>
+                <span style={bannerStyles.detailType}>{d.type.toUpperCase()}</span>
                 <span style={bannerStyles.detailTitle}>{d.title}</span>
-                <span style={bannerStyles.severityLabel}>
-                  {d.severity}
-                </span>
+                <span style={bannerStyles.severityLabel}>{d.severity}</span>
               </div>
-              {d.description && (
-                <p style={bannerStyles.detailDescription}>{d.description}</p>
-              )}
+              {d.description && <p style={bannerStyles.detailDescription}>{d.description}</p>}
               <div style={bannerStyles.detailMeta}>
                 {d.affectedAircraftIds.length > 0 && (
-                  <span style={bannerStyles.metaTag}>
-                    {d.affectedAircraftIds.length} aircraft
-                  </span>
+                  <span style={bannerStyles.metaTag}>{d.affectedAircraftIds.length} aircraft</span>
                 )}
                 {d.affectedStudentIds.length > 0 && (
                   <span style={bannerStyles.metaTag}>
-                    {d.affectedStudentIds.length} student{d.affectedStudentIds.length !== 1 ? 's' : ''}
+                    {d.affectedStudentIds.length} student
+                    {d.affectedStudentIds.length !== 1 ? 's' : ''}
                   </span>
                 )}
                 {d.affectedReservationIds.length > 0 && (
                   <span style={bannerStyles.metaTag}>
-                    {d.affectedReservationIds.length} reservation{d.affectedReservationIds.length !== 1 ? 's' : ''}
+                    {d.affectedReservationIds.length} reservation
+                    {d.affectedReservationIds.length !== 1 ? 's' : ''}
                   </span>
                 )}
-                {d.locationId && (
-                  <span style={bannerStyles.metaTag}>
-                    {d.locationId}
-                  </span>
-                )}
-                <button
-                  style={bannerStyles.resolveButton}
-                  onClick={() => handleResolve(d.id)}
-                >
+                {d.locationId && <span style={bannerStyles.metaTag}>{d.locationId}</span>}
+                <button style={bannerStyles.resolveButton} onClick={() => handleResolve(d.id)}>
                   Resolve
                 </button>
               </div>

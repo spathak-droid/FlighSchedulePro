@@ -31,9 +31,7 @@ function makeProgress(overrides: Partial<FspEnrollmentProgress> = {}): FspEnroll
   };
 }
 
-function makeSchedulableEvent(
-  overrides: Partial<FspSchedulableEvent> = {},
-): FspSchedulableEvent {
+function makeSchedulableEvent(overrides: Partial<FspSchedulableEvent> = {}): FspSchedulableEvent {
   return {
     eventId: 'evt-1',
     enrollmentId: 'enr-1',
@@ -457,9 +455,7 @@ describe('detectCompletedLessons', () => {
           enrollmentId: 'enr-2',
           completedLessons: 0,
           totalLessons: 3,
-          lessons: [
-            { lessonId: 'A1', lessonName: 'A1', order: 1, isCompleted: false },
-          ],
+          lessons: [{ lessonId: 'A1', lessonName: 'A1', order: 1, isCompleted: false }],
         }),
       ],
     ]);
@@ -483,9 +479,7 @@ describe('detectCompletedLessons', () => {
           enrollmentId: 'enr-2',
           completedLessons: 1,
           totalLessons: 3,
-          lessons: [
-            { lessonId: 'A1', lessonName: 'A1', order: 1, isCompleted: true },
-          ],
+          lessons: [{ lessonId: 'A1', lessonName: 'A1', order: 1, isCompleted: true }],
         }),
       ],
     ]);

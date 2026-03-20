@@ -7,10 +7,10 @@ import type { WeatherData, FlightCategory } from '@/lib/types';
 // ─── Flight Category Colors ────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<FlightCategory, string> = {
-  VFR: '#16a34a',   // green
-  MVFR: '#0369a1',  // blue (aviation standard)
-  IFR: '#dc2626',   // red
-  LIFR: '#9333ea',  // purple
+  VFR: '#16a34a', // green
+  MVFR: '#0369a1', // blue (aviation standard)
+  IFR: '#dc2626', // red
+  LIFR: '#9333ea', // purple
 };
 
 const CATEGORY_BG: Record<FlightCategory, string> = {
@@ -38,7 +38,24 @@ function weatherCodeLabel(code: number): string {
 // ─── Wind Direction Arrow ──────────────────────────────────────────────────
 
 function windDirectionLabel(deg: number): string {
-  const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const dirs = [
+    'N',
+    'NNE',
+    'NE',
+    'ENE',
+    'E',
+    'ESE',
+    'SE',
+    'SSE',
+    'S',
+    'SSW',
+    'SW',
+    'WSW',
+    'W',
+    'WNW',
+    'NW',
+    'NNW',
+  ];
   const i = Math.round(deg / 22.5) % 16;
   return dirs[i] ?? 'N';
 }
@@ -55,7 +72,7 @@ export default function WeatherWidget() {
       try {
         const resp = await api.get<{ data: WeatherData[] }>('/weather');
         // Handle both { data: [...] } and direct array
-        const data = Array.isArray(resp) ? resp : (resp as { data: WeatherData[] }).data ?? resp;
+        const data = Array.isArray(resp) ? resp : ((resp as { data: WeatherData[] }).data ?? resp);
         setWeatherList(Array.isArray(data) ? data : []);
       } catch {
         setError('Unable to load weather data.');
@@ -77,7 +94,10 @@ export default function WeatherWidget() {
         <div style={styles.grid}>
           {[1, 2].map((i) => (
             <div key={i} style={{ ...styles.card, opacity: 0.5 }}>
-              <div className="skeleton" style={{ width: 140, height: 14, borderRadius: 4, marginBottom: 12 }} />
+              <div
+                className="skeleton"
+                style={{ width: 140, height: 14, borderRadius: 4, marginBottom: 12 }}
+              />
               <div className="skeleton" style={{ width: 80, height: 28, borderRadius: 6 }} />
             </div>
           ))}

@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Req,
-  Body,
-} from '@nestjs/common';
+import { Controller, Post, Get, HttpCode, HttpStatus, Req, Body } from '@nestjs/common';
 import { SimulationService } from './simulation.service.js';
 
 interface AuthenticatedRequest {

@@ -121,7 +121,8 @@ export class WeatherService {
     const params = new URLSearchParams({
       latitude: lat.toString(),
       longitude: lon.toString(),
-      current: 'temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,weather_code',
+      current:
+        'temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,weather_code',
     });
 
     const url = `${OPEN_METEO_BASE_URL}?${params.toString()}`;
@@ -160,7 +161,8 @@ export class WeatherService {
     const params = new URLSearchParams({
       latitude: lat.toString(),
       longitude: lon.toString(),
-      hourly: 'temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,weather_code',
+      hourly:
+        'temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,weather_code',
       forecast_hours: hours.toString(),
     });
 
@@ -290,7 +292,9 @@ export class WeatherService {
         return JSON.parse(cached) as WeatherResponse;
       }
     } catch {
-      this.logger.debug(`Redis unavailable for cache read, fetching fresh weather for ${locationId}`);
+      this.logger.debug(
+        `Redis unavailable for cache read, fetching fresh weather for ${locationId}`,
+      );
     }
 
     // Fetch from Open-Meteo

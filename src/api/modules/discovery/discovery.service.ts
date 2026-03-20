@@ -156,7 +156,8 @@ export class DiscoveryService {
 
     // Find the discovery flight activity type
     const discoveryActivity = activityTypes.find(
-      (at) => at.name.toLowerCase().includes(DiscoveryService.DISCOVERY_ACTIVITY_KEYWORD) && at.isActive,
+      (at) =>
+        at.name.toLowerCase().includes(DiscoveryService.DISCOVERY_ACTIVITY_KEYWORD) && at.isActive,
     );
     const activityTypeId = discoveryActivity?.id ?? '';
 
@@ -205,8 +206,8 @@ export class DiscoveryService {
     // Compare using date strings to avoid UTC midnight vs local time issues
     const todayStr = toLocalDateStr(now);
     const parsedPreferredDates = (data.preferredDates ?? [])
-      .filter(d => d.date && d.date >= todayStr)
-      .map(d => d.date)
+      .filter((d) => d.date && d.date >= todayStr)
+      .map((d) => d.date)
       .sort();
 
     let dateRangeStart: string;
@@ -230,13 +231,17 @@ export class DiscoveryService {
     }
 
     // Find slots in the preferred range (pass fspToken for per-instructor availability)
-    let slots = await this.solverService.findTime(operatorId, {
-      studentId: '',
-      activityTypeId,
-      dateRangeStart,
-      dateRangeEnd,
-      durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
-    }, fspToken);
+    let slots = await this.solverService.findTime(
+      operatorId,
+      {
+        studentId: '',
+        activityTypeId,
+        dateRangeStart,
+        dateRangeEnd,
+        durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
+      },
+      fspToken,
+    );
 
     // Step 6: Apply civil twilight (daylight) constraint as additional filter
     if (civilTwilight) {
@@ -253,16 +258,16 @@ export class DiscoveryService {
     let isAlternative = false;
 
     if (preferredDateStr && slots.length > 0) {
-      const onPreferredDate = slots.filter(s =>
-        toLocalDateStr(s.start) === preferredDateStr
-      );
+      const onPreferredDate = slots.filter((s) => toLocalDateStr(s.start) === preferredDateStr);
       if (onPreferredDate.length > 0) {
         matchedSlots = onPreferredDate;
       } else {
         // No slots on preferred date — show alternatives with a flag
         matchedSlots = slots;
         isAlternative = true;
-        this.logger.log(`No slots on preferred date ${preferredDateStr} — showing ${slots.length} alternatives`);
+        this.logger.log(
+          `No slots on preferred date ${preferredDateStr} — showing ${slots.length} alternatives`,
+        );
       }
     }
 
@@ -270,13 +275,17 @@ export class DiscoveryService {
     if (matchedSlots.length === 0 && parsedPreferredDates.length > 0) {
       const fullEnd = new Date(now);
       fullEnd.setDate(fullEnd.getDate() + searchDays);
-      matchedSlots = await this.solverService.findTime(operatorId, {
-        studentId: '',
-        activityTypeId,
-        dateRangeStart: todayStr,
-        dateRangeEnd: toLocalDateStr(fullEnd),
-        durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
-      }, fspToken);
+      matchedSlots = await this.solverService.findTime(
+        operatorId,
+        {
+          studentId: '',
+          activityTypeId,
+          dateRangeStart: todayStr,
+          dateRangeEnd: toLocalDateStr(fullEnd),
+          durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
+        },
+        fspToken,
+      );
       if (civilTwilight) {
         matchedSlots = filterDaylightSlots(matchedSlots, civilTwilight);
       }
@@ -314,7 +323,8 @@ export class DiscoveryService {
     });
 
     // Cap at configured max (default 5)
-    const maxSuggestions = (policy as Record<string, unknown>)?.rescheduleAlternatives as number ?? 5;
+    const maxSuggestions =
+      ((policy as Record<string, unknown>)?.rescheduleAlternatives as number) ?? 5;
     const cappedSlots = uniqueSlots.slice(0, maxSuggestions);
 
     // Create suggestion records
@@ -378,17 +388,14 @@ export class DiscoveryService {
       };
     });
 
-    const insertedSuggestions = await db
-      .insert(suggestions)
-      .values(suggestionRecords)
-      .returning({
-        id: suggestions.id,
-        proposedStart: suggestions.proposedStart,
-        proposedEnd: suggestions.proposedEnd,
-        instructorId: suggestions.instructorId,
-        aircraftId: suggestions.aircraftId,
-        rankingScore: suggestions.rankingScore,
-      });
+    const insertedSuggestions = await db.insert(suggestions).values(suggestionRecords).returning({
+      id: suggestions.id,
+      proposedStart: suggestions.proposedStart,
+      proposedEnd: suggestions.proposedEnd,
+      instructorId: suggestions.instructorId,
+      aircraftId: suggestions.aircraftId,
+      rankingScore: suggestions.rankingScore,
+    });
 
     // Enrich with names from the original slots (DB only stores IDs)
     const enrichedSuggestions = insertedSuggestions.map((s, i) => ({
@@ -436,11 +443,7 @@ export class DiscoveryService {
    * 6. Send confirmation email to prospect
    * 7. Return booking confirmation
    */
-  async bookSlot(
-    operatorId: number,
-    suggestionId: string,
-    userId: string,
-  ) {
+  async bookSlot(operatorId: number, suggestionId: string, userId: string) {
     // Load suggestion
     const [suggestion] = await db
       .select()
@@ -489,12 +492,7 @@ export class DiscoveryService {
       await db
         .update(suggestions)
         .set({ status: 'expired', expiredReason: 'slot_filled', updatedAt: now })
-        .where(
-          and(
-            eq(suggestions.groupId, suggestion.groupId),
-            eq(suggestions.status, 'pending'),
-          ),
-        );
+        .where(and(eq(suggestions.groupId, suggestion.groupId), eq(suggestions.status, 'pending')));
     }
 
     // 4. Update prospect status
@@ -519,19 +517,31 @@ export class DiscoveryService {
     // 5. Resolve names for response
     let instructorName: string | undefined;
     if (suggestion.instructorId) {
-      const [inst] = await db.select().from(instructors).where(eq(instructors.id, suggestion.instructorId)).limit(1);
+      const [inst] = await db
+        .select()
+        .from(instructors)
+        .where(eq(instructors.id, suggestion.instructorId))
+        .limit(1);
       if (inst) instructorName = `${inst.firstName} ${inst.lastName}`;
     }
 
     let aircraftRegistration: string | undefined;
     if (suggestion.aircraftId) {
-      const [craft] = await db.select().from(aircraft).where(eq(aircraft.id, suggestion.aircraftId)).limit(1);
+      const [craft] = await db
+        .select()
+        .from(aircraft)
+        .where(eq(aircraft.id, suggestion.aircraftId))
+        .limit(1);
       if (craft) aircraftRegistration = craft.registration;
     }
 
     let activityTypeName: string | undefined;
     if (suggestion.activityTypeId) {
-      const [at] = await db.select().from(activityTypes).where(eq(activityTypes.id, suggestion.activityTypeId)).limit(1);
+      const [at] = await db
+        .select()
+        .from(activityTypes)
+        .where(eq(activityTypes.id, suggestion.activityTypeId))
+        .limit(1);
       if (at) activityTypeName = at.name;
     }
 
@@ -551,7 +561,9 @@ export class DiscoveryService {
       });
       emailSent = true;
     } catch (err) {
-      this.logger.warn(`Email failed for discovery booking: ${err instanceof Error ? err.message : err}`);
+      this.logger.warn(
+        `Email failed for discovery booking: ${err instanceof Error ? err.message : err}`,
+      );
     }
 
     // 7. Audit log

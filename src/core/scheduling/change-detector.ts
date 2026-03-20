@@ -49,8 +49,8 @@ export function hashSchedule(events: FspScheduleEvent[]): string {
   });
 
   // Serialize each event as a stable string
-  const serialized = sorted.map((e) =>
-    `${e.Start}|${e.End}|${e.Title}|${e.CustomerName}|${e.InstructorName}|${e.AircraftName}`,
+  const serialized = sorted.map(
+    (e) => `${e.Start}|${e.End}|${e.Title}|${e.CustomerName}|${e.InstructorName}|${e.AircraftName}`,
   );
 
   const payload = serialized.join('\n');
@@ -78,9 +78,8 @@ function eventKey(event: FspScheduleEvent): string {
 function parseFspDateTime(fspTime: string): Date {
   // FSP format: "2024-03-15T10:00" or "2024-03-15T10:00:00"
   // Append seconds if missing to ensure valid Date parsing
-  const normalized = fspTime.includes(':') && fspTime.split(':').length === 2
-    ? `${fspTime}:00`
-    : fspTime;
+  const normalized =
+    fspTime.includes(':') && fspTime.split(':').length === 2 ? `${fspTime}:00` : fspTime;
   return new Date(normalized);
 }
 

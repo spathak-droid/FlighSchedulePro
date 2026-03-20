@@ -26,7 +26,10 @@ class ApiClient {
     return headers;
   }
 
-  private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
+  private buildUrl(
+    path: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): string {
     const url = new URL(`${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -62,7 +65,10 @@ class ApiClient {
     return body as T;
   }
 
-  async get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
+  async get<T>(
+    path: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): Promise<T> {
     const url = this.buildUrl(path, params);
     const response = await fetch(url, {
       method: 'GET',

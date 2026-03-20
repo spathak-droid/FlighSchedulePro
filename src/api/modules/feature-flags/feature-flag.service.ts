@@ -69,12 +69,7 @@ export class FeatureFlagService {
     const [flag] = await db
       .select({ enabled: featureFlags.enabled })
       .from(featureFlags)
-      .where(
-        and(
-          eq(featureFlags.operatorId, operatorId),
-          eq(featureFlags.flagName, flagName),
-        ),
-      )
+      .where(and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, flagName)))
       .limit(1);
 
     return flag?.enabled ?? false;
@@ -88,12 +83,7 @@ export class FeatureFlagService {
     const [flag] = await db
       .select({ config: featureFlags.config })
       .from(featureFlags)
-      .where(
-        and(
-          eq(featureFlags.operatorId, operatorId),
-          eq(featureFlags.flagName, flagName),
-        ),
-      )
+      .where(and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, flagName)))
       .limit(1);
 
     return (flag?.config as Record<string, unknown>) ?? {};
@@ -126,12 +116,7 @@ export class FeatureFlagService {
     const [existing] = await db
       .select({ id: featureFlags.id })
       .from(featureFlags)
-      .where(
-        and(
-          eq(featureFlags.operatorId, operatorId),
-          eq(featureFlags.flagName, flagName),
-        ),
-      )
+      .where(and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, flagName)))
       .limit(1);
 
     if (existing) {
@@ -147,12 +132,7 @@ export class FeatureFlagService {
       const [updated] = await db
         .update(featureFlags)
         .set(updateData)
-        .where(
-          and(
-            eq(featureFlags.operatorId, operatorId),
-            eq(featureFlags.flagName, flagName),
-          ),
-        )
+        .where(and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, flagName)))
         .returning();
 
       this.logger.log(
@@ -205,8 +185,6 @@ export class FeatureFlagService {
       })),
     );
 
-    this.logger.log(
-      `Seeded ${toInsert.length} default feature flags for operator ${operatorId}`,
-    );
+    this.logger.log(`Seeded ${toInsert.length} default feature flags for operator ${operatorId}`);
   }
 }

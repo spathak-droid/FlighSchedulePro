@@ -20,24 +20,12 @@ export function Logo({ size = 32, className }: { size?: number; className?: stri
       />
 
       {/* Main wings */}
-      <path
-        d="M29.5 28L12 36C11 36.5 11 38 12 38.5L18 40L29.5 34Z"
-        fill="#d1fae5"
-      />
-      <path
-        d="M34.5 28L52 36C53 36.5 53 38 52 38.5L46 40L34.5 34Z"
-        fill="#d1fae5"
-      />
+      <path d="M29.5 28L12 36C11 36.5 11 38 12 38.5L18 40L29.5 34Z" fill="#d1fae5" />
+      <path d="M34.5 28L52 36C53 36.5 53 38 52 38.5L46 40L34.5 34Z" fill="#d1fae5" />
 
       {/* Tail wings */}
-      <path
-        d="M30 46L22 49C21.5 49.2 21.5 50 22 50.2L26 51L30 48Z"
-        fill="#bbf7d0"
-      />
-      <path
-        d="M34 46L42 49C42.5 49.2 42.5 50 42 50.2L38 51L34 48Z"
-        fill="#bbf7d0"
-      />
+      <path d="M30 46L22 49C21.5 49.2 21.5 50 22 50.2L26 51L30 48Z" fill="#bbf7d0" />
+      <path d="M34 46L42 49C42.5 49.2 42.5 50 42 50.2L38 51L34 48Z" fill="#bbf7d0" />
 
       {/* Cockpit window */}
       <ellipse cx="32" cy="16" rx="1.5" ry="2.5" fill="#14532d" opacity="0.6" />
@@ -63,11 +51,7 @@ export function LogoMark({ size = 20, color = '#15803d' }: { size?: number; colo
         d="M32 6C30 6 28.5 9 28.5 13L28.5 51C28.5 54 30 56 32 58C34 56 35.5 54 35.5 51L35.5 13C35.5 9 34 6 32 6Z"
         fill={color}
       />
-      <path
-        d="M28.5 26L8 36C6.5 36.7 6.5 39 8 39.5L16 42L28.5 33Z"
-        fill={color}
-        opacity="0.7"
-      />
+      <path d="M28.5 26L8 36C6.5 36.7 6.5 39 8 39.5L16 42L28.5 33Z" fill={color} opacity="0.7" />
       <path
         d="M35.5 26L56 36C57.5 36.7 57.5 39 56 39.5L48 42L35.5 33Z"
         fill={color}

@@ -117,7 +117,11 @@ export class FspResourceService {
    *
    * Endpoint: GET /core/v1.0/operators/{operatorId}/aircraft/{aircraftId}/maintenanceReminders
    */
-  async getMaintenanceReminders(operatorId: number, aircraftId: string, token: string): Promise<unknown[]> {
+  async getMaintenanceReminders(
+    operatorId: number,
+    aircraftId: string,
+    token: string,
+  ): Promise<unknown[]> {
     this.logger.debug(`Fetching maintenance reminders for ${aircraftId}`);
     return this.fspClient.coreGet(
       operatorId,
@@ -150,9 +154,7 @@ export class FspResourceService {
     token: string,
     locationId: string,
   ): Promise<FspCivilTwilight> {
-    this.logger.debug(
-      `Fetching civil twilight for operator ${operatorId}, location ${locationId}`,
-    );
+    this.logger.debug(`Fetching civil twilight for operator ${operatorId}, location ${locationId}`);
 
     return this.fspClient.coreGet<FspCivilTwilight>(
       operatorId,

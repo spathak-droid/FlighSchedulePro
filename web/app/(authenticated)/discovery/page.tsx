@@ -12,7 +12,9 @@ export default function DiscoveryPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [preferredDates, setPreferredDates] = useState<string[]>(['']);
-  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'anytime'>('anytime');
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'anytime'>(
+    'anytime',
+  );
   const [notes, setNotes] = useState('');
 
   // Submission state
@@ -42,7 +44,7 @@ export default function DiscoveryPage() {
       gsap.fromTo(
         formCardRef.current,
         { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }
+        { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' },
       );
     }
   }, []);
@@ -53,7 +55,7 @@ export default function DiscoveryPage() {
       gsap.fromTo(
         resultsRef.current,
         { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', delay: 0.1 }
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', delay: 0.1 },
       );
 
       // Stagger individual result cards
@@ -78,7 +80,7 @@ export default function DiscoveryPage() {
       gsap.fromTo(
         toastRef.current,
         { opacity: 0, y: 20, x: 20 },
-        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' }
+        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' },
       );
       const timer = setTimeout(() => {
         if (toastRef.current) {
@@ -132,9 +134,7 @@ export default function DiscoveryPage() {
         lastName,
         email: email || undefined,
         phone: phone ? phoneDigits(phone) : undefined,
-        preferredDates: preferredDates
-          .filter((d) => d)
-          .map((date) => ({ date, timeOfDay })),
+        preferredDates: preferredDates.filter((d) => d).map((date) => ({ date, timeOfDay })),
         timeOfDay,
         notes: notes || undefined,
       };
@@ -155,18 +155,20 @@ export default function DiscoveryPage() {
   async function handleConfirmBooking(suggestionId: string) {
     setConfirmingId(suggestionId);
     try {
-      const res = await api.post<{ data: {
-        booking: {
-          prospectName: string;
-          prospectEmail?: string;
-          proposedStart: string;
-          proposedEnd: string;
-          instructorName?: string;
-          aircraftRegistration?: string;
-          activityType: string;
+      const res = await api.post<{
+        data: {
+          booking: {
+            prospectName: string;
+            prospectEmail?: string;
+            proposedStart: string;
+            proposedEnd: string;
+            instructorName?: string;
+            aircraftRegistration?: string;
+            activityType: string;
+          };
+          emailSent: boolean;
         };
-        emailSent: boolean;
-      } }>(`/discovery-flights/${suggestionId}/book`, {});
+      }>(`/discovery-flights/${suggestionId}/book`, {});
 
       const booking = res.data.booking;
       setConfirmedSuggestion({
@@ -243,7 +245,16 @@ export default function DiscoveryPage() {
       <div ref={formCardRef} className="card" style={styles.formCard}>
         <div style={styles.formHeader}>
           <div style={styles.formIcon}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M22 2L11 13" />
               <path d="M22 2L15 22L11 13L2 9L22 2Z" />
             </svg>
@@ -391,7 +402,9 @@ export default function DiscoveryPage() {
             disabled={submitting || !firstName || !lastName || !phoneValid}
             style={styles.submitBtn}
           >
-            {submitting && <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />}
+            {submitting && (
+              <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+            )}
             {submitting ? 'Searching...' : 'Find Available Slots'}
           </button>
         </form>
@@ -402,46 +415,79 @@ export default function DiscoveryPage() {
         <div ref={resultsRef} style={styles.resultsSection}>
           <div className="card" style={styles.confirmationCard}>
             <div style={styles.confirmationIcon}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#4ade80"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             </div>
             <h2 style={styles.confirmationTitle}>Booking Confirmed!</h2>
             <p style={styles.confirmationSubtitle}>
-              Discovery flight for <strong style={{ color: 'var(--color-text)' }}>{result?.prospect.firstName} {result?.prospect.lastName}</strong> has been booked.
+              Discovery flight for{' '}
+              <strong style={{ color: 'var(--color-text)' }}>
+                {result?.prospect.firstName} {result?.prospect.lastName}
+              </strong>{' '}
+              has been booked.
             </p>
 
             <div style={styles.confirmationDetails}>
               <div style={styles.confirmationDetailRow}>
                 <span style={styles.confirmationDetailLabel}>Date & Time</span>
-                <span style={styles.confirmationDetailValue}>{formatSlotTime(confirmedSuggestion.proposedStart)}</span>
+                <span style={styles.confirmationDetailValue}>
+                  {formatSlotTime(confirmedSuggestion.proposedStart)}
+                </span>
               </div>
               <div style={styles.confirmationDetailRow}>
                 <span style={styles.confirmationDetailLabel}>End Time</span>
-                <span style={styles.confirmationDetailValue}>{formatSlotTime(confirmedSuggestion.proposedEnd)}</span>
+                <span style={styles.confirmationDetailValue}>
+                  {formatSlotTime(confirmedSuggestion.proposedEnd)}
+                </span>
               </div>
               {confirmedSuggestion.instructorName && (
                 <div style={styles.confirmationDetailRow}>
                   <span style={styles.confirmationDetailLabel}>Instructor</span>
-                  <span style={styles.confirmationDetailValue}>{confirmedSuggestion.instructorName}</span>
+                  <span style={styles.confirmationDetailValue}>
+                    {confirmedSuggestion.instructorName}
+                  </span>
                 </div>
               )}
               {confirmedSuggestion.aircraftRegistration && (
                 <div style={styles.confirmationDetailRow}>
                   <span style={styles.confirmationDetailLabel}>Aircraft</span>
-                  <span style={styles.confirmationDetailValue}>{confirmedSuggestion.aircraftRegistration}</span>
+                  <span style={styles.confirmationDetailValue}>
+                    {confirmedSuggestion.aircraftRegistration}
+                  </span>
                 </div>
               )}
             </div>
 
             {confirmedSuggestion.prospectEmail && (
               <div style={styles.emailSentNotice}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#60a5fa"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ flexShrink: 0 }}
+                >
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-                <span>Confirmation email sent to <strong>{confirmedSuggestion.prospectEmail}</strong></span>
+                <span>
+                  Confirmation email sent to <strong>{confirmedSuggestion.prospectEmail}</strong>
+                </span>
               </div>
             )}
 
@@ -470,16 +516,29 @@ export default function DiscoveryPage() {
               {result.isAlternative ? 'Recommended Alternatives' : 'Available Slots'}
             </h2>
             {result.isAlternative && result.preferredDate && (
-              <div style={{
-                background: 'var(--color-warning-glow)', border: '1px solid rgba(245,158,11,0.3)',
-                borderRadius: '8px', padding: '10px 16px', marginBottom: '12px',
-                color: '#d97706', fontSize: '0.85rem',
-              }}>
-                No flights available on {new Date(result.preferredDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} — showing nearest alternatives
+              <div
+                style={{
+                  background: 'var(--color-warning-glow)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: '8px',
+                  padding: '10px 16px',
+                  marginBottom: '12px',
+                  color: '#d97706',
+                  fontSize: '0.85rem',
+                }}
+              >
+                No flights available on{' '}
+                {new Date(result.preferredDate + 'T12:00:00').toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}{' '}
+                — showing nearest alternatives
               </div>
             )}
             <p style={styles.resultsSubtitle}>
-              Found {result.suggestions.length} option{result.suggestions.length !== 1 ? 's' : ''} for{' '}
+              Found {result.suggestions.length} option{result.suggestions.length !== 1 ? 's' : ''}{' '}
+              for{' '}
               <strong style={{ color: 'var(--color-text)' }}>
                 {result.prospect.firstName} {result.prospect.lastName}
               </strong>
@@ -488,14 +547,17 @@ export default function DiscoveryPage() {
 
           {result.suggestions.length === 0 ? (
             <div className="card" style={styles.noResults}>
-              No available slots found for the selected criteria. Try adjusting dates or time preferences.
+              No available slots found for the selected criteria. Try adjusting dates or time
+              preferences.
             </div>
           ) : (
             <div style={styles.resultsGrid}>
               {result.suggestions.map((suggestion, idx) => (
                 <div
                   key={suggestion.id}
-                  ref={(el) => { resultCardsRef.current[idx] = el; }}
+                  ref={(el) => {
+                    resultCardsRef.current[idx] = el;
+                  }}
                   className="card"
                   style={styles.resultCard}
                 >
@@ -504,28 +566,42 @@ export default function DiscoveryPage() {
 
                   {/* Time slot */}
                   <div style={styles.slotTime}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ flexShrink: 0 }}
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    <span style={styles.slotTimeText}>{formatSlotTime(suggestion.proposedStart)}</span>
+                    <span style={styles.slotTimeText}>
+                      {formatSlotTime(suggestion.proposedStart)}
+                    </span>
                   </div>
-                  <div style={styles.slotEndTime}>
-                    to {formatSlotTime(suggestion.proposedEnd)}
-                  </div>
+                  <div style={styles.slotEndTime}>to {formatSlotTime(suggestion.proposedEnd)}</div>
 
                   {/* Details */}
                   <div style={styles.slotDetails}>
                     {(suggestion.instructorName || suggestion.instructorId) && (
                       <div style={styles.detailRow}>
                         <span style={styles.detailLabel}>Instructor</span>
-                        <span style={styles.detailValue}>{suggestion.instructorName || suggestion.instructorId}</span>
+                        <span style={styles.detailValue}>
+                          {suggestion.instructorName || suggestion.instructorId}
+                        </span>
                       </div>
                     )}
                     {(suggestion.aircraftRegistration || suggestion.aircraftId) && (
                       <div style={styles.detailRow}>
                         <span style={styles.detailLabel}>Aircraft</span>
-                        <span style={styles.detailValue}>{suggestion.aircraftRegistration || suggestion.aircraftId}</span>
+                        <span style={styles.detailValue}>
+                          {suggestion.aircraftRegistration || suggestion.aircraftId}
+                        </span>
                       </div>
                     )}
                     {suggestion.rankingScore !== undefined && (
@@ -547,7 +623,10 @@ export default function DiscoveryPage() {
                     style={styles.confirmBtn}
                   >
                     {confirmingId === suggestion.id && (
-                      <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, borderTopColor: '#fff' }} />
+                      <span
+                        className="spinner"
+                        style={{ width: 14, height: 14, borderWidth: 2, borderTopColor: '#fff' }}
+                      />
                     )}
                     {confirmingId === suggestion.id ? 'Confirming...' : 'Confirm Booking'}
                   </button>

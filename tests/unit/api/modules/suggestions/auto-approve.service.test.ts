@@ -90,11 +90,7 @@ describe('AutoApproveService', () => {
     suggestionsService = createMockSuggestionsService();
     auditService = createMockAuditService();
 
-    service = new AutoApproveService(
-      featureFlagService,
-      suggestionsService,
-      auditService,
-    );
+    service = new AutoApproveService(featureFlagService, suggestionsService, auditService);
   });
 
   // ── Feature flag check ────────────────────────────────────────────────
@@ -131,7 +127,7 @@ describe('AutoApproveService', () => {
 
     expect(result.autoApproved).toBe(false);
     expect(result.reason).toContain("'approved'");
-    expect(result.reason).toContain('not \'pending\'');
+    expect(result.reason).toContain("not 'pending'");
   });
 
   it('rejects when suggestion status is expired', async () => {

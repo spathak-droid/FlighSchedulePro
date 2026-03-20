@@ -8,19 +8,10 @@
  * - Updates AsyncLocalStorage with operatorId once available from auth
  */
 
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { metrics } from '../../../common/logger.js';
-import {
-  getCorrelationId,
-  requestContext,
-} from '../middleware/correlation-id.middleware.js';
+import { getCorrelationId, requestContext } from '../middleware/correlation-id.middleware.js';
 
 @Injectable()
 export class RequestLoggingInterceptor implements NestInterceptor {
@@ -94,7 +85,11 @@ export class RequestLoggingInterceptor implements NestInterceptor {
           metrics.increment('http_errors_total', { method, status: String(statusCode) });
 
           // Metrics — per-endpoint error count
-          metrics.increment('http_endpoint_errors_total', { method, path: normalizedPath, status: String(statusCode) });
+          metrics.increment('http_endpoint_errors_total', {
+            method,
+            path: normalizedPath,
+            status: String(statusCode),
+          });
 
           // Metrics — response time histogram (errors too)
           metrics.observe('http_request_duration_ms', duration, { method, path: normalizedPath });

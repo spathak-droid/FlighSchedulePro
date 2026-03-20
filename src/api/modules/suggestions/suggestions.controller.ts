@@ -82,7 +82,7 @@ export class SuggestionsController {
       // Discovery flights store prospect name as "prospect:FirstName LastName"
       const studentName = sid?.startsWith('prospect:')
         ? sid.slice(9)
-        : studentMap.get(sid ?? '') ?? null;
+        : (studentMap.get(sid ?? '') ?? null);
 
       return {
         ...row,
@@ -136,10 +136,7 @@ export class SuggestionsController {
   @HttpCode(HttpStatus.OK)
   async mockTrigger(@Req() req: AuthenticatedRequest) {
     try {
-      const result = await this.mockTriggerService.trigger(
-        req.user.operatorId,
-        req.user.userId,
-      );
+      const result = await this.mockTriggerService.trigger(req.user.operatorId, req.user.userId);
       return {
         data: {
           suggestionIds: result.suggestionIds,
@@ -160,14 +157,8 @@ export class SuggestionsController {
    * Get a single suggestion by ID.
    */
   @Get(':id')
-  async getById(
-    @Req() req: AuthenticatedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    const suggestion = await this.suggestionsService.getById(
-      req.user.operatorId,
-      id,
-    );
+  async getById(@Req() req: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
+    const suggestion = await this.suggestionsService.getById(req.user.operatorId, id);
     return { data: suggestion };
   }
 
@@ -177,10 +168,7 @@ export class SuggestionsController {
    */
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
-  async approve(
-    @Req() req: AuthenticatedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  async approve(@Req() req: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
     // TODO: FSP token storage per operator — currently we don't persist the FSP
     // bearer token after login. When operator-level FSP token storage is
     // implemented (Phase 4), replace this placeholder with the real token
@@ -224,10 +212,7 @@ export class SuggestionsController {
    */
   @Post('bulk-approve')
   @HttpCode(HttpStatus.OK)
-  async bulkApprove(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: BulkApproveBody,
-  ) {
+  async bulkApprove(@Req() req: AuthenticatedRequest, @Body() body: BulkApproveBody) {
     // TODO: FSP token storage per operator — see approve() TODO above
     const fspToken = '';
 
@@ -247,10 +232,7 @@ export class SuggestionsController {
    */
   @Post('bulk-decline')
   @HttpCode(HttpStatus.OK)
-  async bulkDecline(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: BulkDeclineBody,
-  ) {
+  async bulkDecline(@Req() req: AuthenticatedRequest, @Body() body: BulkDeclineBody) {
     const result = await this.suggestionsService.bulkDecline(
       req.user.operatorId,
       body.suggestionIds,
@@ -294,13 +276,21 @@ export class SuggestionsController {
           ? await db.select().from(students).where(eq(students.id, suggestion.studentId)).limit(1)
           : [null];
         const [instructor] = suggestion.instructorId
-          ? await db.select().from(instructors).where(eq(instructors.id, suggestion.instructorId)).limit(1)
+          ? await db
+              .select()
+              .from(instructors)
+              .where(eq(instructors.id, suggestion.instructorId))
+              .limit(1)
           : [null];
         const [craft] = suggestion.aircraftId
           ? await db.select().from(aircraft).where(eq(aircraft.id, suggestion.aircraftId)).limit(1)
           : [null];
         const [activity] = suggestion.activityTypeId
-          ? await db.select().from(activityTypes).where(eq(activityTypes.id, suggestion.activityTypeId)).limit(1)
+          ? await db
+              .select()
+              .from(activityTypes)
+              .where(eq(activityTypes.id, suggestion.activityTypeId))
+              .limit(1)
           : [null];
 
         const existingRationale = suggestion.rationale as Record<string, unknown>;
@@ -310,25 +300,61 @@ export class SuggestionsController {
           suggestionType: suggestion.type as AiRationaleInput['suggestionType'],
           studentName: student ? `${student.firstName} ${student.lastName}` : undefined,
           totalFlightHours: student ? Number(student.totalFlightHours) : undefined,
-          enrollmentProgress: suggestion.enrollmentId ? `Course ${suggestion.courseId}, Lesson ${suggestion.lessonId}` : undefined,
-          proposedStart: suggestion.proposedStart.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }),
-          proposedEnd: suggestion.proposedEnd.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          enrollmentProgress: suggestion.enrollmentId
+            ? `Course ${suggestion.courseId}, Lesson ${suggestion.lessonId}`
+            : undefined,
+          proposedStart: suggestion.proposedStart.toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          }),
+          proposedEnd: suggestion.proposedEnd.toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          }),
           activityType: activity?.name,
           instructorName: instructor ? `${instructor.firstName} ${instructor.lastName}` : undefined,
           aircraftRegistration: craft?.registration,
           rankingScore: suggestion.rankingScore ? Number(suggestion.rankingScore) : undefined,
-          constraintsPassed: constraints ? Object.entries(constraints).filter(([, v]) => v === true).map(([k]) => k) : [],
-          constraintsFailed: constraints ? Object.entries(constraints).filter(([, v]) => v === false).map(([k]) => k) : [],
-          policyNotes: Array.isArray(existingRationale?.policies) ? existingRationale.policies as string[] : Object.keys((existingRationale?.policies as Record<string, unknown>) ?? {}),
+          constraintsPassed: constraints
+            ? Object.entries(constraints)
+                .filter(([, v]) => v === true)
+                .map(([k]) => k)
+            : [],
+          constraintsFailed: constraints
+            ? Object.entries(constraints)
+                .filter(([, v]) => v === false)
+                .map(([k]) => k)
+            : [],
+          policyNotes: Array.isArray(existingRationale?.policies)
+            ? (existingRationale.policies as string[])
+            : Object.keys((existingRationale?.policies as Record<string, unknown>) ?? {}),
         };
 
         const result = await this.aiService.generateRationale(input);
-        if (!result) { failed++; continue; }
+        if (!result) {
+          failed++;
+          continue;
+        }
 
-        await db.update(suggestions).set({
-          rationale: { ...existingRationale, aiSummary: result.aiSummary, riskLevel: result.riskLevel, riskReason: result.riskReason, aiModel: result.aiModel, aiEnriched: true },
-          updatedAt: new Date(),
-        }).where(eq(suggestions.id, s.id));
+        await db
+          .update(suggestions)
+          .set({
+            rationale: {
+              ...existingRationale,
+              aiSummary: result.aiSummary,
+              riskLevel: result.riskLevel,
+              riskReason: result.riskReason,
+              aiModel: result.aiModel,
+              aiEnriched: true,
+            },
+            updatedAt: new Date(),
+          })
+          .where(eq(suggestions.id, s.id));
 
         // Try auto-approve if enabled
         await this.autoApproveService.checkAndAutoApprove(operatorId, s.id).catch(() => {});
@@ -339,6 +365,13 @@ export class SuggestionsController {
       }
     }
 
-    return { data: { enriched, failed, total: pending.length, message: `AI enriched ${enriched}/${pending.length} suggestions` } };
+    return {
+      data: {
+        enriched,
+        failed,
+        total: pending.length,
+        message: `AI enriched ${enriched}/${pending.length} suggestions`,
+      },
+    };
   }
 }

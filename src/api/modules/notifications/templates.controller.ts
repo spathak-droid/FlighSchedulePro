@@ -42,9 +42,7 @@ export class TemplatesController {
    */
   @Get()
   async listTemplates(@Req() req: AuthenticatedRequest) {
-    const templates = await this.notificationService.getTemplates(
-      req.user.operatorId,
-    );
+    const templates = await this.notificationService.getTemplates(req.user.operatorId);
 
     return { data: templates };
   }
@@ -60,14 +58,10 @@ export class TemplatesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateTemplateBody,
   ) {
-    const updated = await this.notificationService.updateTemplate(
-      req.user.operatorId,
-      id,
-      {
-        subject: body.subject,
-        bodyTemplate: body.bodyTemplate,
-      },
-    );
+    const updated = await this.notificationService.updateTemplate(req.user.operatorId, id, {
+      subject: body.subject,
+      bodyTemplate: body.bodyTemplate,
+    });
 
     return { data: updated };
   }

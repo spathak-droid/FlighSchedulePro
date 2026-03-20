@@ -9,7 +9,15 @@ import WeatherWidget from '@/components/weather-widget';
 
 /* ── Animated Number ─────────────────────────────────────────────────────── */
 
-function AnimatedNumber({ value, duration = 0.8, pad = false }: { value: number | null | undefined; duration?: number; pad?: boolean }) {
+function AnimatedNumber({
+  value,
+  duration = 0.8,
+  pad = false,
+}: {
+  value: number | null | undefined;
+  duration?: number;
+  pad?: boolean;
+}) {
   const spanRef = useRef<HTMLSpanElement>(null);
   const numValue = Number(value) || 0;
 
@@ -36,47 +44,91 @@ function AnimatedNumber({ value, duration = 0.8, pad = false }: { value: number 
 
 function StatIcon({ type }: { type: 'pending' | 'approved' | 'declined' | 'expired' }) {
   const colors: Record<string, { bg: string; fg: string }> = {
-    pending:  { bg: '#dcfce7', fg: '#15803d' },
+    pending: { bg: '#dcfce7', fg: '#15803d' },
     approved: { bg: '#d1fae5', fg: '#059669' },
     declined: { bg: '#fee2e2', fg: '#dc2626' },
-    expired:  { bg: '#f1f5f1', fg: '#6b876b' },
+    expired: { bg: '#f1f5f1', fg: '#6b876b' },
   };
   const c = colors[type];
 
   const icons: Record<string, React.ReactNode> = {
     pending: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.fg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={c.fg}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
       </svg>
     ),
     approved: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.fg} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={c.fg}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
       </svg>
     ),
     declined: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.fg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={c.fg}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
       </svg>
     ),
     expired: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.fg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /><line x1="4" y1="4" x2="20" y2="20" />
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={c.fg}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+        <line x1="4" y1="4" x2="20" y2="20" />
       </svg>
     ),
   };
 
   return (
-    <div style={{
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      background: c.bg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    }}>
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        background: c.bg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
       {icons[type]}
     </div>
   );
@@ -112,12 +164,32 @@ function WeeklyFlightHoursChart({ data }: { data: WeeklyFlightHour[] }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#14532d', display: 'inline-block' }} />
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Domestic</span>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: '#14532d',
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+              Domestic
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#22c55e', display: 'inline-block' }} />
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>International</span>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: '#22c55e',
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+              International
+            </span>
           </div>
         </div>
       </div>
@@ -143,8 +215,20 @@ function WeeklyFlightHoursChart({ data }: { data: WeeklyFlightHour[] }) {
                     overflow: 'hidden',
                   }}
                 >
-                  <div style={{ height: `${intlPct / Math.max(pct, 1) * 100}%`, background: '#22c55e', minHeight: 2 }} />
-                  <div style={{ height: `${domesticPct / Math.max(pct, 1) * 100}%`, background: '#14532d', minHeight: 2 }} />
+                  <div
+                    style={{
+                      height: `${(intlPct / Math.max(pct, 1)) * 100}%`,
+                      background: '#22c55e',
+                      minHeight: 2,
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: `${(domesticPct / Math.max(pct, 1)) * 100}%`,
+                      background: '#14532d',
+                      minHeight: 2,
+                    }}
+                  />
                 </div>
               </div>
               <span style={styles.barLabel}>{formatDayLabel(day.date)}</span>
@@ -164,14 +248,27 @@ function AcceptanceRateGauge({ rate, delta }: { rate: number; delta?: string }) 
 
   return (
     <div style={styles.gaugeCard}>
-      <h3 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginBottom: 20, textAlign: 'center' as const }}>
+      <h3
+        style={{
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.06em',
+          color: 'var(--color-text-muted)',
+          marginBottom: 20,
+          textAlign: 'center' as const,
+        }}
+      >
         Acceptance Rate
       </h3>
       <div style={{ position: 'relative', width: 140, height: 140, margin: '0 auto' }}>
         <svg width="140" height="140" viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="52" fill="none" stroke="#d5e0d5" strokeWidth="8" />
           <circle
-            cx="60" cy="60" r="52" fill="none"
+            cx="60"
+            cy="60"
+            r="52"
+            fill="none"
             stroke="#15803d"
             strokeWidth="8"
             strokeLinecap="round"
@@ -181,28 +278,63 @@ function AcceptanceRateGauge({ rate, delta }: { rate: number; delta?: string }) 
             style={{ transition: 'stroke-dashoffset 1s ease' }}
           />
         </svg>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: 800,
+              color: 'var(--color-text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
             {rate.toFixed(1)}%
           </span>
           {delta && (
-            <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+            <span
+              style={{
+                fontSize: '0.75rem',
+                color: '#16a34a',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#16a34a"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
               </svg>
               {delta}
             </span>
           )}
         </div>
       </div>
-      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textAlign: 'center' as const, marginTop: 16 }}>
+      <p
+        style={{
+          fontSize: '0.8rem',
+          color: 'var(--color-text-muted)',
+          textAlign: 'center' as const,
+          marginTop: 16,
+        }}
+      >
         Performance is above targets
       </p>
     </div>
@@ -213,21 +345,68 @@ function AcceptanceRateGauge({ rate, delta }: { rate: number; delta?: string }) 
 
 function QuickShortcuts() {
   const shortcuts = [
-    { label: 'Reschedule Flight', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ), href: '/queue' },
-    { label: 'Export Logbook', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
-    ), href: '/reservations' },
-    { label: 'Request Pilot', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
-      </svg>
-    ), href: '/discovery' },
+    {
+      label: 'Reschedule Flight',
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      ),
+      href: '/queue',
+    },
+    {
+      label: 'Export Logbook',
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      ),
+      href: '/reservations',
+    },
+    {
+      label: 'Request Pilot',
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg>
+      ),
+      href: '/discovery',
+    },
   ];
 
   return (
@@ -236,8 +415,21 @@ function QuickShortcuts() {
       {shortcuts.map((s, i) => (
         <Link key={i} href={s.href} style={styles.shortcutItem}>
           <span style={{ color: 'var(--color-text-muted)' }}>{s.icon}</span>
-          <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>{s.label}</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <span
+            style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}
+          >
+            {s.label}
+          </span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </Link>
@@ -281,7 +473,7 @@ export default function DashboardPage() {
         duration: 0.4,
         ease: 'power2.out',
         stagger: 0.08,
-      }
+      },
     );
   }, [stats]);
 
@@ -291,7 +483,9 @@ export default function DashboardPage() {
       <div style={styles.pageHeader}>
         <div>
           <h1 style={styles.pageTitle}>Flight Schedule</h1>
-          <p style={styles.pageSubtitle}>Manage your upcoming journeys and fleet operations with precision.</p>
+          <p style={styles.pageSubtitle}>
+            Manage your upcoming journeys and fleet operations with precision.
+          </p>
         </div>
       </div>
 
@@ -303,13 +497,19 @@ export default function DashboardPage() {
           <div style={styles.statsGrid}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="stat-card" style={{ opacity: 0.5 }}>
-                <div className="skeleton" style={{ width: 100, height: 12, borderRadius: 4, marginBottom: 12 }} />
+                <div
+                  className="skeleton"
+                  style={{ width: 100, height: 12, borderRadius: 4, marginBottom: 12 }}
+                />
                 <div className="skeleton" style={{ width: 60, height: 36, borderRadius: 6 }} />
               </div>
             ))}
           </div>
           <div className="card" style={{ padding: 24, marginBottom: 24, opacity: 0.5 }}>
-            <div className="skeleton" style={{ width: 140, height: 14, borderRadius: 4, marginBottom: 16 }} />
+            <div
+              className="skeleton"
+              style={{ width: 140, height: 14, borderRadius: 4, marginBottom: 16 }}
+            />
             <div className="skeleton" style={{ width: '100%', height: 160, borderRadius: 8 }} />
           </div>
         </>
@@ -318,18 +518,53 @@ export default function DashboardPage() {
           {/* Stats cards */}
           <div ref={statsGridRef} style={styles.statsGrid}>
             {[
-              { key: 'pending', label: 'Pending', value: stats.pendingSuggestions, type: 'pending' as const },
-              { key: 'approved', label: 'Approved\nToday', value: stats.approvedToday, type: 'approved' as const },
-              { key: 'declined', label: 'Declined Today', value: stats.declinedToday, type: 'declined' as const },
-              { key: 'expired', label: 'Expired Today', value: stats.expiredToday, type: 'expired' as const },
+              {
+                key: 'pending',
+                label: 'Pending',
+                value: stats.pendingSuggestions,
+                type: 'pending' as const,
+              },
+              {
+                key: 'approved',
+                label: 'Approved\nToday',
+                value: stats.approvedToday,
+                type: 'approved' as const,
+              },
+              {
+                key: 'declined',
+                label: 'Declined Today',
+                value: stats.declinedToday,
+                type: 'declined' as const,
+              },
+              {
+                key: 'expired',
+                label: 'Expired Today',
+                value: stats.expiredToday,
+                type: 'expired' as const,
+              },
             ].map((card) => (
               <div key={card.key} className="stat-card" style={styles.statCardInner}>
                 <StatIcon type={card.type} />
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 4 }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--color-text-muted)',
+                      fontWeight: 500,
+                      marginBottom: 4,
+                    }}
+                  >
                     {card.label.replace('\n', ' ')}
                   </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  <div
+                    style={{
+                      fontSize: '1.75rem',
+                      fontWeight: 700,
+                      color: 'var(--color-text)',
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1,
+                    }}
+                  >
                     <AnimatedNumber value={card.value} pad />
                   </div>
                 </div>
@@ -346,7 +581,15 @@ export default function DashboardPage() {
               )}
             </div>
             {/* Right column: Rate + Shortcuts */}
-            <div style={{ flex: '0.8 1 300px', display: 'flex', flexDirection: 'column' as const, gap: 20, minWidth: 280 }}>
+            <div
+              style={{
+                flex: '0.8 1 300px',
+                display: 'flex',
+                flexDirection: 'column' as const,
+                gap: 20,
+                minWidth: 280,
+              }}
+            >
               <AcceptanceRateGauge
                 rate={stats.acceptanceRate ?? 0}
                 delta={stats.weeklyFlightHoursDelta ? `+${stats.weeklyFlightHoursDelta}` : '+2.4%'}

@@ -35,25 +35,37 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
     }
 
     // ── 2. Schedule repeatable jobs ───────────────────────────────────
-    await this.pollQueue.add('poll', { checkPendingLessons: true }, {
-      repeat: { every: 3 * 60 * 1000 },
-      removeOnComplete: { count: 50 },
-      removeOnFail: { count: 20 },
-    });
+    await this.pollQueue.add(
+      'poll',
+      { checkPendingLessons: true },
+      {
+        repeat: { every: 3 * 60 * 1000 },
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
+    );
     this.logger.log('Scheduled poll-schedule (every 3 min)');
 
-    await this.expireQueue.add('expire', {}, {
-      repeat: { every: 10 * 60 * 1000 },
-      removeOnComplete: { count: 50 },
-      removeOnFail: { count: 20 },
-    });
+    await this.expireQueue.add(
+      'expire',
+      {},
+      {
+        repeat: { every: 10 * 60 * 1000 },
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
+    );
     this.logger.log('Scheduled expire-suggestions (every 10 min)');
 
     // ── 3. Immediate poll on startup ──────────────────────────────────
-    await this.pollQueue.add('poll-immediate', { checkPendingLessons: true }, {
-      removeOnComplete: { count: 5 },
-      removeOnFail: { count: 5 },
-    });
+    await this.pollQueue.add(
+      'poll-immediate',
+      { checkPendingLessons: true },
+      {
+        removeOnComplete: { count: 5 },
+        removeOnFail: { count: 5 },
+      },
+    );
     this.logger.log('Enqueued immediate poll');
 
     // ── 4. Create manual Workers ──────────────────────────────────────
@@ -90,15 +102,28 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
     const { AiEnrichSuggestionJob } = await import('./jobs/ai-enrich-suggestion.job.js');
 
     // Instantiate processors with correct constructor args
-    const pollJob = new PollScheduleJob(fspScheduleService, fspAuthService, fspTrainingService, suggestionsQueue);
-    const genJob = new GenerateSuggestionsJob(fspTrainingService, fspResourceService, fspScheduleService, {} as any, aiEnrichQueue);
+    const pollJob = new PollScheduleJob(
+      fspScheduleService,
+      fspAuthService,
+      fspTrainingService,
+      suggestionsQueue,
+    );
+    const genJob = new GenerateSuggestionsJob(
+      fspTrainingService,
+      fspResourceService,
+      fspScheduleService,
+      {} as any,
+      aiEnrichQueue,
+    );
     const expireJob = new ExpireSuggestionsJob(fspScheduleService);
     const aiJob = new AiEnrichSuggestionJob(aiService);
 
     // SendNotificationJob needs NotificationService which has complex DI
     // For now, create a simple handler that logs
     const sendHandler = async (job: Job) => {
-      this.logger.log(`Notification job ${job.id}: would send notification for suggestion ${job.data?.suggestionId}`);
+      this.logger.log(
+        `Notification job ${job.id}: would send notification for suggestion ${job.data?.suggestionId}`,
+      );
     };
 
     const jobs: Array<{ name: string; handler: (job: Job) => Promise<unknown> }> = [
@@ -126,7 +151,7 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await Promise.all(this.workers.map(w => w.close()));
+    await Promise.all(this.workers.map((w) => w.close()));
     this.logger.log('All workers closed');
   }
 }

@@ -23,7 +23,12 @@ export function isAuthenticated(): boolean {
   return getToken() !== null;
 }
 
-export function getStoredUser(): { userId: string; email: string; operatorId: number; permissions: string[] } | null {
+export function getStoredUser(): {
+  userId: string;
+  email: string;
+  operatorId: number;
+  permissions: string[];
+} | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
@@ -34,7 +39,12 @@ export function getStoredUser(): { userId: string; email: string; operatorId: nu
   }
 }
 
-export function setStoredUser(user: { userId: string; email: string; operatorId: number; permissions: string[] }): void {
+export function setStoredUser(user: {
+  userId: string;
+  email: string;
+  operatorId: number;
+  permissions: string[];
+}): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }

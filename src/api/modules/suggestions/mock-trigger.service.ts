@@ -38,9 +38,7 @@ import type { AiEnrichPayload } from '../../../worker/jobs/ai-enrich-suggestion.
 export class MockTriggerService {
   private readonly logger = new Logger(MockTriggerService.name);
 
-  constructor(
-    @InjectQueue('ai-enrich-suggestion') private readonly aiEnrichQueue: Queue,
-  ) {}
+  constructor(@InjectQueue('ai-enrich-suggestion') private readonly aiEnrichQueue: Queue) {}
 
   /**
    * Generate mock suggestions from real DB data and enqueue AI enrichment.
@@ -53,7 +51,10 @@ export class MockTriggerService {
    * 5. Insert pending suggestions with shared groupId
    * 6. Enqueue ai-enrich-suggestion jobs
    */
-  async trigger(operatorId: number, userId: string): Promise<{ suggestionIds: string[]; count: number }> {
+  async trigger(
+    operatorId: number,
+    userId: string,
+  ): Promise<{ suggestionIds: string[]; count: number }> {
     // ── 1. Load real entities ──────────────────────────────────────────────
     const [studentRows, instructorRows, aircraftRows, activityTypeRows, policyRows] =
       await Promise.all([
@@ -140,7 +141,7 @@ export class MockTriggerService {
     // ── 4. Run ranking algorithm ───────────────────────────────────────────
     const weights: RankingWeights = {
       ...DEFAULT_RANKING_WEIGHTS,
-      ...(policy?.waitlistWeights as Partial<RankingWeights> ?? {}),
+      ...((policy?.waitlistWeights as Partial<RankingWeights>) ?? {}),
     };
     const ranked = rankWaitlistCandidates(rankingInputs, weights);
     const topCandidates = ranked.slice(0, Math.min(maxSuggestions, ranked.length));
@@ -150,11 +151,13 @@ export class MockTriggerService {
     const activeAircraft = aircraftRows.filter((a) => a.isActive && !a.isSimulator);
     const activeActivityTypes = activityTypeRows.filter((a) => a.isActive);
 
-    const openingInstructor = activeInstructors[Math.floor(Math.random() * activeInstructors.length)]!;
+    const openingInstructor =
+      activeInstructors[Math.floor(Math.random() * activeInstructors.length)]!;
     const openingAircraft = activeAircraft[Math.floor(Math.random() * activeAircraft.length)]!;
-    const openingActivity = activeActivityTypes.length > 0
-      ? activeActivityTypes[Math.floor(Math.random() * activeActivityTypes.length)]!
-      : null;
+    const openingActivity =
+      activeActivityTypes.length > 0
+        ? activeActivityTypes[Math.floor(Math.random() * activeActivityTypes.length)]!
+        : null;
 
     // Mock opening: tomorrow 10:00-12:00 local time
     const tomorrow = new Date(now);
@@ -174,17 +177,37 @@ export class MockTriggerService {
     for (const candidate of topCandidates) {
       // Build mock constraint results (all pass in mock mode)
       const constraintResults: ConstraintResult[] = [
-        { passed: true, constraint: 'student_availability', details: `Student ${candidate.studentId} assumed available (mock)` },
-        { passed: true, constraint: 'instructor_availability', details: `Instructor ${openingInstructor.id} assumed available (mock)` },
-        { passed: true, constraint: 'daylight_hours', details: 'Proposed time 10:00-12:00 is within daylight hours (mock)' },
-        { passed: true, constraint: 'activity_type', details: openingActivity ? `Activity type ${openingActivity.name} specified` : 'No activity type (mock)' },
+        {
+          passed: true,
+          constraint: 'student_availability',
+          details: `Student ${candidate.studentId} assumed available (mock)`,
+        },
+        {
+          passed: true,
+          constraint: 'instructor_availability',
+          details: `Instructor ${openingInstructor.id} assumed available (mock)`,
+        },
+        {
+          passed: true,
+          constraint: 'daylight_hours',
+          details: 'Proposed time 10:00-12:00 is within daylight hours (mock)',
+        },
+        {
+          passed: true,
+          constraint: 'activity_type',
+          details: openingActivity
+            ? `Activity type ${openingActivity.name} specified`
+            : 'No activity type (mock)',
+        },
       ];
 
       // Policy notes based on real operator policy
       const policyNotes: string[] = [];
       if (policy) {
         policyNotes.push(`TTL: ${ttlHours}h`);
-        policyNotes.push(`Search window: ${policy.searchWindowInitialDays}-${policy.searchWindowMaxDays}d`);
+        policyNotes.push(
+          `Search window: ${policy.searchWindowInitialDays}-${policy.searchWindowMaxDays}d`,
+        );
         policyNotes.push(`Max alternatives: ${maxSuggestions}`);
       } else {
         policyNotes.push('Using default policy settings');
@@ -210,22 +233,25 @@ export class MockTriggerService {
       });
 
       // Insert the suggestion
-      const [inserted] = await db.insert(suggestions).values({
-        operatorId,
-        type: 'waitlist',
-        status: 'pending',
-        locationId,
-        studentId: candidate.studentId,
-        instructorId: openingInstructor.id,
-        aircraftId: openingAircraft.id,
-        activityTypeId: openingActivity?.id ?? null,
-        proposedStart,
-        proposedEnd,
-        rankingScore: candidate.score.toFixed(4),
-        rationale,
-        groupId,
-        expiresAt,
-      }).returning({ id: suggestions.id });
+      const [inserted] = await db
+        .insert(suggestions)
+        .values({
+          operatorId,
+          type: 'waitlist',
+          status: 'pending',
+          locationId,
+          studentId: candidate.studentId,
+          instructorId: openingInstructor.id,
+          aircraftId: openingAircraft.id,
+          activityTypeId: openingActivity?.id ?? null,
+          proposedStart,
+          proposedEnd,
+          rankingScore: candidate.score.toFixed(4),
+          rationale,
+          groupId,
+          expiresAt,
+        })
+        .returning({ id: suggestions.id });
 
       if (inserted) {
         suggestionIds.push(inserted.id);
@@ -261,7 +287,7 @@ export class MockTriggerService {
 
     this.logger.log(
       `Mock trigger: created ${suggestionIds.length} suggestions for operator ${operatorId} ` +
-      `(group ${groupId.slice(0, 8)}..., AI enrichment queued)`,
+        `(group ${groupId.slice(0, 8)}..., AI enrichment queued)`,
     );
 
     return { suggestionIds, count: suggestionIds.length };

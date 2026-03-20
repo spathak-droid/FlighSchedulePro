@@ -131,13 +131,12 @@ export class PollScheduleJob extends WorkerHost {
         // Run less frequently than schedule polling (default every 30 min)
         if (job.data.checkPendingLessons !== false) {
           try {
-            const lessonToken = op.fspToken ?? (process.env.FSP_MOCK_MODE === 'true' ? 'mock-poll-token' : null);
+            const lessonToken =
+              op.fspToken ?? (process.env.FSP_MOCK_MODE === 'true' ? 'mock-poll-token' : null);
             await this.checkPendingLessonsIfDue(op.id, lessonToken);
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            this.logger.error(
-              `T091: Pending-lesson check failed for operator ${op.id}: ${msg}`,
-            );
+            this.logger.error(`T091: Pending-lesson check failed for operator ${op.id}: ${msg}`);
           }
 
           // ── Inactive student outreach ─────────────────────────────────
@@ -185,7 +184,11 @@ export class PollScheduleJob extends WorkerHost {
       .where(eq(operators.status, 'active'));
   }
 
-  private async pollOperator(operatorId: number, operatorName: string, fspToken: string | null): Promise<void> {
+  private async pollOperator(
+    operatorId: number,
+    operatorName: string,
+    fspToken: string | null,
+  ): Promise<void> {
     const isMockMode = process.env.FSP_MOCK_MODE === 'true';
     const token = fspToken ?? (isMockMode ? 'mock-poll-token' : null);
     if (!token) {
@@ -218,15 +221,11 @@ export class PollScheduleJob extends WorkerHost {
     const endDate = new Date(now.getTime() + searchWindowDays * 24 * 60 * 60 * 1000);
 
     // Fetch current schedule from FSP
-    const scheduleResponse = await this.fspScheduleService.getSchedule(
-      operatorId,
-      effectiveToken,
-      {
-        start: toFspLocalTime(now),
-        end: toFspLocalTime(endDate),
-        locationIds: [], // empty = all locations
-      },
-    );
+    const scheduleResponse = await this.fspScheduleService.getSchedule(operatorId, effectiveToken, {
+      start: toFspLocalTime(now),
+      end: toFspLocalTime(endDate),
+      locationIds: [], // empty = all locations
+    });
 
     const currentEvents: FspScheduleEvent[] = scheduleResponse.results?.events ?? [];
 
@@ -274,7 +273,7 @@ export class PollScheduleJob extends WorkerHost {
     // Since we don't store the full previous schedule, we can only detect
     // openings when we have a previous snapshot. On first poll, we just
     // store the baseline hash.
-    let openings: Array<{
+    const openings: Array<{
       start: string;
       end: string;
       locationId: string;
@@ -327,18 +326,12 @@ export class PollScheduleJob extends WorkerHost {
         detectedAt: now.toISOString(),
       };
 
-      await this.suggestionsQueue.add(
-        `generate-${operatorId}-${Date.now()}`,
-        changePayload,
-        {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-        },
-      );
+      await this.suggestionsQueue.add(`generate-${operatorId}-${Date.now()}`, changePayload, {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      });
 
-      this.logger.log(
-        `Enqueued generate-suggestions job for operator ${operatorId}`,
-      );
+      this.logger.log(`Enqueued generate-suggestions job for operator ${operatorId}`);
     } else {
       this.logger.log(
         `First poll for operator ${operatorId} — baseline hash stored, no suggestions generated`,
@@ -389,15 +382,13 @@ export class PollScheduleJob extends WorkerHost {
       if (elapsed < intervalMinutes) {
         this.logger.debug(
           `T091: Skipping pending-lesson check for operator ${operatorId} — ` +
-          `last check was ${Math.round(elapsed)}min ago (interval: ${intervalMinutes}min)`,
+            `last check was ${Math.round(elapsed)}min ago (interval: ${intervalMinutes}min)`,
         );
         return;
       }
     }
 
-    this.logger.log(
-      `T091: Running pending-lesson check for operator ${operatorId}`,
-    );
+    this.logger.log(`T091: Running pending-lesson check for operator ${operatorId}`);
 
     this.lastPendingLessonCheck.set(operatorId, now);
 
@@ -415,10 +406,7 @@ export class PollScheduleJob extends WorkerHost {
    * For each such student, enqueue a 'generate-suggestions' job
    * with type='next_lesson'.
    */
-  private async detectPendingLessons(
-    operatorId: number,
-    fspToken: string,
-  ): Promise<void> {
+  private async detectPendingLessons(operatorId: number, fspToken: string): Promise<void> {
     // Step 1: Get all students for this operator
     const students = await this.fspTrainingService.getStudents(operatorId, fspToken);
 
@@ -453,9 +441,7 @@ export class PollScheduleJob extends WorkerHost {
     }
 
     // Build a set of student IDs who already have upcoming reservations
-    const studentsWithReservations = new Set<string>(
-      upcomingReservations.map((r) => r.pilotId),
-    );
+    const studentsWithReservations = new Set<string>(upcomingReservations.map((r) => r.pilotId));
 
     // Step 3: For each student without upcoming reservations, check enrollments
     let enqueued = 0;
@@ -518,7 +504,7 @@ export class PollScheduleJob extends WorkerHost {
 
             this.logger.debug(
               `T091: Enqueued next-lesson job for student ${student.id}, ` +
-              `enrollment ${enrollment.id} (${enrollment.courseName})`,
+                `enrollment ${enrollment.id} (${enrollment.courseName})`,
             );
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
@@ -529,16 +515,12 @@ export class PollScheduleJob extends WorkerHost {
         }
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        this.logger.warn(
-          `T091: Could not check enrollments for student ${student.id}: ${msg}`,
-        );
+        this.logger.warn(`T091: Could not check enrollments for student ${student.id}: ${msg}`);
       }
     }
 
     if (enqueued > 0) {
-      this.logger.log(
-        `T091: Enqueued ${enqueued} next-lesson jobs for operator ${operatorId}`,
-      );
+      this.logger.log(`T091: Enqueued ${enqueued} next-lesson jobs for operator ${operatorId}`);
 
       await db.insert(auditEvents).values({
         operatorId,
@@ -552,9 +534,7 @@ export class PollScheduleJob extends WorkerHost {
         },
       });
     } else {
-      this.logger.debug(
-        `T091: No pending-lesson candidates found for operator ${operatorId}`,
-      );
+      this.logger.debug(`T091: No pending-lesson candidates found for operator ${operatorId}`);
     }
   }
 
@@ -567,10 +547,9 @@ export class PollScheduleJob extends WorkerHost {
     const [flag] = await db
       .select()
       .from(featureFlags)
-      .where(and(
-        eq(featureFlags.operatorId, operatorId),
-        eq(featureFlags.flagName, 'student_insights'),
-      ))
+      .where(
+        and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, 'student_insights')),
+      )
       .limit(1);
 
     if (!flag?.enabled) return;
@@ -599,8 +578,8 @@ export class PollScheduleJob extends WorkerHost {
         ),
       );
 
-    const recentFlyerIds = new Set(recentFlyers.map(r => r.studentId));
-    const inactiveStudents = allStudents.filter(s => !recentFlyerIds.has(s.id));
+    const recentFlyerIds = new Set(recentFlyers.map((r) => r.studentId));
+    const inactiveStudents = allStudents.filter((s) => !recentFlyerIds.has(s.id));
 
     if (inactiveStudents.length === 0) return;
 
@@ -616,7 +595,7 @@ export class PollScheduleJob extends WorkerHost {
         ),
       );
 
-    const alreadyTargeted = new Set(existingOutreach.map(s => s.studentId));
+    const alreadyTargeted = new Set(existingOutreach.map((s) => s.studentId));
 
     // Also filter students with upcoming reservations
     const withUpcoming = await db
@@ -630,10 +609,10 @@ export class PollScheduleJob extends WorkerHost {
         ),
       );
 
-    const hasUpcoming = new Set(withUpcoming.map(r => r.studentId));
+    const hasUpcoming = new Set(withUpcoming.map((r) => r.studentId));
 
     const candidates = inactiveStudents.filter(
-      s => !alreadyTargeted.has(s.id) && !hasUpcoming.has(s.id),
+      (s) => !alreadyTargeted.has(s.id) && !hasUpcoming.has(s.id),
     );
 
     if (candidates.length === 0) return;
@@ -657,7 +636,7 @@ export class PollScheduleJob extends WorkerHost {
 
     this.logger.log(
       `Inactive student outreach: ${enqueued} candidates for operator ${operatorId} ` +
-      `(${inactiveStudents.length} inactive, ${alreadyTargeted.size} already targeted, ${hasUpcoming.size} have upcoming)`,
+        `(${inactiveStudents.length} inactive, ${alreadyTargeted.size} already targeted, ${hasUpcoming.size} have upcoming)`,
     );
 
     await db.insert(auditEvents).values({

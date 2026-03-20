@@ -15,7 +15,11 @@ function formatTimeRange(start: string, end: string): string {
   try {
     const s = new Date(start);
     const e = new Date(end);
-    const date = s.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const date = s.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
     const startTime = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     const endTime = e.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return `${date}, ${startTime} \u2013 ${endTime}`;
@@ -54,11 +58,17 @@ const TYPE_BORDER_COLORS: Record<string, string> = {
   next_lesson: '#14b8a6',
 };
 
-export default function SuggestionCard({ suggestion, onApprove, onDecline, loading }: SuggestionCardProps) {
+export default function SuggestionCard({
+  suggestion,
+  onApprove,
+  onDecline,
+  loading,
+}: SuggestionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isPending = suggestion.status === 'pending';
   const borderColor = TYPE_BORDER_COLORS[suggestion.type] || '#3b82f6';
-  const scorePercent = suggestion.rankingScore !== undefined ? Math.round(Number(suggestion.rankingScore)) : null;
+  const scorePercent =
+    suggestion.rankingScore !== undefined ? Math.round(Number(suggestion.rankingScore)) : null;
   const cardRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -95,7 +105,15 @@ export default function SuggestionCard({ suggestion, onApprove, onDecline, loadi
 
       {/* Time */}
       <div style={styles.timeRow}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          style={{ flexShrink: 0 }}
+        >
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>

@@ -54,11 +54,7 @@ export class AuthController {
       });
     }
 
-    return this.authService.mfa(
-      parsed.data.mfaToken,
-      parsed.data.mfaCode,
-      parsed.data.mfaMethod,
-    );
+    return this.authService.mfa(parsed.data.mfaToken, parsed.data.mfaCode, parsed.data.mfaMethod);
   }
 
   /**
@@ -83,17 +79,13 @@ export class AuthController {
     await this.authService.logout(token);
   }
 
-  private extractToken(request: {
-    headers: Record<string, string | undefined>;
-  }): string {
+  private extractToken(request: { headers: Record<string, string | undefined> }): string {
     const authorization = request.headers.authorization ?? '';
     const [, token] = authorization.split(' ');
     return token ?? '';
   }
 
   private formatZodErrors(error: ZodError): string[] {
-    return error.errors.map(
-      (e) => `${e.path.join('.')}: ${e.message}`,
-    );
+    return error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
   }
 }

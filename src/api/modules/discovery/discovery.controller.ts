@@ -54,10 +54,7 @@ export class DiscoveryController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createDiscoveryFlight(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: CreateDiscoveryBody,
-  ) {
+  async createDiscoveryFlight(@Req() req: AuthenticatedRequest, @Body() body: CreateDiscoveryBody) {
     // Validate required fields
     if (!body.firstName || !body.lastName) {
       throw new BadRequestException('firstName and lastName are required');

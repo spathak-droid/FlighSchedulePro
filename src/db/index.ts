@@ -10,7 +10,8 @@ let _db: NodePgDatabase<typeof schema> | undefined;
 function getPool(): pg.Pool {
   if (!_pool) {
     _pool = new Pool({
-      connectionString: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/fsp_scheduler',
+      connectionString:
+        process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/fsp_scheduler',
     });
   }
   return _pool;

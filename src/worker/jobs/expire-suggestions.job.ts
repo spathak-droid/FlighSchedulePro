@@ -31,9 +31,7 @@ export interface ExpireSuggestionsJobData {
 export class ExpireSuggestionsJob extends WorkerHost {
   private readonly logger = new Logger(ExpireSuggestionsJob.name);
 
-  constructor(
-    private readonly fspScheduleService: FspScheduleService,
-  ) {
+  constructor(private readonly fspScheduleService: FspScheduleService) {
     super();
   }
 
@@ -77,12 +75,7 @@ export class ExpireSuggestionsJob extends WorkerHost {
         expiredReason: 'ttl_exceeded',
         updatedAt: now,
       })
-      .where(
-        and(
-          eq(suggestions.status, 'pending'),
-          lt(suggestions.expiresAt, now),
-        ),
-      )
+      .where(and(eq(suggestions.status, 'pending'), lt(suggestions.expiresAt, now)))
       .returning({ id: suggestions.id, operatorId: suggestions.operatorId });
 
     if (expired.length > 0) {
@@ -176,9 +169,7 @@ export class ExpireSuggestionsJob extends WorkerHost {
         totalExpired += expired;
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        this.logger.warn(
-          `Could not check slot-filled for operator ${operatorId}: ${msg}`,
-        );
+        this.logger.warn(`Could not check slot-filled for operator ${operatorId}: ${msg}`);
       }
     }
 
@@ -218,15 +209,11 @@ export class ExpireSuggestionsJob extends WorkerHost {
     }
 
     // Fetch current reservations from FSP for this time range
-    const reservations = await this.fspScheduleService.getReservations(
-      operatorId,
-      op.fspToken,
-      {
-        dateRangeType: 3, // Custom range
-        startRange: toFspLocalTime(minStart),
-        endRange: toFspLocalTime(maxEnd),
-      },
-    );
+    const reservations = await this.fspScheduleService.getReservations(operatorId, op.fspToken, {
+      dateRangeType: 3, // Custom range
+      startRange: toFspLocalTime(minStart),
+      endRange: toFspLocalTime(maxEnd),
+    });
 
     const currentReservations = reservations.results ?? [];
 

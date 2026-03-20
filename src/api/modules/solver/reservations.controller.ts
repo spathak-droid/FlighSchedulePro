@@ -90,10 +90,7 @@ export class ReservationsController {
    */
   @Post('solver/find-time')
   @HttpCode(HttpStatus.OK)
-  async findTime(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: FindTimeBody,
-  ) {
+  async findTime(@Req() req: AuthenticatedRequest, @Body() body: FindTimeBody) {
     if (!body.studentId || !body.activityTypeId || !body.dateRangeStart || !body.dateRangeEnd) {
       throw new BadRequestException(
         'studentId, activityTypeId, dateRangeStart, and dateRangeEnd are required',
@@ -137,10 +134,7 @@ export class ReservationsController {
    */
   @Post('solver/optimize')
   @HttpCode(HttpStatus.OK)
-  async optimizeDay(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: OptimizeBody,
-  ) {
+  async optimizeDay(@Req() req: AuthenticatedRequest, @Body() body: OptimizeBody) {
     if (!body.date) {
       throw new BadRequestException('date is required (YYYY-MM-DD format)');
     }
@@ -164,11 +158,12 @@ export class ReservationsController {
    */
   @Post('reservations/batch')
   @HttpCode(HttpStatus.CREATED)
-  async batchCreate(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: BatchCreateBody,
-  ) {
-    if (!body.suggestionIds || !Array.isArray(body.suggestionIds) || body.suggestionIds.length === 0) {
+  async batchCreate(@Req() req: AuthenticatedRequest, @Body() body: BatchCreateBody) {
+    if (
+      !body.suggestionIds ||
+      !Array.isArray(body.suggestionIds) ||
+      body.suggestionIds.length === 0
+    ) {
       throw new BadRequestException('suggestionIds must be a non-empty array of UUIDs');
     }
 
@@ -245,46 +240,77 @@ export class ReservationsController {
       .offset(offset);
 
     // Enrich with names
-    const studentIds = [...new Set(rows.map(r => r.studentId).filter(Boolean))];
-    const instructorIds = [...new Set(rows.map(r => r.instructorId).filter(Boolean))] as string[];
-    const aircraftIds = [...new Set(rows.map(r => r.aircraftId).filter(Boolean))] as string[];
-    const atIds = [...new Set(rows.map(r => r.activityTypeId).filter(Boolean))] as string[];
+    const studentIds = [...new Set(rows.map((r) => r.studentId).filter(Boolean))];
+    const instructorIds = [...new Set(rows.map((r) => r.instructorId).filter(Boolean))] as string[];
+    const aircraftIds = [...new Set(rows.map((r) => r.aircraftId).filter(Boolean))] as string[];
+    const atIds = [...new Set(rows.map((r) => r.activityTypeId).filter(Boolean))] as string[];
 
     const [stuRows, instRows, acRows, atRows] = await Promise.all([
-      studentIds.length > 0 ? db.select({ id: students.id, firstName: students.firstName, lastName: students.lastName }).from(students).where(inArray(students.id, studentIds)) : [],
-      instructorIds.length > 0 ? db.select({ id: instructors.id, firstName: instructors.firstName, lastName: instructors.lastName }).from(instructors).where(inArray(instructors.id, instructorIds)) : [],
-      aircraftIds.length > 0 ? db.select({ id: aircraft.id, registration: aircraft.registration }).from(aircraft).where(inArray(aircraft.id, aircraftIds)) : [],
-      atIds.length > 0 ? db.select({ id: activityTypes.id, name: activityTypes.name }).from(activityTypes).where(inArray(activityTypes.id, atIds)) : [],
+      studentIds.length > 0
+        ? db
+            .select({ id: students.id, firstName: students.firstName, lastName: students.lastName })
+            .from(students)
+            .where(inArray(students.id, studentIds))
+        : [],
+      instructorIds.length > 0
+        ? db
+            .select({
+              id: instructors.id,
+              firstName: instructors.firstName,
+              lastName: instructors.lastName,
+            })
+            .from(instructors)
+            .where(inArray(instructors.id, instructorIds))
+        : [],
+      aircraftIds.length > 0
+        ? db
+            .select({ id: aircraft.id, registration: aircraft.registration })
+            .from(aircraft)
+            .where(inArray(aircraft.id, aircraftIds))
+        : [],
+      atIds.length > 0
+        ? db
+            .select({ id: activityTypes.id, name: activityTypes.name })
+            .from(activityTypes)
+            .where(inArray(activityTypes.id, atIds))
+        : [],
     ]);
 
-    const stuMap = new Map(stuRows.map(s => [s.id, `${s.firstName} ${s.lastName}`]));
-    const instMap = new Map(instRows.map(i => [i.id, `${i.firstName} ${i.lastName}`]));
-    const acMap = new Map(acRows.map(a => [a.id, a.registration]));
-    const atMap = new Map(atRows.map(a => [a.id, a.name]));
+    const stuMap = new Map(stuRows.map((s) => [s.id, `${s.firstName} ${s.lastName}`]));
+    const instMap = new Map(instRows.map((i) => [i.id, `${i.firstName} ${i.lastName}`]));
+    const acMap = new Map(acRows.map((a) => [a.id, a.registration]));
+    const atMap = new Map(atRows.map((a) => [a.id, a.name]));
 
     // Look up suggestion source for each reservation
-    const resIds = rows.map(r => r.id);
-    const sourceRows = resIds.length > 0
-      ? await db
-          .select({
-            fspReservationId: suggestions.fspReservationId,
-            type: suggestions.type,
-            approvedBy: suggestions.approvedBy,
-          })
-          .from(suggestions)
-          .where(and(
-            eq(suggestions.operatorId, operatorId),
-            eq(suggestions.status, 'approved'),
-            inArray(suggestions.fspReservationId, resIds),
-          ))
-      : [];
-    const sourceMap = new Map(sourceRows.map(s => [s.fspReservationId, { type: s.type, approvedBy: s.approvedBy }]));
+    const resIds = rows.map((r) => r.id);
+    const sourceRows =
+      resIds.length > 0
+        ? await db
+            .select({
+              fspReservationId: suggestions.fspReservationId,
+              type: suggestions.type,
+              approvedBy: suggestions.approvedBy,
+            })
+            .from(suggestions)
+            .where(
+              and(
+                eq(suggestions.operatorId, operatorId),
+                eq(suggestions.status, 'approved'),
+                inArray(suggestions.fspReservationId, resIds),
+              ),
+            )
+        : [];
+    const sourceMap = new Map(
+      sourceRows.map((s) => [s.fspReservationId, { type: s.type, approvedBy: s.approvedBy }]),
+    );
 
-    const enriched = rows.map(r => {
+    const enriched = rows.map((r) => {
       const source = sourceMap.get(r.id);
       return {
         ...r,
-        studentName: r.studentId?.startsWith('prospect:') ? r.studentId.slice(9) : stuMap.get(r.studentId) ?? null,
+        studentName: r.studentId?.startsWith('prospect:')
+          ? r.studentId.slice(9)
+          : (stuMap.get(r.studentId) ?? null),
         instructorName: instMap.get(r.instructorId ?? '') ?? null,
         aircraftRegistration: acMap.get(r.aircraftId ?? '') ?? null,
         activityTypeName: atMap.get(r.activityTypeId ?? '') ?? null,
@@ -310,17 +336,13 @@ export class ReservationsController {
    * Get a single reservation by ID.
    */
   @Get('reservations/:id')
-  async getReservation(
-    @Req() req: AuthenticatedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  async getReservation(@Req() req: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
     const [row] = await db
       .select()
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.id, id),
-        eq(reservationHistory.operatorId, req.user.operatorId),
-      ))
+      .where(
+        and(eq(reservationHistory.id, id), eq(reservationHistory.operatorId, req.user.operatorId)),
+      )
       .limit(1);
 
     if (!row) {
@@ -348,10 +370,7 @@ export class ReservationsController {
     const [existing] = await db
       .select()
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.id, id),
-        eq(reservationHistory.operatorId, operatorId),
-      ))
+      .where(and(eq(reservationHistory.id, id), eq(reservationHistory.operatorId, operatorId)))
       .limit(1);
 
     if (!existing) {
@@ -368,10 +387,12 @@ export class ReservationsController {
       const [reasonRecord] = await db
         .select()
         .from(cancellationReasons)
-        .where(and(
-          eq(cancellationReasons.id, body.reasonId),
-          eq(cancellationReasons.operatorId, operatorId),
-        ))
+        .where(
+          and(
+            eq(cancellationReasons.id, body.reasonId),
+            eq(cancellationReasons.operatorId, operatorId),
+          ),
+        )
         .limit(1);
 
       if (reasonRecord) {
@@ -387,26 +408,30 @@ export class ReservationsController {
       .returning();
 
     // Enqueue suggestion generation for the freed slot
-    await this.suggestionsQueue.add(
-      `cancel-${operatorId}-${id}-${Date.now()}`,
-      {
-        operatorId,
-        openings: [{
-          start: existing.startTime?.toISOString() ?? new Date().toISOString(),
-          end: existing.endTime?.toISOString() ?? new Date().toISOString(),
-          locationId: existing.locationId ?? 'unknown',
-          type: 'cancellation' as const,
-          previousReservation: {
-            studentId: existing.studentId,
-            activityTypeId: existing.activityTypeId ?? '',
-            instructorId: existing.instructorId ?? undefined,
-            aircraftId: existing.aircraftId ?? undefined,
-          },
-        }],
-        detectedAt: new Date().toISOString(),
-      },
-      { attempts: 2, backoff: { type: 'exponential', delay: 3000 } },
-    ).catch(() => {}); // Non-blocking — don't fail the cancel if queue is down
+    await this.suggestionsQueue
+      .add(
+        `cancel-${operatorId}-${id}-${Date.now()}`,
+        {
+          operatorId,
+          openings: [
+            {
+              start: existing.startTime?.toISOString() ?? new Date().toISOString(),
+              end: existing.endTime?.toISOString() ?? new Date().toISOString(),
+              locationId: existing.locationId ?? 'unknown',
+              type: 'cancellation' as const,
+              previousReservation: {
+                studentId: existing.studentId,
+                activityTypeId: existing.activityTypeId ?? '',
+                instructorId: existing.instructorId ?? undefined,
+                aircraftId: existing.aircraftId ?? undefined,
+              },
+            },
+          ],
+          detectedAt: new Date().toISOString(),
+        },
+        { attempts: 2, backoff: { type: 'exponential', delay: 3000 } },
+      )
+      .catch(() => {}); // Non-blocking — don't fail the cancel if queue is down
 
     return {
       data: {
@@ -428,10 +453,12 @@ export class ReservationsController {
     const rows = await db
       .select()
       .from(cancellationReasons)
-      .where(and(
-        eq(cancellationReasons.operatorId, req.user.operatorId),
-        eq(cancellationReasons.isActive, true),
-      ))
+      .where(
+        and(
+          eq(cancellationReasons.operatorId, req.user.operatorId),
+          eq(cancellationReasons.isActive, true),
+        ),
+      )
       .orderBy(cancellationReasons.name);
 
     return { data: rows };

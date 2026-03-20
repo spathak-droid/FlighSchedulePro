@@ -44,12 +44,7 @@ export class FlightAlertsService {
     return db
       .select()
       .from(flightAlerts)
-      .where(
-        and(
-          eq(flightAlerts.operatorId, operatorId),
-          eq(flightAlerts.isResolved, false),
-        ),
-      )
+      .where(and(eq(flightAlerts.operatorId, operatorId), eq(flightAlerts.isResolved, false)))
       .orderBy(desc(flightAlerts.createdAt));
   }
 
@@ -72,7 +67,9 @@ export class FlightAlertsService {
       })
       .returning();
 
-    this.logger.log(`[ALERT] Created ${data.severity} alert: ${data.title} (operator ${data.operatorId})`);
+    this.logger.log(
+      `[ALERT] Created ${data.severity} alert: ${data.title} (operator ${data.operatorId})`,
+    );
     return alert!;
   }
 
@@ -105,12 +102,7 @@ export class FlightAlertsService {
     const [result] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(flightAlerts)
-      .where(
-        and(
-          eq(flightAlerts.operatorId, operatorId),
-          eq(flightAlerts.isResolved, false),
-        ),
-      );
+      .where(and(eq(flightAlerts.operatorId, operatorId), eq(flightAlerts.isResolved, false)));
 
     return result?.count ?? 0;
   }
@@ -126,12 +118,7 @@ export class FlightAlertsService {
     const operatorAircraft = await db
       .select()
       .from(aircraft)
-      .where(
-        and(
-          eq(aircraft.operatorId, operatorId),
-          eq(aircraft.isActive, true),
-        ),
-      );
+      .where(and(eq(aircraft.operatorId, operatorId), eq(aircraft.isActive, true)));
 
     // Get existing open maintenance alerts to avoid duplicates
     const existingAlerts = await db
@@ -146,7 +133,7 @@ export class FlightAlertsService {
       );
 
     const alertedAircraftIds = new Set(existingAlerts.map((a) => a.aircraftId));
-    let created = 0;
+    const created = 0;
 
     for (const ac of operatorAircraft) {
       if (alertedAircraftIds.has(ac.id)) continue;

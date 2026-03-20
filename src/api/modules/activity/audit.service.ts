@@ -44,7 +44,14 @@ export class AuditService {
     const offset = (page - 1) * pageSize;
 
     // Exclude noisy system events from the activity feed
-    const excludedTypes = ['sync.started', 'sync.completed', 'sync.failed', 'post_scan', 'post_resolve', 'post_refresh'];
+    const excludedTypes = [
+      'sync.started',
+      'sync.completed',
+      'sync.failed',
+      'post_scan',
+      'post_resolve',
+      'post_refresh',
+    ];
 
     const conditions: SQL[] = [
       eq(auditEvents.operatorId, params.operatorId),

@@ -42,9 +42,7 @@ export function getOperatorId(): number | undefined {
 export class CorrelationIdMiddleware implements NestMiddleware {
   use(req: any, res: any, next: () => void): void {
     const correlationId =
-      req.headers?.['x-request-id'] ??
-      req.headers?.['x-correlation-id'] ??
-      randomUUID();
+      req.headers?.['x-request-id'] ?? req.headers?.['x-correlation-id'] ?? randomUUID();
 
     // Attach to request for interceptors/guards
     req.correlationId = correlationId;

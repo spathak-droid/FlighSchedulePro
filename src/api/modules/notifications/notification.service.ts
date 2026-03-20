@@ -87,7 +87,7 @@ export class NotificationService {
   ): Promise<NotificationDispatchResult> {
     this.logger.log(
       `Dispatching ${params.notificationType} notification for operator ${operatorId} ` +
-      `to ${params.recipientType} ${params.recipientId}`,
+        `to ${params.recipientType} ${params.recipientId}`,
     );
 
     const result: NotificationDispatchResult = {
@@ -286,11 +286,7 @@ export class NotificationService {
    * Get a notification template for a given type and channel.
    * Returns null if no template exists (caller should use defaults).
    */
-  async getTemplate(
-    operatorId: number,
-    notificationType: string,
-    channel: string,
-  ) {
+  async getTemplate(operatorId: number, notificationType: string, channel: string) {
     const [template] = await db
       .select()
       .from(notificationTemplates)
@@ -421,16 +417,12 @@ export class NotificationService {
           recipientName = `${student.firstName} ${student.lastName}`;
         }
       } else {
-        this.logger.warn(
-          `Suggestion ${suggestion.id} has no student or prospect — skipping email`,
-        );
+        this.logger.warn(`Suggestion ${suggestion.id} has no student or prospect — skipping email`);
         return;
       }
 
       if (!recipientEmail) {
-        this.logger.warn(
-          `No email address for ${recipientType} ${recipientId!} — skipping email`,
-        );
+        this.logger.warn(`No email address for ${recipientType} ${recipientId!} — skipping email`);
         return;
       }
 
@@ -499,11 +491,7 @@ export class NotificationService {
       };
 
       // Load template
-      const template = await this.getTemplate(
-        operatorId,
-        suggestion.type,
-        'email',
-      );
+      const template = await this.getTemplate(operatorId, suggestion.type, 'email');
 
       let subject: string;
       let body: string;
@@ -518,7 +506,11 @@ export class NotificationService {
         // Wrap plain-text template body in HTML email layout
         const htmlBody = rendered.body
           .split('\n')
-          .map((line: string) => line.trim() ? `<p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0;">${line}</p>` : '')
+          .map((line: string) =>
+            line.trim()
+              ? `<p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0;">${line}</p>`
+              : '',
+          )
           .join('\n');
         body = this.wrapInEmailLayout(htmlBody, variables);
       } else {
@@ -605,10 +597,7 @@ export class NotificationService {
   /**
    * Get a default HTML email body for a given notification type.
    */
-  private getDefaultEmailBody(
-    notificationType: string,
-    variables: Record<string, string>,
-  ): string {
+  private getDefaultEmailBody(notificationType: string, variables: Record<string, string>): string {
     const v = variables;
     const wrapper = (content: string) => `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">

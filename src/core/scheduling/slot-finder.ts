@@ -121,8 +121,8 @@ function generateCandidateSlots(
     const dateStr = toDateString(current);
 
     // Check for overrides on this date
-    const override = availability.availabilityOverrides?.find(
-      (o: FspAvailabilityOverride) => o.date?.startsWith(dateStr),
+    const override = availability.availabilityOverrides?.find((o: FspAvailabilityOverride) =>
+      o.date?.startsWith(dateStr),
     );
 
     if (override) {
@@ -149,9 +149,10 @@ function generateCandidateSlots(
       }
     } else {
       // Use recurring availability for this day of week
-      const entries = availability.availabilities?.filter(
-        (a: FspAvailabilityEntry) => a.dayOfWeek === dayOfWeek,
-      ) ?? [];
+      const entries =
+        availability.availabilities?.filter(
+          (a: FspAvailabilityEntry) => a.dayOfWeek === dayOfWeek,
+        ) ?? [];
 
       for (const entry of entries) {
         const entryStart = parseTimeToMinutes(entry.startAtTimeUtc);
@@ -313,15 +314,11 @@ export async function findAvailableSlots(
 
     let availabilities: FspAvailability[] = [];
     try {
-      availabilities = await fspResourceService.getAvailability(
-        operatorId,
-        token,
-        {
-          userGuidIds: instructorIds,
-          startAtUtc: toFspLocal(windowStart),
-          endAtUtc: toFspLocal(windowEnd),
-        },
-      );
+      availabilities = await fspResourceService.getAvailability(operatorId, token, {
+        userGuidIds: instructorIds,
+        startAtUtc: toFspLocal(windowStart),
+        endAtUtc: toFspLocal(windowEnd),
+      });
     } catch {
       // If availability fetch fails, move to next window
       searchDays += config.incrementDays;
@@ -331,15 +328,11 @@ export async function findAvailableSlots(
     // Fetch existing schedule for conflict checking
     let existingEvents: FspScheduleEvent[] = [];
     try {
-      const scheduleResponse = await fspScheduleService.getSchedule(
-        operatorId,
-        token,
-        {
-          start: toFspLocal(windowStart),
-          end: toFspLocal(windowEnd),
-          locationIds: [Number(config.locationId)],
-        },
-      );
+      const scheduleResponse = await fspScheduleService.getSchedule(operatorId, token, {
+        start: toFspLocal(windowStart),
+        end: toFspLocal(windowEnd),
+        locationIds: [Number(config.locationId)],
+      });
       existingEvents = scheduleResponse.results?.events ?? [];
     } catch {
       // If schedule fetch fails, proceed without conflict checking
@@ -367,9 +360,17 @@ export async function findAvailableSlots(
         const instructorName = `${instructor.firstName} ${instructor.lastName}`;
 
         // Find the first aircraft without a conflict
-        let bestCraft: typeof activeAircraft[0] | null = null;
+        let bestCraft: (typeof activeAircraft)[0] | null = null;
         for (const craft of activeAircraft) {
-          if (!hasConflict(candidate.start, candidate.end, existingEvents, instructorName, craft.registration)) {
+          if (
+            !hasConflict(
+              candidate.start,
+              candidate.end,
+              existingEvents,
+              instructorName,
+              craft.registration,
+            )
+          ) {
             bestCraft = craft;
             break;
           }

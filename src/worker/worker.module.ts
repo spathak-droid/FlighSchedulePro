@@ -29,13 +29,8 @@ import { JobScheduler } from './job-scheduler.js';
       }),
     }),
 
-    BullModule.registerQueue(
-      { name: 'poll-schedule' },
-      { name: 'expire-suggestions' },
-    ),
+    BullModule.registerQueue({ name: 'poll-schedule' }, { name: 'expire-suggestions' }),
   ],
-  providers: [
-    JobScheduler,
-  ],
+  providers: [JobScheduler],
 })
 export class WorkerModule {}

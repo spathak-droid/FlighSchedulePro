@@ -6,8 +6,8 @@ import type { FlightAlert, FlightAlertSeverity } from '@/lib/types';
 
 const SEVERITY_COLORS: Record<FlightAlertSeverity, { dot: string; bg: string; border: string }> = {
   critical: { dot: '#dc2626', bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.2)' },
-  warning:  { dot: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.2)' },
-  info:     { dot: '#15803d', bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.2)' },
+  warning: { dot: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.2)' },
+  info: { dot: '#15803d', bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.2)' },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -27,7 +27,7 @@ export default function AlertsPage() {
   const fetchAlerts = useCallback(async () => {
     try {
       const res = await api.get<{ data: FlightAlert[] }>('/flight-alerts');
-      const data = Array.isArray(res) ? res : (res as { data: FlightAlert[] }).data ?? [];
+      const data = Array.isArray(res) ? res : ((res as { data: FlightAlert[] }).data ?? []);
       setAlerts(Array.isArray(data) ? data : []);
     } catch {
       setError('Failed to load alerts.');
@@ -64,7 +64,15 @@ export default function AlertsPage() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>
+        <h1
+          style={{
+            fontSize: '1.75rem',
+            fontWeight: 800,
+            color: 'var(--color-text)',
+            margin: 0,
+            letterSpacing: '-0.02em',
+          }}
+        >
           Flight Alerts
         </h1>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: 4 }}>
@@ -73,15 +81,17 @@ export default function AlertsPage() {
       </div>
 
       {error && (
-        <div style={{
-          background: 'rgba(220,38,38,0.08)',
-          color: '#dc2626',
-          border: '1px solid rgba(220,38,38,0.2)',
-          borderRadius: 10,
-          padding: '12px 16px',
-          fontSize: '0.875rem',
-          marginBottom: 16,
-        }}>
+        <div
+          style={{
+            background: 'rgba(220,38,38,0.08)',
+            color: '#dc2626',
+            border: '1px solid rgba(220,38,38,0.2)',
+            borderRadius: 10,
+            padding: '12px 16px',
+            fontSize: '0.875rem',
+            marginBottom: 16,
+          }}
+        >
           {error}
         </div>
       )}
@@ -112,12 +122,14 @@ export default function AlertsPage() {
               }}
             >
               {key === 'all' ? 'All' : key.charAt(0).toUpperCase() + key.slice(1)}
-              <span style={{
-                background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--color-surface-elevated)',
-                padding: '1px 7px',
-                borderRadius: 10,
-                fontSize: '0.7rem',
-              }}>
+              <span
+                style={{
+                  background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--color-surface-elevated)',
+                  padding: '1px 7px',
+                  borderRadius: 10,
+                  fontSize: '0.7rem',
+                }}
+              >
                 {counts[key]}
               </span>
             </button>
@@ -130,14 +142,27 @@ export default function AlertsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[1, 2, 3].map((i) => (
             <div key={i} className="card" style={{ padding: 20, opacity: 0.5 }}>
-              <div className="skeleton" style={{ width: 200, height: 14, borderRadius: 4, marginBottom: 8 }} />
+              <div
+                className="skeleton"
+                style={{ width: 200, height: 14, borderRadius: 4, marginBottom: 8 }}
+              />
               <div className="skeleton" style={{ width: 300, height: 12, borderRadius: 4 }} />
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}>
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ marginBottom: 12 }}
+          >
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
@@ -160,50 +185,76 @@ export default function AlertsPage() {
                   alignItems: 'flex-start',
                 }}
               >
-                <span style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: sev.dot,
-                  flexShrink: 0,
-                  marginTop: 5,
-                }} />
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: sev.dot,
+                    flexShrink: 0,
+                    marginTop: 5,
+                  }}
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 4,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}
+                    >
                       {alert.title}
                     </span>
-                    <span style={{
-                      fontSize: '0.65rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: '2px 8px',
-                      borderRadius: 4,
-                      background: sev.bg,
-                      color: sev.dot,
-                      border: `1px solid ${sev.border}`,
-                    }}>
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        background: sev.bg,
+                        color: sev.dot,
+                        border: `1px solid ${sev.border}`,
+                      }}
+                    >
                       {alert.severity}
                     </span>
-                    <span style={{
-                      fontSize: '0.65rem',
-                      fontWeight: 500,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: 'var(--color-text-muted)',
-                    }}>
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 500,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--color-text-muted)',
+                      }}
+                    >
                       {TYPE_LABELS[alert.alertType] ?? alert.alertType}
                     </span>
                   </div>
                   {alert.description && (
-                    <p style={{ fontSize: '0.825rem', color: 'var(--color-text-secondary)', margin: '4px 0 8px', lineHeight: 1.5 }}>
+                    <p
+                      style={{
+                        fontSize: '0.825rem',
+                        color: 'var(--color-text-secondary)',
+                        margin: '4px 0 8px',
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {alert.description}
                     </p>
                   )}
                   <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
                     {new Date(alert.createdAt).toLocaleString('en-US', {
-                      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
                     })}
                   </span>
                 </div>

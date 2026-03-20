@@ -112,21 +112,14 @@ export class OnboardingService {
    * 4. Initial sync_state record
    * 5. Default feature flags
    */
-  async onboardOperator(
-    operatorId: number,
-    operatorName: string,
-  ): Promise<void> {
+  async onboardOperator(operatorId: number, operatorName: string): Promise<void> {
     const alreadyOnboarded = await this.isOnboarded(operatorId);
     if (alreadyOnboarded) {
-      this.logger.log(
-        `Operator ${operatorId} (${operatorName}) already onboarded — skipping`,
-      );
+      this.logger.log(`Operator ${operatorId} (${operatorName}) already onboarded — skipping`);
       return;
     }
 
-    this.logger.log(
-      `Onboarding operator ${operatorId} (${operatorName})...`,
-    );
+    this.logger.log(`Onboarding operator ${operatorId} (${operatorName})...`);
 
     // 1. Insert operator record
     await db.insert(operators).values({
@@ -163,8 +156,6 @@ export class OnboardingService {
     // 5. Seed default feature flags
     await this.featureFlagService.seedDefaultFlags(operatorId);
 
-    this.logger.log(
-      `Operator ${operatorId} (${operatorName}) onboarded successfully`,
-    );
+    this.logger.log(`Operator ${operatorId} (${operatorName}) onboarded successfully`);
   }
 }

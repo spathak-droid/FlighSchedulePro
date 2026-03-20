@@ -109,7 +109,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
     this.logger.log(
       `Generate-suggestions job started for operator ${operatorId} ` +
-      `(jobId=${job.id}, detectedAt=${detectedAt})`,
+        `(jobId=${job.id}, detectedAt=${detectedAt})`,
     );
 
     try {
@@ -155,9 +155,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
         return;
       }
 
-      this.logger.log(
-        `Processing ${openings.length} openings for operator ${operatorId}`,
-      );
+      this.logger.log(`Processing ${openings.length} openings for operator ${operatorId}`);
 
       // Fetch all students once for this operator
       const students = await this.fspTrainingService.getStudents(operatorId, token);
@@ -195,13 +193,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
         if (opening.type === 'cancellation' && opening.previousReservation) {
           // T076: Reschedule pipeline for the cancelled student
           concurrentTasks.push(
-            this.processReschedule(
-              operatorId,
-              token,
-              opening,
-              policy,
-              ttlHours,
-            ).catch((error) => {
+            this.processReschedule(operatorId, token, opening, policy, ttlHours).catch((error) => {
               const msg = error instanceof Error ? error.message : String(error);
               this.logger.error(
                 `Reschedule pipeline failed for opening ${opening.start}-${opening.end}: ${msg}`,
@@ -251,7 +243,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
       this.logger.log(
         `Generate-suggestions completed for operator ${operatorId}: ` +
-        `${totalSuggestionsCreated} suggestions from ${openings.length} openings`,
+          `${totalSuggestionsCreated} suggestions from ${openings.length} openings`,
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -267,14 +259,18 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
     return {
       timeSinceLastFlight: policyWeights['waitTime'] ?? DEFAULT_RANKING_WEIGHTS.timeSinceLastFlight,
-      timeUntilNextFlight: policyWeights['studentProgress'] ?? DEFAULT_RANKING_WEIGHTS.timeUntilNextFlight,
+      timeUntilNextFlight:
+        policyWeights['studentProgress'] ?? DEFAULT_RANKING_WEIGHTS.timeUntilNextFlight,
       totalHours: policyWeights['instructorPreference'] ?? DEFAULT_RANKING_WEIGHTS.totalHours,
       custom: Object.entries(policyWeights)
         .filter(([key]) => !['waitTime', 'studentProgress', 'instructorPreference'].includes(key))
-        .reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {} as Record<string, number>),
+        .reduce(
+          (acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
     };
   }
 
@@ -290,15 +286,11 @@ export class GenerateSuggestionsJob extends WorkerHost {
     const now = new Date();
     const endDate = new Date(now.getTime() + searchWindowDays * 24 * 60 * 60 * 1000);
 
-    const scheduleResponse = await this.fspScheduleService.getSchedule(
-      operatorId,
-      token,
-      {
-        start: toFspLocalTime(now),
-        end: toFspLocalTime(endDate),
-        locationIds: [],
-      },
-    );
+    const scheduleResponse = await this.fspScheduleService.getSchedule(operatorId, token, {
+      start: toFspLocalTime(now),
+      end: toFspLocalTime(endDate),
+      locationIds: [],
+    });
 
     const events: FspScheduleEvent[] = scheduleResponse.results?.events ?? [];
 
@@ -315,12 +307,16 @@ export class GenerateSuggestionsJob extends WorkerHost {
       const nextStart = sorted[i + 1]!.Start;
 
       if (currentEnd < nextStart) {
-        const gapStartDate = new Date(currentEnd.includes(':') && currentEnd.split(':').length === 2
-          ? `${currentEnd}:00`
-          : currentEnd);
-        const gapEndDate = new Date(nextStart.includes(':') && nextStart.split(':').length === 2
-          ? `${nextStart}:00`
-          : nextStart);
+        const gapStartDate = new Date(
+          currentEnd.includes(':') && currentEnd.split(':').length === 2
+            ? `${currentEnd}:00`
+            : currentEnd,
+        );
+        const gapEndDate = new Date(
+          nextStart.includes(':') && nextStart.split(':').length === 2
+            ? `${nextStart}:00`
+            : nextStart,
+        );
 
         const durationMin = (gapEndDate.getTime() - gapStartDate.getTime()) / 60_000;
 
@@ -359,13 +355,19 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
     // Resolve instructorId from name
     if (!prev.instructorId && prev.instructorName) {
-      const resolvedId = await this.resourceLookup.getInstructorByName(operatorId, prev.instructorName);
+      const resolvedId = await this.resourceLookup.getInstructorByName(
+        operatorId,
+        prev.instructorName,
+      );
       if (resolvedId) prev.instructorId = resolvedId;
     }
 
     // Resolve aircraftId from registration/name
     if (!prev.aircraftId && prev.aircraftName) {
-      const resolvedId = await this.resourceLookup.getAircraftByRegistration(operatorId, prev.aircraftName);
+      const resolvedId = await this.resourceLookup.getAircraftByRegistration(
+        operatorId,
+        prev.aircraftName,
+      );
       if (resolvedId) prev.aircraftId = resolvedId;
     }
 
@@ -437,15 +439,11 @@ export class GenerateSuggestionsJob extends WorkerHost {
     let availability: FspAvailability[] = [];
     try {
       const studentIds = topCandidates.map((c) => c.studentId);
-      availability = await this.fspResourceService.getAvailability(
-        operatorId,
-        token,
-        {
-          userGuidIds: studentIds,
-          startAtUtc: toFspLocalTime(proposedStart),
-          endAtUtc: toFspLocalTime(proposedEnd),
-        },
-      );
+      availability = await this.fspResourceService.getAvailability(operatorId, token, {
+        userGuidIds: studentIds,
+        startAtUtc: toFspLocalTime(proposedStart),
+        endAtUtc: toFspLocalTime(proposedEnd),
+      });
     } catch (error) {
       this.logger.warn(
         `Could not fetch availability for operator ${operatorId}: ${error instanceof Error ? error.message : error}`,
@@ -509,42 +507,51 @@ export class GenerateSuggestionsJob extends WorkerHost {
       if (!allPassed) {
         this.logger.debug(
           `Skipping candidate ${candidate.studentId} for opening ` +
-          `${opening.start}-${opening.end}: constraints failed`,
+            `${opening.start}-${opening.end}: constraints failed`,
         );
         continue;
       }
 
       // Create suggestion record
-      const [inserted] = await db.insert(suggestions).values({
-        operatorId,
-        type: 'waitlist',
-        status: 'pending',
-        locationId: opening.locationId || 'unknown',
-        studentId: candidate.studentId,
-        proposedStart: proposedStart,
-        proposedEnd: proposedEnd,
-        activityTypeId: opening.previousReservation?.activityTypeId ?? null,
-        rankingScore: candidate.score.toFixed(4),
-        rationale: {
-          reason: rationale.summary,
-          factors: candidate.breakdown,
-          context: {
-            inputs: rationale.inputs,
-            constraints: rationale.constraints,
-            policies: rationale.policies,
-            openingType: opening.type,
+      const [inserted] = await db
+        .insert(suggestions)
+        .values({
+          operatorId,
+          type: 'waitlist',
+          status: 'pending',
+          locationId: opening.locationId || 'unknown',
+          studentId: candidate.studentId,
+          proposedStart: proposedStart,
+          proposedEnd: proposedEnd,
+          activityTypeId: opening.previousReservation?.activityTypeId ?? null,
+          rankingScore: candidate.score.toFixed(4),
+          rationale: {
+            reason: rationale.summary,
+            factors: candidate.breakdown,
+            context: {
+              inputs: rationale.inputs,
+              constraints: rationale.constraints,
+              policies: rationale.policies,
+              openingType: opening.type,
+            },
           },
-        },
-        groupId: openingGroupId,
-        expiresAt,
-      }).returning({ id: suggestions.id });
+          groupId: openingGroupId,
+          expiresAt,
+        })
+        .returning({ id: suggestions.id });
 
       // Enqueue AI enrichment (async, non-blocking)
       if (inserted) {
-        await this.aiEnrichQueue.add('enrich', { suggestionId: inserted.id, operatorId }, {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 2000 },
-        }).catch(() => {}); // never fail the main pipeline
+        await this.aiEnrichQueue
+          .add(
+            'enrich',
+            { suggestionId: inserted.id, operatorId },
+            {
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 2000 },
+            },
+          )
+          .catch(() => {}); // never fail the main pipeline
       }
 
       created++;
@@ -588,7 +595,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
     this.logger.log(
       `T076: Processing reschedule for student ${studentId} ` +
-      `(activity: ${activityTypeId}) in operator ${operatorId}`,
+        `(activity: ${activityTypeId}) in operator ${operatorId}`,
     );
 
     // Fetch resources for slot finding
@@ -684,13 +691,23 @@ export class GenerateSuggestionsJob extends WorkerHost {
     });
 
     if (suggestionRecords.length > 0) {
-      const insertedReschedules = await db.insert(suggestions).values(suggestionRecords).returning({ id: suggestions.id });
+      const insertedReschedules = await db
+        .insert(suggestions)
+        .values(suggestionRecords)
+        .returning({ id: suggestions.id });
 
       // Enqueue AI enrichment for each reschedule suggestion
       for (const ins of insertedReschedules) {
-        await this.aiEnrichQueue.add('enrich', { suggestionId: ins.id, operatorId }, {
-          attempts: 3, backoff: { type: 'exponential', delay: 2000 },
-        }).catch(() => {});
+        await this.aiEnrichQueue
+          .add(
+            'enrich',
+            { suggestionId: ins.id, operatorId },
+            {
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 2000 },
+            },
+          )
+          .catch(() => {});
       }
 
       await db.insert(auditEvents).values({
@@ -709,7 +726,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
       this.logger.log(
         `T076: Created ${suggestionRecords.length} reschedule suggestions ` +
-        `for student ${studentId} (group: ${groupId})`,
+          `for student ${studentId} (group: ${groupId})`,
       );
     }
 
@@ -736,7 +753,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
     this.logger.log(
       `T090: Next-lesson job started for student ${studentId}, ` +
-      `enrollment ${enrollmentId}, operator ${operatorId} (jobId=${job.id})`,
+        `enrollment ${enrollmentId}, operator ${operatorId} (jobId=${job.id})`,
     );
 
     try {
@@ -803,15 +820,15 @@ export class GenerateSuggestionsJob extends WorkerHost {
       if (!nextEvent) {
         this.logger.log(
           `T090: No next schedulable event found for student ${studentId}, ` +
-          `enrollment ${enrollmentId} — may need prerequisites or data refresh`,
+            `enrollment ${enrollmentId} — may need prerequisites or data refresh`,
         );
         return;
       }
 
       this.logger.log(
         `T090: Next event for student ${studentId}: ` +
-        `${nextEvent.courseName} > ${nextEvent.lessonName} ` +
-        `(lesson ${nextEvent.lessonOrder}, ${completionPct}% complete)`,
+          `${nextEvent.courseName} > ${nextEvent.lessonName} ` +
+          `(lesson ${nextEvent.lessonOrder}, ${completionPct}% complete)`,
       );
 
       // Step 4: Find available slots using slot finder
@@ -822,13 +839,15 @@ export class GenerateSuggestionsJob extends WorkerHost {
       ]);
 
       // Filter instructors and aircraft to those allowed for this event
-      const allowedInstructors = nextEvent.instructorIds.length > 0
-        ? instructorsResult.filter((i) => nextEvent.instructorIds.includes(i.id))
-        : instructorsResult;
+      const allowedInstructors =
+        nextEvent.instructorIds.length > 0
+          ? instructorsResult.filter((i) => nextEvent.instructorIds.includes(i.id))
+          : instructorsResult;
 
-      const allowedAircraft = nextEvent.aircraftIds.length > 0
-        ? aircraftResult.filter((a) => nextEvent.aircraftIds.includes(a.id))
-        : aircraftResult;
+      const allowedAircraft =
+        nextEvent.aircraftIds.length > 0
+          ? aircraftResult.filter((a) => nextEvent.aircraftIds.includes(a.id))
+          : aircraftResult;
 
       const maxSlots = policy?.rescheduleAlternativesCount ?? DEFAULT_NEXT_LESSON_MAX_SLOTS;
 
@@ -860,7 +879,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
       if (slots.length === 0) {
         this.logger.log(
           `T090: No available slots found for next lesson of student ${studentId} — ` +
-          `searched up to ${slotConfig.maxDays} days`,
+            `searched up to ${slotConfig.maxDays} days`,
         );
         return;
       }
@@ -874,15 +893,11 @@ export class GenerateSuggestionsJob extends WorkerHost {
         // Evaluate constraints
         let availability: FspAvailability[] = [];
         try {
-          availability = await this.fspResourceService.getAvailability(
-            operatorId,
-            token,
-            {
-              userGuidIds: [studentId, slot.instructorId].filter(Boolean),
-              startAtUtc: toFspLocalTime(slot.start),
-              endAtUtc: toFspLocalTime(slot.end),
-            },
-          );
+          availability = await this.fspResourceService.getAvailability(operatorId, token, {
+            userGuidIds: [studentId, slot.instructorId].filter(Boolean),
+            startAtUtc: toFspLocalTime(slot.start),
+            endAtUtc: toFspLocalTime(slot.end),
+          });
         } catch {
           // Availability fetch is best-effort for constraint checking
         }
@@ -905,7 +920,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
         if (!allPassed) {
           this.logger.debug(
             `T090: Skipping slot ${toFspLocalTime(slot.start)} for student ${studentId}: ` +
-            `constraints failed`,
+              `constraints failed`,
           );
           continue;
         }
@@ -943,56 +958,66 @@ export class GenerateSuggestionsJob extends WorkerHost {
         });
 
         // Step 7: Create suggestion record with enrollment/course/lesson links
-        const [insertedNextLesson] = await db.insert(suggestions).values({
-          operatorId,
-          type: 'next_lesson',
-          status: 'pending',
-          locationId: slotConfig.locationId,
-          studentId,
-          instructorId: slot.instructorId,
-          aircraftId: slot.aircraftId,
-          proposedStart: slot.start,
-          proposedEnd: slot.end,
-          activityTypeId: nextEvent.activityTypeId,
-          courseId: nextEvent.courseId,
-          lessonId: nextEvent.lessonId,
-          enrollmentId: nextEvent.enrollmentId,
-          rankingScore: slot.matchScore.toFixed(4),
-          rationale: {
-            reason: rationale.summary,
-            factors: {
-              instructorContinuity: slot.instructorId === slotConfig.instructorId ? 30 : 0,
-              aircraftMatch: slot.aircraftId === slotConfig.aircraftId ? 10 : 0,
-              timeOfDayMatch: 10,
-              enrollmentProgress: completionPct,
-              baseScore: 50,
+        const [insertedNextLesson] = await db
+          .insert(suggestions)
+          .values({
+            operatorId,
+            type: 'next_lesson',
+            status: 'pending',
+            locationId: slotConfig.locationId,
+            studentId,
+            instructorId: slot.instructorId,
+            aircraftId: slot.aircraftId,
+            proposedStart: slot.start,
+            proposedEnd: slot.end,
+            activityTypeId: nextEvent.activityTypeId,
+            courseId: nextEvent.courseId,
+            lessonId: nextEvent.lessonId,
+            enrollmentId: nextEvent.enrollmentId,
+            rankingScore: slot.matchScore.toFixed(4),
+            rationale: {
+              reason: rationale.summary,
+              factors: {
+                instructorContinuity: slot.instructorId === slotConfig.instructorId ? 30 : 0,
+                aircraftMatch: slot.aircraftId === slotConfig.aircraftId ? 10 : 0,
+                timeOfDayMatch: 10,
+                enrollmentProgress: completionPct,
+                baseScore: 50,
+              },
+              context: {
+                inputs: rationale.inputs,
+                constraints: rationale.constraints,
+                policies: rationale.policies,
+                courseName: nextEvent.courseName,
+                lessonName: nextEvent.lessonName,
+                lessonOrder: nextEvent.lessonOrder,
+                completionPercentage: completionPct,
+                completedLessons: progress.completedLessons,
+                totalLessons: progress.totalLessons,
+                instructorName: slot.instructorName,
+                aircraftRegistration: slot.aircraftRegistration,
+                flightType: nextEvent.flightType,
+                routeType: nextEvent.routeType,
+                instructorRequired: nextEvent.instructorRequired,
+              },
             },
-            context: {
-              inputs: rationale.inputs,
-              constraints: rationale.constraints,
-              policies: rationale.policies,
-              courseName: nextEvent.courseName,
-              lessonName: nextEvent.lessonName,
-              lessonOrder: nextEvent.lessonOrder,
-              completionPercentage: completionPct,
-              completedLessons: progress.completedLessons,
-              totalLessons: progress.totalLessons,
-              instructorName: slot.instructorName,
-              aircraftRegistration: slot.aircraftRegistration,
-              flightType: nextEvent.flightType,
-              routeType: nextEvent.routeType,
-              instructorRequired: nextEvent.instructorRequired,
-            },
-          },
-          groupId,
-          expiresAt,
-        }).returning({ id: suggestions.id });
+            groupId,
+            expiresAt,
+          })
+          .returning({ id: suggestions.id });
 
         // Enqueue AI enrichment
         if (insertedNextLesson) {
-          await this.aiEnrichQueue.add('enrich', { suggestionId: insertedNextLesson.id, operatorId }, {
-            attempts: 3, backoff: { type: 'exponential', delay: 2000 },
-          }).catch(() => {});
+          await this.aiEnrichQueue
+            .add(
+              'enrich',
+              { suggestionId: insertedNextLesson.id, operatorId },
+              {
+                attempts: 3,
+                backoff: { type: 'exponential', delay: 2000 },
+              },
+            )
+            .catch(() => {});
         }
 
         created++;
@@ -1022,13 +1047,13 @@ export class GenerateSuggestionsJob extends WorkerHost {
 
       this.logger.log(
         `T090: Created ${created} next-lesson suggestions for student ${studentId} ` +
-        `(${nextEvent.courseName} > ${nextEvent.lessonName}, ${completionPct}% complete)`,
+          `(${nextEvent.courseName} > ${nextEvent.lessonName}, ${completionPct}% complete)`,
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(
         `T090: Next-lesson suggestion failed for student ${studentId}, ` +
-        `enrollment ${enrollmentId}: ${msg}`,
+          `enrollment ${enrollmentId}: ${msg}`,
       );
       throw error;
     }

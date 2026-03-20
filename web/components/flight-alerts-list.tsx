@@ -32,7 +32,16 @@ function SeverityIcon({ severity }: { severity: string }) {
   if (severity === 'critical') {
     return (
       <div style={{ ...styles.iconWrapper, backgroundColor: config.bg, color: config.color }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -44,7 +53,16 @@ function SeverityIcon({ severity }: { severity: string }) {
   if (severity === 'warning') {
     return (
       <div style={{ ...styles.iconWrapper, backgroundColor: config.bg, color: config.color }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -56,7 +74,16 @@ function SeverityIcon({ severity }: { severity: string }) {
   // info
   return (
     <div style={{ ...styles.iconWrapper, backgroundColor: config.bg, color: config.color }}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="16" x2="12" y2="12" />
         <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -138,7 +165,10 @@ export default function FlightAlertsList() {
             <div key={i} style={{ ...styles.alertItem, opacity: 0.5 }}>
               <div className="skeleton" style={{ width: 36, height: 36, borderRadius: 8 }} />
               <div style={{ flex: 1 }}>
-                <div className="skeleton" style={{ width: 200, height: 12, borderRadius: 4, marginBottom: 8 }} />
+                <div
+                  className="skeleton"
+                  style={{ width: 200, height: 12, borderRadius: 4, marginBottom: 8 }}
+                />
                 <div className="skeleton" style={{ width: 140, height: 10, borderRadius: 4 }} />
               </div>
             </div>
@@ -164,9 +194,7 @@ export default function FlightAlertsList() {
       <div style={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h3 style={styles.title}>Flight Alerts</h3>
-          {alerts.length > 0 && (
-            <span style={styles.badge}>{alerts.length}</span>
-          )}
+          {alerts.length > 0 && <span style={styles.badge}>{alerts.length}</span>}
         </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -200,22 +228,24 @@ export default function FlightAlertsList() {
                   <div style={styles.alertContent}>
                     <div style={styles.alertTitleRow}>
                       <span style={styles.alertTitle}>{alert.title}</span>
-                      <span style={{ ...styles.severityBadge, color: config.color, backgroundColor: config.bg }}>
+                      <span
+                        style={{
+                          ...styles.severityBadge,
+                          color: config.color,
+                          backgroundColor: config.bg,
+                        }}
+                      >
                         {config.label}
                       </span>
                     </div>
 
-                    {alert.description && (
-                      <p style={styles.alertDesc}>{alert.description}</p>
-                    )}
+                    {alert.description && <p style={styles.alertDesc}>{alert.description}</p>}
 
                     <div style={styles.alertMeta}>
                       <span style={styles.alertType}>
                         {ALERT_TYPE_LABELS[alert.alertType] ?? alert.alertType}
                       </span>
-                      <span style={styles.alertTime}>
-                        {formatTimeAgo(alert.createdAt)}
-                      </span>
+                      <span style={styles.alertTime}>{formatTimeAgo(alert.createdAt)}</span>
                     </div>
                   </div>
 

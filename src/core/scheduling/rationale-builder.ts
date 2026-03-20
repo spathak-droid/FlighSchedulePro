@@ -108,9 +108,10 @@ export function buildRationale(input: RationaleInput): Rationale {
 
   // ── Policies ─────────────────────────────────────────────────────────────
 
-  const policies: string[] = policyMatches.length > 0
-    ? policyMatches.map((p) => p)
-    : ['No specific policy overrides applied'];
+  const policies: string[] =
+    policyMatches.length > 0
+      ? policyMatches.map((p) => p)
+      : ['No specific policy overrides applied'];
 
   return { summary, inputs, constraints, policies };
 }

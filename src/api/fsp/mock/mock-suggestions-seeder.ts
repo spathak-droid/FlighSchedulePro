@@ -1,14 +1,25 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { db } from '../../../db/index.js';
 import {
-  suggestions, prospects, auditEvents,
-  students, instructors, aircraft, activityTypes, reservationHistory,
-  studentInsights, disruptionEvents, cancellationReasons, flightAlerts,
+  suggestions,
+  prospects,
+  auditEvents,
+  students,
+  instructors,
+  aircraft,
+  activityTypes,
+  reservationHistory,
+  studentInsights,
+  disruptionEvents,
+  cancellationReasons,
+  flightAlerts,
 } from '../../../db/schema/index.js';
 import { sql, eq, and, desc, gte, lte } from 'drizzle-orm';
 import {
-  MOCK_OPERATOR_ID, MOCK_ALL_OPERATORS,
-  MOCK_STUDENTS_BY_OPERATOR, MOCK_INSTRUCTORS_BY_OPERATOR,
+  MOCK_OPERATOR_ID,
+  MOCK_ALL_OPERATORS,
+  MOCK_STUDENTS_BY_OPERATOR,
+  MOCK_INSTRUCTORS_BY_OPERATOR,
   MOCK_AIRCRAFT_BY_OPERATOR,
 } from './mock-data.js';
 import { OnboardingService } from '../../modules/auth/onboarding.service.js';
@@ -64,10 +75,18 @@ export class MockSuggestionsSeeder implements OnModuleInit {
       const [pending1001] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(and(eq(suggestions.operatorId, MOCK_OPERATOR_ID), eq(suggestions.status, 'pending')));
+        .where(
+          and(eq(suggestions.operatorId, MOCK_OPERATOR_ID), eq(suggestions.status, 'pending')),
+        );
 
       if ((pending1001?.count ?? 0) === 0) {
-        const prospect1001 = await this.seedProspect(MOCK_OPERATOR_ID, 'Jane', 'Smith', 'jane.smith@gmail.com', '(650) 555-0199');
+        const prospect1001 = await this.seedProspect(
+          MOCK_OPERATOR_ID,
+          'Jane',
+          'Smith',
+          'jane.smith@gmail.com',
+          '(650) 555-0199',
+        );
         const rows1001 = buildMockSuggestions(now, prospect1001);
         await db.insert(suggestions).values(rows1001);
         this.logger.log(`[MOCK] Seeded ${rows1001.length} suggestions for operator 1001`);
@@ -82,7 +101,13 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         .where(and(eq(suggestions.operatorId, 1002), eq(suggestions.status, 'pending')));
 
       if ((pending1002?.count ?? 0) === 0) {
-        const prospect1002 = await this.seedProspect(1002, 'Tom', 'Baker', 'tom.baker@gmail.com', '(408) 555-0234');
+        const prospect1002 = await this.seedProspect(
+          1002,
+          'Tom',
+          'Baker',
+          'tom.baker@gmail.com',
+          '(408) 555-0234',
+        );
         const rows1002 = buildOperator1002Suggestions(now, prospect1002);
         await db.insert(suggestions).values(rows1002);
         this.logger.log(`[MOCK] Seeded ${rows1002.length} suggestions for operator 1002`);
@@ -97,7 +122,13 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         .where(and(eq(suggestions.operatorId, 1003), eq(suggestions.status, 'pending')));
 
       if ((pending1003?.count ?? 0) === 0) {
-        const prospect1003 = await this.seedProspect(1003, 'Lisa', 'Chang', 'lisa.chang@gmail.com', '(510) 555-0187');
+        const prospect1003 = await this.seedProspect(
+          1003,
+          'Lisa',
+          'Chang',
+          'lisa.chang@gmail.com',
+          '(510) 555-0187',
+        );
         const rows1003 = buildOperator1003Suggestions(now, prospect1003);
         await db.insert(suggestions).values(rows1003);
         this.logger.log(`[MOCK] Seeded ${rows1003.length} suggestions for operator 1003`);
@@ -108,7 +139,12 @@ export class MockSuggestionsSeeder implements OnModuleInit {
       // ── Seed audit events for all operators ───────────────────────────
       for (const opId of [MOCK_OPERATOR_ID, 1002, 1003]) {
         const inserted = await db
-          .select({ id: suggestions.id, type: suggestions.type, status: suggestions.status, createdAt: suggestions.createdAt })
+          .select({
+            id: suggestions.id,
+            type: suggestions.type,
+            status: suggestions.status,
+            createdAt: suggestions.createdAt,
+          })
           .from(suggestions)
           .where(eq(suggestions.operatorId, opId));
         await this.seedAuditEvents(inserted, now, opId);
@@ -130,21 +166,26 @@ export class MockSuggestionsSeeder implements OnModuleInit {
   private async seedResources(): Promise<void> {
     const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(students);
     if ((countResult?.count ?? 0) > 0) {
-      this.logger.log('[MOCK] Resource tables already seeded — upserting instructors for new entries');
+      this.logger.log(
+        '[MOCK] Resource tables already seeded — upserting instructors for new entries',
+      );
       // Ensure any newly added instructors get inserted (onConflictDoNothing handles existing ones)
       for (const op of MOCK_ALL_OPERATORS) {
         const mockInstructors = MOCK_INSTRUCTORS_BY_OPERATOR[op.id] ?? [];
         if (mockInstructors.length > 0) {
-          await db.insert(instructors).values(
-            mockInstructors.map((i) => ({
-              id: i.id,
-              operatorId: op.id,
-              firstName: i.firstName,
-              lastName: i.lastName,
-              instructorType: i.instructorType || null,
-              isActive: i.isActive,
-            })),
-          ).onConflictDoNothing();
+          await db
+            .insert(instructors)
+            .values(
+              mockInstructors.map((i) => ({
+                id: i.id,
+                operatorId: op.id,
+                firstName: i.firstName,
+                lastName: i.lastName,
+                instructorType: i.instructorType || null,
+                isActive: i.isActive,
+              })),
+            )
+            .onConflictDoNothing();
         }
       }
       return;
@@ -165,77 +206,99 @@ export class MockSuggestionsSeeder implements OnModuleInit {
       const opId = op.id;
 
       // Insert activity types per operator
-      await db.insert(activityTypes).values(
-        activityTypeRows.map((at) => ({
-          id: `${at.id}-${opId}`,
-          operatorId: opId,
-          name: at.name,
-          isActive: at.isActive,
-        })),
-      ).onConflictDoNothing();
-
-      // Also insert with base IDs for operator 1001 (backward compat)
-      if (opId === MOCK_OPERATOR_ID) {
-        await db.insert(activityTypes).values(
+      await db
+        .insert(activityTypes)
+        .values(
           activityTypeRows.map((at) => ({
-            id: at.id,
+            id: `${at.id}-${opId}`,
             operatorId: opId,
             name: at.name,
             isActive: at.isActive,
           })),
-        ).onConflictDoNothing();
+        )
+        .onConflictDoNothing();
+
+      // Also insert with base IDs for operator 1001 (backward compat)
+      if (opId === MOCK_OPERATOR_ID) {
+        await db
+          .insert(activityTypes)
+          .values(
+            activityTypeRows.map((at) => ({
+              id: at.id,
+              operatorId: opId,
+              name: at.name,
+              isActive: at.isActive,
+            })),
+          )
+          .onConflictDoNothing();
       }
 
       // Insert students
       const mockStudents = MOCK_STUDENTS_BY_OPERATOR[opId] ?? [];
       // Realistic total flight hours per student
       const flightHoursMap: Record<string, number> = {
-        'stu-001': 42.5, 'stu-002': 28.3, 'stu-003': 156.8, 'stu-004': 15.2,
-        'stu-005': 8.7, 'stu-006': 63.1,
-        'stu-101': 35.0, 'stu-102': 22.5, 'stu-103': 10.0,
-        'stu-201': 18.0, 'stu-202': 45.5,
+        'stu-001': 42.5,
+        'stu-002': 28.3,
+        'stu-003': 156.8,
+        'stu-004': 15.2,
+        'stu-005': 8.7,
+        'stu-006': 63.1,
+        'stu-101': 35.0,
+        'stu-102': 22.5,
+        'stu-103': 10.0,
+        'stu-201': 18.0,
+        'stu-202': 45.5,
       };
       if (mockStudents.length > 0) {
-        await db.insert(students).values(
-          mockStudents.map((s) => ({
-            id: s.id,
-            operatorId: opId,
-            firstName: s.firstName,
-            lastName: s.lastName,
-            email: s.email || null,
-            totalFlightHours: String(flightHoursMap[s.id] ?? 0),
-          })),
-        ).onConflictDoNothing();
+        await db
+          .insert(students)
+          .values(
+            mockStudents.map((s) => ({
+              id: s.id,
+              operatorId: opId,
+              firstName: s.firstName,
+              lastName: s.lastName,
+              email: s.email || null,
+              totalFlightHours: String(flightHoursMap[s.id] ?? 0),
+            })),
+          )
+          .onConflictDoNothing();
       }
 
       // Insert instructors
       const mockInstructors = MOCK_INSTRUCTORS_BY_OPERATOR[opId] ?? [];
       if (mockInstructors.length > 0) {
-        await db.insert(instructors).values(
-          mockInstructors.map((i) => ({
-            id: i.id,
-            operatorId: opId,
-            firstName: i.firstName,
-            lastName: i.lastName,
-            instructorType: i.instructorType || null,
-            isActive: i.isActive,
-          })),
-        ).onConflictDoNothing();
+        await db
+          .insert(instructors)
+          .values(
+            mockInstructors.map((i) => ({
+              id: i.id,
+              operatorId: opId,
+              firstName: i.firstName,
+              lastName: i.lastName,
+              instructorType: i.instructorType || null,
+              isActive: i.isActive,
+            })),
+          )
+          .onConflictDoNothing();
       }
 
       // Insert aircraft
       const mockAircraft = MOCK_AIRCRAFT_BY_OPERATOR[opId] ?? [];
       if (mockAircraft.length > 0) {
-        await db.insert(aircraft).values(
-          mockAircraft.map((a) => ({
-            id: a.id,
-            operatorId: opId,
-            registration: a.registration,
-            makeModel: a.makeModel || `${a.make} ${a.model}`,
-            isSimulator: a.isSimulator,
-            isActive: a.isActive,
-          })),
-        ).onConflictDoNothing();
+        await db
+          .insert(aircraft)
+          .values(
+            mockAircraft.map((a) => ({
+              id: a.id,
+              operatorId: opId,
+              registration: a.registration,
+              makeModel: a.makeModel || `${a.make} ${a.model}`,
+              isSimulator: a.isSimulator,
+              isActive: a.isActive,
+            })),
+          )
+          .onConflictDoNothing();
       }
     }
 
@@ -253,7 +316,9 @@ export class MockSuggestionsSeeder implements OnModuleInit {
    * Idempotent — skips if student_insights already has data.
    */
   private async seedStudentInsights(): Promise<void> {
-    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(studentInsights);
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(studentInsights);
     if ((countResult?.count ?? 0) > 0) {
       this.logger.log('[MOCK] Student insights already seeded — skipping');
       return;
@@ -267,7 +332,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
     const enrollmentData: Record<string, { completed: number; total: number }> = {
       'stu-001': { completed: 16, total: 40 },
       'stu-002': { completed: 9, total: 30 },
-      'stu-003': { completed: 38, total: 40 },  // 95% — checkride ready
+      'stu-003': { completed: 38, total: 40 }, // 95% — checkride ready
       'stu-004': { completed: 6, total: 30 },
       'stu-005': { completed: 3, total: 40 },
       'stu-006': { completed: 25, total: 40 },
@@ -331,7 +396,8 @@ export class MockSuggestionsSeeder implements OnModuleInit {
           ? Math.floor((now.getTime() - lastFlight.endTime.getTime()) / (1000 * 60 * 60 * 24))
           : null;
 
-        const isInactive = (daysSince !== null && daysSince >= 14 && !nextFlight) ||
+        const isInactive =
+          (daysSince !== null && daysSince >= 14 && !nextFlight) ||
           (daysSince === null && !nextFlight);
 
         // Enrollment progress
@@ -364,7 +430,9 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         if (flights.length >= 3) {
           const gaps: number[] = [];
           for (let i = 1; i < flights.length; i++) {
-            const gap = (flights[i]!.startTime.getTime() - flights[i - 1]!.endTime.getTime()) / (1000 * 60 * 60 * 24);
+            const gap =
+              (flights[i]!.startTime.getTime() - flights[i - 1]!.endTime.getTime()) /
+              (1000 * 60 * 60 * 24);
             gaps.push(gap);
           }
           let increasing = true;
@@ -420,9 +488,15 @@ export class MockSuggestionsSeeder implements OnModuleInit {
     const op = MOCK_OPERATOR_ID;
     const loc = 'loc-001';
     const rows: Array<{
-      operatorId: number; studentId: string; instructorId: string;
-      aircraftId: string; activityTypeId: string; locationId: string;
-      startTime: Date; endTime: Date; status: string;
+      operatorId: number;
+      studentId: string;
+      instructorId: string;
+      aircraftId: string;
+      activityTypeId: string;
+      locationId: string;
+      startTime: Date;
+      endTime: Date;
+      status: string;
     }> = [];
 
     function pastDate(daysAgo: number, hour: number, minute = 0): Date {
@@ -441,56 +515,276 @@ export class MockSuggestionsSeeder implements OnModuleInit {
 
     // stu-001 (Alex Johnson) — 42.5 hours, last flight 2 days ago, next in 3 days
     rows.push(
-      { operatorId: op, studentId: 'stu-001', instructorId: 'inst-001', aircraftId: 'ac-001', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(2, 8), endTime: pastDate(2, 10), status: 'completed' },
-      { operatorId: op, studentId: 'stu-001', instructorId: 'inst-001', aircraftId: 'ac-001', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(5, 9), endTime: pastDate(5, 11), status: 'completed' },
-      { operatorId: op, studentId: 'stu-001', instructorId: 'inst-001', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(9, 14), endTime: pastDate(9, 16), status: 'completed' },
-      { operatorId: op, studentId: 'stu-001', instructorId: 'inst-001', aircraftId: 'ac-001', activityTypeId: 'at-001', locationId: loc, startTime: futureDate(3, 10), endTime: futureDate(3, 12), status: 'completed' },
+      {
+        operatorId: op,
+        studentId: 'stu-001',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(2, 8),
+        endTime: pastDate(2, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-001',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(5, 9),
+        endTime: pastDate(5, 11),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-001',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(9, 14),
+        endTime: pastDate(9, 16),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-001',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: futureDate(3, 10),
+        endTime: futureDate(3, 12),
+        status: 'completed',
+      },
     );
 
     // stu-002 (Emily Davis) — 28.3 hours, last flight 4 days ago, next in 1 day
     rows.push(
-      { operatorId: op, studentId: 'stu-002', instructorId: 'inst-002', aircraftId: 'ac-001', activityTypeId: 'at-002', locationId: loc, startTime: pastDate(4, 14), endTime: pastDate(4, 16), status: 'completed' },
-      { operatorId: op, studentId: 'stu-002', instructorId: 'inst-002', aircraftId: 'ac-003', activityTypeId: 'at-002', locationId: loc, startTime: pastDate(7, 8), endTime: pastDate(7, 10), status: 'completed' },
-      { operatorId: op, studentId: 'stu-002', instructorId: 'inst-002', aircraftId: 'ac-001', activityTypeId: 'at-002', locationId: loc, startTime: futureDate(1, 9), endTime: futureDate(1, 11), status: 'completed' },
+      {
+        operatorId: op,
+        studentId: 'stu-002',
+        instructorId: 'inst-002',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-002',
+        locationId: loc,
+        startTime: pastDate(4, 14),
+        endTime: pastDate(4, 16),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-002',
+        instructorId: 'inst-002',
+        aircraftId: 'ac-003',
+        activityTypeId: 'at-002',
+        locationId: loc,
+        startTime: pastDate(7, 8),
+        endTime: pastDate(7, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-002',
+        instructorId: 'inst-002',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-002',
+        locationId: loc,
+        startTime: futureDate(1, 9),
+        endTime: futureDate(1, 11),
+        status: 'completed',
+      },
     );
 
     // stu-003 (Ryan Martinez) — 156.8 hours, last flight 1 day ago, next in 5 days
     rows.push(
-      { operatorId: op, studentId: 'stu-003', instructorId: 'inst-003', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(1, 7), endTime: pastDate(1, 9), status: 'completed' },
-      { operatorId: op, studentId: 'stu-003', instructorId: 'inst-003', aircraftId: 'ac-001', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(3, 8), endTime: pastDate(3, 10), status: 'completed' },
-      { operatorId: op, studentId: 'stu-003', instructorId: 'inst-001', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: futureDate(5, 8), endTime: futureDate(5, 10, 30), status: 'completed' },
+      {
+        operatorId: op,
+        studentId: 'stu-003',
+        instructorId: 'inst-003',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(1, 7),
+        endTime: pastDate(1, 9),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-003',
+        instructorId: 'inst-003',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(3, 8),
+        endTime: pastDate(3, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-003',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: futureDate(5, 8),
+        endTime: futureDate(5, 10, 30),
+        status: 'completed',
+      },
     );
 
     // stu-004 (Sophie Brown) — 15.2 hours, last flight 10 days ago, no upcoming
     rows.push(
-      { operatorId: op, studentId: 'stu-004', instructorId: 'inst-002', aircraftId: 'ac-003', activityTypeId: 'at-002', locationId: loc, startTime: pastDate(10, 14), endTime: pastDate(10, 16), status: 'completed' },
-      { operatorId: op, studentId: 'stu-004', instructorId: 'inst-002', aircraftId: 'ac-001', activityTypeId: 'at-002', locationId: loc, startTime: pastDate(14, 9), endTime: pastDate(14, 11), status: 'completed' },
+      {
+        operatorId: op,
+        studentId: 'stu-004',
+        instructorId: 'inst-002',
+        aircraftId: 'ac-003',
+        activityTypeId: 'at-002',
+        locationId: loc,
+        startTime: pastDate(10, 14),
+        endTime: pastDate(10, 16),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-004',
+        instructorId: 'inst-002',
+        aircraftId: 'ac-001',
+        activityTypeId: 'at-002',
+        locationId: loc,
+        startTime: pastDate(14, 9),
+        endTime: pastDate(14, 11),
+        status: 'completed',
+      },
     );
 
     // stu-005 (Tyler Lee) — 8.7 hours, last flight 7 days ago, no upcoming
     rows.push(
-      { operatorId: op, studentId: 'stu-005', instructorId: 'inst-001', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(7, 13), endTime: pastDate(7, 14, 30), status: 'completed' },
-      { operatorId: op, studentId: 'stu-005', instructorId: 'inst-001', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(12, 10), endTime: pastDate(12, 12), status: 'completed' },
+      {
+        operatorId: op,
+        studentId: 'stu-005',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(7, 13),
+        endTime: pastDate(7, 14, 30),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-005',
+        instructorId: 'inst-001',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(12, 10),
+        endTime: pastDate(12, 12),
+        status: 'completed',
+      },
     );
 
     // stu-006 (Mia Garcia) — 63.1 hours, last flight 3 days ago, cancelled today
     rows.push(
-      { operatorId: op, studentId: 'stu-006', instructorId: 'inst-003', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(3, 8), endTime: pastDate(3, 10), status: 'completed' },
-      { operatorId: op, studentId: 'stu-006', instructorId: 'inst-003', aircraftId: 'ac-002', activityTypeId: 'at-001', locationId: loc, startTime: pastDate(0, 8), endTime: pastDate(0, 10), status: 'cancelled' },
+      {
+        operatorId: op,
+        studentId: 'stu-006',
+        instructorId: 'inst-003',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(3, 8),
+        endTime: pastDate(3, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: op,
+        studentId: 'stu-006',
+        instructorId: 'inst-003',
+        aircraftId: 'ac-002',
+        activityTypeId: 'at-001',
+        locationId: loc,
+        startTime: pastDate(0, 8),
+        endTime: pastDate(0, 10),
+        status: 'cancelled',
+      },
     );
 
     // Operator 1002 students
     rows.push(
-      { operatorId: 1002, studentId: 'stu-101', instructorId: 'inst-101', aircraftId: 'ac-101', activityTypeId: 'at-001', locationId: 'loc-101', startTime: pastDate(3, 9), endTime: pastDate(3, 11), status: 'completed' },
-      { operatorId: 1002, studentId: 'stu-102', instructorId: 'inst-102', aircraftId: 'ac-102', activityTypeId: 'at-001', locationId: 'loc-101', startTime: pastDate(5, 14), endTime: pastDate(5, 16), status: 'completed' },
-      { operatorId: 1002, studentId: 'stu-103', instructorId: 'inst-101', aircraftId: 'ac-103', activityTypeId: 'at-001', locationId: 'loc-101', startTime: pastDate(8, 10), endTime: pastDate(8, 12), status: 'completed' },
+      {
+        operatorId: 1002,
+        studentId: 'stu-101',
+        instructorId: 'inst-101',
+        aircraftId: 'ac-101',
+        activityTypeId: 'at-001',
+        locationId: 'loc-101',
+        startTime: pastDate(3, 9),
+        endTime: pastDate(3, 11),
+        status: 'completed',
+      },
+      {
+        operatorId: 1002,
+        studentId: 'stu-102',
+        instructorId: 'inst-102',
+        aircraftId: 'ac-102',
+        activityTypeId: 'at-001',
+        locationId: 'loc-101',
+        startTime: pastDate(5, 14),
+        endTime: pastDate(5, 16),
+        status: 'completed',
+      },
+      {
+        operatorId: 1002,
+        studentId: 'stu-103',
+        instructorId: 'inst-101',
+        aircraftId: 'ac-103',
+        activityTypeId: 'at-001',
+        locationId: 'loc-101',
+        startTime: pastDate(8, 10),
+        endTime: pastDate(8, 12),
+        status: 'completed',
+      },
     );
 
     // Operator 1003 students
     rows.push(
-      { operatorId: 1003, studentId: 'stu-201', instructorId: 'inst-201', aircraftId: 'ac-201', activityTypeId: 'at-001', locationId: 'loc-201', startTime: pastDate(2, 8), endTime: pastDate(2, 10), status: 'completed' },
-      { operatorId: 1003, studentId: 'stu-201', instructorId: 'inst-201', aircraftId: 'ac-201', activityTypeId: 'at-001', locationId: 'loc-201', startTime: futureDate(1, 8), endTime: futureDate(1, 10), status: 'completed' },
-      { operatorId: 1003, studentId: 'stu-202', instructorId: 'inst-201', aircraftId: 'ac-202', activityTypeId: 'at-001', locationId: 'loc-201', startTime: pastDate(6, 14), endTime: pastDate(6, 16), status: 'completed' },
+      {
+        operatorId: 1003,
+        studentId: 'stu-201',
+        instructorId: 'inst-201',
+        aircraftId: 'ac-201',
+        activityTypeId: 'at-001',
+        locationId: 'loc-201',
+        startTime: pastDate(2, 8),
+        endTime: pastDate(2, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: 1003,
+        studentId: 'stu-201',
+        instructorId: 'inst-201',
+        aircraftId: 'ac-201',
+        activityTypeId: 'at-001',
+        locationId: 'loc-201',
+        startTime: futureDate(1, 8),
+        endTime: futureDate(1, 10),
+        status: 'completed',
+      },
+      {
+        operatorId: 1003,
+        studentId: 'stu-202',
+        instructorId: 'inst-201',
+        aircraftId: 'ac-202',
+        activityTypeId: 'at-001',
+        locationId: 'loc-201',
+        startTime: pastDate(6, 14),
+        endTime: pastDate(6, 16),
+        status: 'completed',
+      },
     );
 
     return rows;
@@ -501,7 +795,9 @@ export class MockSuggestionsSeeder implements OnModuleInit {
    * Idempotent — skips if cancellation_reasons already has data.
    */
   private async seedCancellationReasons(): Promise<void> {
-    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(cancellationReasons);
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(cancellationReasons);
     if ((countResult?.count ?? 0) > 0) {
       this.logger.log('[MOCK] Cancellation reasons already seeded — skipping');
       return;
@@ -518,23 +814,32 @@ export class MockSuggestionsSeeder implements OnModuleInit {
     ];
 
     for (const op of MOCK_ALL_OPERATORS) {
-      await db.insert(cancellationReasons).values(
-        defaultReasons.map((name) => ({
-          operatorId: op.id,
-          name,
-          isActive: true,
-        })),
-      ).onConflictDoNothing();
+      await db
+        .insert(cancellationReasons)
+        .values(
+          defaultReasons.map((name) => ({
+            operatorId: op.id,
+            name,
+            isActive: true,
+          })),
+        )
+        .onConflictDoNothing();
     }
 
-    this.logger.log(`[MOCK] Seeded cancellation reasons for ${MOCK_ALL_OPERATORS.length} operators`);
+    this.logger.log(
+      `[MOCK] Seeded cancellation reasons for ${MOCK_ALL_OPERATORS.length} operators`,
+    );
   }
 
   /**
    * Seed a discovery-flight prospect and return the UUID.
    */
   private async seedProspect(
-    operatorId: number, firstName: string, lastName: string, email: string, phone: string,
+    operatorId: number,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phone: string,
   ): Promise<string> {
     const preferredDate = new Date();
     preferredDate.setDate(preferredDate.getDate() + 3);
@@ -689,9 +994,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
    * Idempotent — skips if flight_alerts already has data.
    */
   private async seedFlightAlerts(): Promise<void> {
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(flightAlerts);
+    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(flightAlerts);
 
     if ((countResult?.count ?? 0) > 0) {
       this.logger.log('[MOCK] Flight alerts already seeded — skipping');
@@ -808,7 +1111,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-001',
       rankingScore: '92.5000',
       rationale: {
-        summary: 'Alex Johnson can fill the 10-12 slot vacated by a cancellation tomorrow. CFI James Wilson is available and N172SP is free.',
+        summary:
+          'Alex Johnson can fill the 10-12 slot vacated by a cancellation tomorrow. CFI James Wilson is available and N172SP is free.',
         inputs: {
           cancellationDetectedAt: now.toISOString(),
           originalPilot: 'Tyler Lee',
@@ -855,7 +1159,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-002',
       rankingScore: '85.2500',
       rationale: {
-        summary: 'Emily Davis is next on the waitlist for instrument training. CFII Lisa Park is available and the same N172SP slot works for ILS approach practice.',
+        summary:
+          'Emily Davis is next on the waitlist for instrument training. CFII Lisa Park is available and the same N172SP slot works for ILS approach practice.',
         inputs: {
           cancellationDetectedAt: now.toISOString(),
           waitlistPosition: 2,
@@ -902,7 +1207,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-003',
       rankingScore: '78.0000',
       rationale: {
-        summary: 'Ryan Martinez needs checkride prep and day-after-tomorrow morning has an opening. CFI David Kim is available with N152AB.',
+        summary:
+          'Ryan Martinez needs checkride prep and day-after-tomorrow morning has an opening. CFI David Kim is available with N152AB.',
         inputs: {
           cancellationDetectedAt: now.toISOString(),
           waitlistPosition: 3,
@@ -949,7 +1255,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '65.7500',
       rationale: {
-        summary: 'Tyler Lee was on the aircraft rental waitlist. An afternoon slot opened up in 3 days with N152AB.',
+        summary:
+          'Tyler Lee was on the aircraft rental waitlist. An afternoon slot opened up in 3 days with N152AB.',
         inputs: {
           cancellationDetectedAt: now.toISOString(),
           waitlistPosition: 4,
@@ -998,7 +1305,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '70.0000',
       rationale: {
-        summary: 'Sophie Brown requested a reschedule from morning to afternoon. CFII Lisa Park has availability and N182RG is free in the 2-4pm slot.',
+        summary:
+          'Sophie Brown requested a reschedule from morning to afternoon. CFII Lisa Park has availability and N182RG is free in the 2-4pm slot.',
         inputs: {
           originalStart: daysFromNow(2, 8, 0, now).toISOString(),
           originalEnd: daysFromNow(2, 10, 0, now).toISOString(),
@@ -1044,7 +1352,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '68.5000',
       rationale: {
-        summary: 'Mia Garcia weather-cancelled flight rescheduled to 4 days out. CFI David Kim and N152AB both free.',
+        summary:
+          'Mia Garcia weather-cancelled flight rescheduled to 4 days out. CFI David Kim and N152AB both free.',
         inputs: {
           originalStart: daysFromNow(0, 8, 0, now).toISOString(),
           originalEnd: daysFromNow(0, 10, 0, now).toISOString(),
@@ -1092,7 +1401,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '55.0000',
       rationale: {
-        summary: 'Jane Smith requested a discovery flight. CFI James Wilson and N172SP available for a 1-hour intro flight.',
+        summary:
+          'Jane Smith requested a discovery flight. CFI James Wilson and N172SP available for a 1-hour intro flight.',
         inputs: {
           prospectName: 'Jane Smith',
           preferredTimeOfDay: 'morning',
@@ -1138,7 +1448,8 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-003',
       rankingScore: '88.0000',
       rationale: {
-        summary: 'Ryan Martinez is at lesson 39/40 (checkride prep). Scheduling this soon keeps momentum for the final checkride.',
+        summary:
+          'Ryan Martinez is at lesson 39/40 (checkride prep). Scheduling this soon keeps momentum for the final checkride.',
         inputs: {
           completedLessons: 38,
           totalLessons: 40,
@@ -1186,9 +1497,15 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-001',
       rankingScore: '95.0000',
       rationale: {
-        summary: 'Alex Johnson filled a same-day cancellation slot. Approved by scheduler earlier today.',
+        summary:
+          'Alex Johnson filled a same-day cancellation slot. Approved by scheduler earlier today.',
         inputs: { cancellationDetectedAt: hoursFromNow(-6, now).toISOString() },
-        constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
         policies: { priorityWeight: 0.95 },
       },
       groupId: null,
@@ -1220,9 +1537,15 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: 'enr-002',
       rankingScore: '82.0000',
       rationale: {
-        summary: 'Emily Davis next ILS lesson auto-suggested and approved. CFII Lisa Park and N182RG confirmed.',
+        summary:
+          'Emily Davis next ILS lesson auto-suggested and approved. CFII Lisa Park and N182RG confirmed.',
         inputs: { completedLessons: 8, totalLessons: 30 },
-        constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
         policies: { maxGapDays: 7 },
       },
       groupId: null,
@@ -1256,13 +1579,19 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '50.0000',
       rationale: {
-        summary: 'Tyler Lee reschedule suggestion declined by scheduler — student contacted and prefers a different week.',
+        summary:
+          'Tyler Lee reschedule suggestion declined by scheduler — student contacted and prefers a different week.',
         inputs: {
           originalStart: daysFromNow(-1, 9, 0, now).toISOString(),
           originalEnd: daysFromNow(-1, 11, 0, now).toISOString(),
           rescheduleReason: 'maintenance',
         },
-        constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
         policies: { maxRescheduleAlternatives: 5 },
       },
       groupId: null,
@@ -1296,9 +1625,15 @@ function buildMockSuggestions(now: Date, prospectId: string): SuggestionInsert[]
       enrollmentId: null,
       rankingScore: '72.0000',
       rationale: {
-        summary: 'Sophie Brown waitlist suggestion expired — slot was filled by another student before scheduler could review.',
+        summary:
+          'Sophie Brown waitlist suggestion expired — slot was filled by another student before scheduler could review.',
         inputs: { cancellationDetectedAt: hoursFromNow(-30, now).toISOString() },
-        constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
         policies: { priorityWeight: 0.72 },
       },
       groupId: null,
@@ -1323,71 +1658,228 @@ function buildOperator1002Suggestions(now: Date, prospectId: string): Suggestion
   const op = 1002;
   const loc = 'loc-101';
   const base = {
-    fspReservationId: null, fspValidationErrors: null,
-    courseId: null, lessonId: null, enrollmentId: null, groupId: null,
+    fspReservationId: null,
+    fspValidationErrors: null,
+    courseId: null,
+    lessonId: null,
+    enrollmentId: null,
+    groupId: null,
   };
 
   return [
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'pending', locationId: loc,
-      studentId: 'stu-101', prospectId: null, instructorId: 'inst-101', aircraftId: 'ac-101',
-      proposedStart: daysFromNow(1, 9, 0, now), proposedEnd: daysFromNow(1, 11, 0, now),
-      activityTypeId: 'at-001', courseId: 'crs-ppl', lessonId: 'ppl-les-010', enrollmentId: 'enr-101',
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'pending',
+      locationId: loc,
+      studentId: 'stu-101',
+      prospectId: null,
+      instructorId: 'inst-101',
+      aircraftId: 'ac-101',
+      proposedStart: daysFromNow(1, 9, 0, now),
+      proposedEnd: daysFromNow(1, 11, 0, now),
+      activityTypeId: 'at-001',
+      courseId: 'crs-ppl',
+      lessonId: 'ppl-les-010',
+      enrollmentId: 'enr-101',
       rankingScore: '89.0000',
-      rationale: { summary: 'Daniel Okafor can fill morning slot. CFI Carlos Mendez and N738JV available.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(24, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary: 'Daniel Okafor can fill morning slot. CFI Carlos Mendez and N738JV available.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(24, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'pending', locationId: loc,
-      studentId: 'stu-102', prospectId: null, instructorId: 'inst-102', aircraftId: 'ac-102',
-      proposedStart: daysFromNow(2, 14, 0, now), proposedEnd: daysFromNow(2, 16, 0, now),
-      activityTypeId: 'at-001', courseId: 'crs-ppl', lessonId: 'ppl-les-008', enrollmentId: 'enr-102',
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'pending',
+      locationId: loc,
+      studentId: 'stu-102',
+      prospectId: null,
+      instructorId: 'inst-102',
+      aircraftId: 'ac-102',
+      proposedStart: daysFromNow(2, 14, 0, now),
+      proposedEnd: daysFromNow(2, 16, 0, now),
+      activityTypeId: 'at-001',
+      courseId: 'crs-ppl',
+      lessonId: 'ppl-les-008',
+      enrollmentId: 'enr-102',
       rankingScore: '76.5000',
-      rationale: { summary: 'Rachel Nguyen next on waitlist. CFII Priya Sharma and Archer III available.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(24, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary: 'Rachel Nguyen next on waitlist. CFII Priya Sharma and Archer III available.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(24, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'pending', locationId: loc,
-      studentId: 'stu-103', prospectId: null, instructorId: 'inst-101', aircraftId: 'ac-103',
-      proposedStart: daysFromNow(3, 8, 0, now), proposedEnd: daysFromNow(3, 10, 0, now),
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'pending',
+      locationId: loc,
+      studentId: 'stu-103',
+      prospectId: null,
+      instructorId: 'inst-101',
+      aircraftId: 'ac-103',
+      proposedStart: daysFromNow(3, 8, 0, now),
+      proposedEnd: daysFromNow(3, 10, 0, now),
       activityTypeId: 'at-001',
       rankingScore: '71.0000',
-      rationale: { summary: 'Marcus Thompson rental waitlist. CFI Carlos Mendez and DA40 Star available.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(24, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary: 'Marcus Thompson rental waitlist. CFI Carlos Mendez and DA40 Star available.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(24, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'discovery', status: 'pending', locationId: loc,
-      studentId: null, prospectId: prospectId, instructorId: 'inst-101', aircraftId: 'ac-101',
-      proposedStart: daysFromNow(2, 10, 0, now), proposedEnd: daysFromNow(2, 11, 0, now),
+      ...base,
+      operatorId: op,
+      type: 'discovery',
+      status: 'pending',
+      locationId: loc,
+      studentId: null,
+      prospectId: prospectId,
+      instructorId: 'inst-101',
+      aircraftId: 'ac-101',
+      proposedStart: daysFromNow(2, 10, 0, now),
+      proposedEnd: daysFromNow(2, 11, 0, now),
       activityTypeId: 'at-003',
       rankingScore: '60.0000',
-      rationale: { summary: 'Tom Baker requested a discovery flight at KSQL. CFI Carlos Mendez and N738JV available.', inputs: { prospectName: 'Tom Baker' }, constraints: { instructorAvailable: true, aircraftAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(48, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary:
+          'Tom Baker requested a discovery flight at KSQL. CFI Carlos Mendez and N738JV available.',
+        inputs: { prospectName: 'Tom Baker' },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(48, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'approved', locationId: loc,
-      studentId: 'stu-101', prospectId: null, instructorId: 'inst-101', aircraftId: 'ac-101',
-      proposedStart: daysFromNow(0, 13, 0, now), proposedEnd: daysFromNow(0, 15, 0, now),
-      activityTypeId: 'at-001', courseId: 'crs-ppl', lessonId: 'ppl-les-009', enrollmentId: 'enr-101',
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'approved',
+      locationId: loc,
+      studentId: 'stu-101',
+      prospectId: null,
+      instructorId: 'inst-101',
+      aircraftId: 'ac-101',
+      proposedStart: daysFromNow(0, 13, 0, now),
+      proposedEnd: daysFromNow(0, 15, 0, now),
+      activityTypeId: 'at-001',
+      courseId: 'crs-ppl',
+      lessonId: 'ppl-les-009',
+      enrollmentId: 'enr-101',
       rankingScore: '91.0000',
-      rationale: { summary: 'Daniel Okafor filled afternoon slot. Approved by scheduler.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(18, now), approvedBy: 'usr-101', approvedAt: hoursFromNow(-3, now), declinedBy: null, declinedAt: null, expiredReason: null,
+      rationale: {
+        summary: 'Daniel Okafor filled afternoon slot. Approved by scheduler.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(18, now),
+      approvedBy: 'usr-101',
+      approvedAt: hoursFromNow(-3, now),
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
       fspReservationId: 'fsp-res-5001',
-      createdAt: hoursFromNow(-5, now), updatedAt: hoursFromNow(-3, now),
+      createdAt: hoursFromNow(-5, now),
+      updatedAt: hoursFromNow(-3, now),
     },
     {
-      ...base, operatorId: op, type: 'reschedule', status: 'declined', locationId: loc,
-      studentId: 'stu-103', prospectId: null, instructorId: 'inst-102', aircraftId: 'ac-102',
-      proposedStart: daysFromNow(1, 10, 0, now), proposedEnd: daysFromNow(1, 12, 0, now),
+      ...base,
+      operatorId: op,
+      type: 'reschedule',
+      status: 'declined',
+      locationId: loc,
+      studentId: 'stu-103',
+      prospectId: null,
+      instructorId: 'inst-102',
+      aircraftId: 'ac-102',
+      proposedStart: daysFromNow(1, 10, 0, now),
+      proposedEnd: daysFromNow(1, 12, 0, now),
       activityTypeId: 'at-001',
       rankingScore: '55.0000',
-      rationale: { summary: 'Marcus Thompson reschedule declined — student unavailable that day.', inputs: { rescheduleReason: 'student_request' }, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: false, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(12, now), approvedBy: null, approvedAt: null, declinedBy: 'usr-101', declinedAt: hoursFromNow(-1, now), expiredReason: null,
-      createdAt: hoursFromNow(-6, now), updatedAt: hoursFromNow(-1, now),
+      rationale: {
+        summary: 'Marcus Thompson reschedule declined — student unavailable that day.',
+        inputs: { rescheduleReason: 'student_request' },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: false,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(12, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: 'usr-101',
+      declinedAt: hoursFromNow(-1, now),
+      expiredReason: null,
+      createdAt: hoursFromNow(-6, now),
+      updatedAt: hoursFromNow(-1, now),
     },
   ];
 }
@@ -1399,51 +1891,158 @@ function buildOperator1003Suggestions(now: Date, prospectId: string): Suggestion
   const op = 1003;
   const loc = 'loc-201';
   const base = {
-    fspReservationId: null, fspValidationErrors: null,
-    courseId: null, lessonId: null, enrollmentId: null, groupId: null,
+    fspReservationId: null,
+    fspValidationErrors: null,
+    courseId: null,
+    lessonId: null,
+    enrollmentId: null,
+    groupId: null,
   };
 
   return [
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'pending', locationId: loc,
-      studentId: 'stu-201', prospectId: null, instructorId: 'inst-201', aircraftId: 'ac-201',
-      proposedStart: daysFromNow(1, 8, 0, now), proposedEnd: daysFromNow(1, 10, 0, now),
-      activityTypeId: 'at-001', courseId: 'crs-ppl', lessonId: 'ppl-les-005', enrollmentId: 'enr-201',
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'pending',
+      locationId: loc,
+      studentId: 'stu-201',
+      prospectId: null,
+      instructorId: 'inst-201',
+      aircraftId: 'ac-201',
+      proposedStart: daysFromNow(1, 8, 0, now),
+      proposedEnd: daysFromNow(1, 10, 0, now),
+      activityTypeId: 'at-001',
+      courseId: 'crs-ppl',
+      lessonId: 'ppl-les-005',
+      enrollmentId: 'enr-201',
       rankingScore: '85.0000',
-      rationale: { summary: 'Aisha Patel can fill morning slot at Hayward. CFI Kevin Tanaka and N921PC available.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(24, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary:
+          'Aisha Patel can fill morning slot at Hayward. CFI Kevin Tanaka and N921PC available.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(24, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'next_lesson', status: 'pending', locationId: loc,
-      studentId: 'stu-202', prospectId: null, instructorId: 'inst-201', aircraftId: 'ac-202',
-      proposedStart: daysFromNow(2, 14, 0, now), proposedEnd: daysFromNow(2, 16, 0, now),
+      ...base,
+      operatorId: op,
+      type: 'next_lesson',
+      status: 'pending',
+      locationId: loc,
+      studentId: 'stu-202',
+      prospectId: null,
+      instructorId: 'inst-201',
+      aircraftId: 'ac-202',
+      proposedStart: daysFromNow(2, 14, 0, now),
+      proposedEnd: daysFromNow(2, 16, 0, now),
       activityTypeId: 'at-001',
       rankingScore: '72.0000',
-      rationale: { summary: 'Brian Larsen next lesson due. CFI Kevin Tanaka and N340PC available.', inputs: { daysSinceLastLesson: 5 }, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(24, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary: 'Brian Larsen next lesson due. CFI Kevin Tanaka and N340PC available.',
+        inputs: { daysSinceLastLesson: 5 },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(24, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'discovery', status: 'pending', locationId: loc,
-      studentId: null, prospectId: prospectId, instructorId: 'inst-201', aircraftId: 'ac-201',
-      proposedStart: daysFromNow(3, 10, 0, now), proposedEnd: daysFromNow(3, 11, 0, now),
+      ...base,
+      operatorId: op,
+      type: 'discovery',
+      status: 'pending',
+      locationId: loc,
+      studentId: null,
+      prospectId: prospectId,
+      instructorId: 'inst-201',
+      aircraftId: 'ac-201',
+      proposedStart: daysFromNow(3, 10, 0, now),
+      proposedEnd: daysFromNow(3, 11, 0, now),
       activityTypeId: 'at-003',
       rankingScore: '58.0000',
-      rationale: { summary: 'Lisa Chang requested a discovery flight at Hayward. CFI Kevin Tanaka and N921PC available.', inputs: { prospectName: 'Lisa Chang' }, constraints: { instructorAvailable: true, aircraftAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(48, now), approvedBy: null, approvedAt: null, declinedBy: null, declinedAt: null, expiredReason: null,
-      createdAt: now, updatedAt: now,
+      rationale: {
+        summary:
+          'Lisa Chang requested a discovery flight at Hayward. CFI Kevin Tanaka and N921PC available.',
+        inputs: { prospectName: 'Lisa Chang' },
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(48, now),
+      approvedBy: null,
+      approvedAt: null,
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
+      createdAt: now,
+      updatedAt: now,
     },
     {
-      ...base, operatorId: op, type: 'waitlist', status: 'approved', locationId: loc,
-      studentId: 'stu-201', prospectId: null, instructorId: 'inst-201', aircraftId: 'ac-201',
-      proposedStart: daysFromNow(0, 10, 0, now), proposedEnd: daysFromNow(0, 12, 0, now),
-      activityTypeId: 'at-001', courseId: 'crs-ppl', lessonId: 'ppl-les-004', enrollmentId: 'enr-201',
+      ...base,
+      operatorId: op,
+      type: 'waitlist',
+      status: 'approved',
+      locationId: loc,
+      studentId: 'stu-201',
+      prospectId: null,
+      instructorId: 'inst-201',
+      aircraftId: 'ac-201',
+      proposedStart: daysFromNow(0, 10, 0, now),
+      proposedEnd: daysFromNow(0, 12, 0, now),
+      activityTypeId: 'at-001',
+      courseId: 'crs-ppl',
+      lessonId: 'ppl-les-004',
+      enrollmentId: 'enr-201',
       rankingScore: '90.0000',
-      rationale: { summary: 'Aisha Patel filled morning slot. Approved by scheduler.', inputs: {}, constraints: { instructorAvailable: true, aircraftAvailable: true, studentAvailable: true, withinCivilTwilight: true }, policies: {} },
-      expiresAt: hoursFromNow(18, now), approvedBy: 'usr-201', approvedAt: hoursFromNow(-2, now), declinedBy: null, declinedAt: null, expiredReason: null,
+      rationale: {
+        summary: 'Aisha Patel filled morning slot. Approved by scheduler.',
+        inputs: {},
+        constraints: {
+          instructorAvailable: true,
+          aircraftAvailable: true,
+          studentAvailable: true,
+          withinCivilTwilight: true,
+        },
+        policies: {},
+      },
+      expiresAt: hoursFromNow(18, now),
+      approvedBy: 'usr-201',
+      approvedAt: hoursFromNow(-2, now),
+      declinedBy: null,
+      declinedAt: null,
+      expiredReason: null,
       fspReservationId: 'fsp-res-6001',
-      createdAt: hoursFromNow(-4, now), updatedAt: hoursFromNow(-2, now),
+      createdAt: hoursFromNow(-4, now),
+      updatedAt: hoursFromNow(-2, now),
     },
   ];
 }

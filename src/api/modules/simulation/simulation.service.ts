@@ -87,19 +87,70 @@ const CANCELLATION_REASONS = [
 ];
 
 const WEATHER_SCENARIOS = [
-  { title: 'IFR conditions — low ceiling', category: 'IFR', visibility: 1.5, cloudCover: 95, severity: 'critical' as const },
-  { title: 'MVFR — reduced visibility', category: 'MVFR', visibility: 4, cloudCover: 75, severity: 'warning' as const },
-  { title: 'Thunderstorms in area — ground stop', category: 'LIFR', visibility: 0.5, cloudCover: 100, severity: 'grounded' as const },
-  { title: 'High crosswinds — 25kt gusting 35kt', category: 'MVFR', visibility: 8, cloudCover: 40, severity: 'warning' as const },
-  { title: 'Fog — visibility below minimums', category: 'IFR', visibility: 0.25, cloudCover: 100, severity: 'critical' as const },
+  {
+    title: 'IFR conditions — low ceiling',
+    category: 'IFR',
+    visibility: 1.5,
+    cloudCover: 95,
+    severity: 'critical' as const,
+  },
+  {
+    title: 'MVFR — reduced visibility',
+    category: 'MVFR',
+    visibility: 4,
+    cloudCover: 75,
+    severity: 'warning' as const,
+  },
+  {
+    title: 'Thunderstorms in area — ground stop',
+    category: 'LIFR',
+    visibility: 0.5,
+    cloudCover: 100,
+    severity: 'grounded' as const,
+  },
+  {
+    title: 'High crosswinds — 25kt gusting 35kt',
+    category: 'MVFR',
+    visibility: 8,
+    cloudCover: 40,
+    severity: 'warning' as const,
+  },
+  {
+    title: 'Fog — visibility below minimums',
+    category: 'IFR',
+    visibility: 0.25,
+    cloudCover: 100,
+    severity: 'critical' as const,
+  },
 ];
 
 const MAINTENANCE_ISSUES = [
-  { title: 'Annual inspection due', severity: 'warning' as const, description: 'Aircraft approaching annual inspection deadline — remove from schedule' },
-  { title: '100-hour inspection required', severity: 'critical' as const, description: 'Aircraft has exceeded 100-hour inspection interval — grounded pending maintenance' },
-  { title: 'Oil pressure anomaly reported', severity: 'critical' as const, description: 'Pilot reported fluctuating oil pressure on last flight — squawk filed' },
-  { title: 'Landing light inoperative', severity: 'warning' as const, description: 'Landing light failed on preflight — night flights restricted' },
-  { title: 'Alternator warning during flight', severity: 'critical' as const, description: 'Alternator warning light illuminated in flight — requires inspection' },
+  {
+    title: 'Annual inspection due',
+    severity: 'warning' as const,
+    description: 'Aircraft approaching annual inspection deadline — remove from schedule',
+  },
+  {
+    title: '100-hour inspection required',
+    severity: 'critical' as const,
+    description:
+      'Aircraft has exceeded 100-hour inspection interval — grounded pending maintenance',
+  },
+  {
+    title: 'Oil pressure anomaly reported',
+    severity: 'critical' as const,
+    description: 'Pilot reported fluctuating oil pressure on last flight — squawk filed',
+  },
+  {
+    title: 'Landing light inoperative',
+    severity: 'warning' as const,
+    description: 'Landing light failed on preflight — night flights restricted',
+  },
+  {
+    title: 'Alternator warning during flight',
+    severity: 'critical' as const,
+    description: 'Alternator warning light illuminated in flight — requires inspection',
+  },
 ];
 
 // ─── Service ────────────────────────────────────────────────────────────────
@@ -109,9 +160,7 @@ export class SimulationService {
   private readonly logger = new Logger(SimulationService.name);
   private readonly simulations = new Map<number, SimulationState>();
 
-  constructor(
-    @InjectQueue('ai-enrich-suggestion') private readonly aiEnrichQueue: Queue,
-  ) {}
+  constructor(@InjectQueue('ai-enrich-suggestion') private readonly aiEnrichQueue: Queue) {}
 
   /** Start simulation for an operator. Events fire every intervalMs. */
   async start(operatorId: number, intervalMs = 20_000): Promise<{ message: string }> {
@@ -156,7 +205,9 @@ export class SimulationService {
 
     clearInterval(state.intervalHandle);
     this.simulations.delete(operatorId);
-    this.logger.log(`Simulation stopped for operator ${operatorId} (${state.eventCount} events fired)`);
+    this.logger.log(
+      `Simulation stopped for operator ${operatorId} (${state.eventCount} events fired)`,
+    );
 
     return { message: `Simulation stopped after ${state.eventCount} events` };
   }
@@ -165,7 +216,13 @@ export class SimulationService {
   getStatus(operatorId: number): SimulationStatus {
     const state = this.simulations.get(operatorId);
     if (!state) {
-      return { running: false, eventCount: 0, startedAt: null, lastEventAt: null, lastEventType: null };
+      return {
+        running: false,
+        eventCount: 0,
+        startedAt: null,
+        lastEventAt: null,
+        lastEventType: null,
+      };
     }
     return {
       running: true,
@@ -311,11 +368,20 @@ export class SimulationService {
 
     this.logger.log(
       `SIM cancellation: ${cancelledStudent.firstName} ${cancelledStudent.lastName} cancelled ` +
-      `${slot.start.toLocaleDateString()} ${slot.start.getHours()}:00 — "${reason}"`,
+        `${slot.start.toLocaleDateString()} ${slot.start.getHours()}:00 — "${reason}"`,
     );
 
     // 3. Generate waitlist suggestions to fill the slot
-    await this.generateWaitlistSuggestions(operatorId, data, cancelledStudent.id, instructor, ac, activity, slot, reason);
+    await this.generateWaitlistSuggestions(
+      operatorId,
+      data,
+      cancelledStudent.id,
+      instructor,
+      ac,
+      activity,
+      slot,
+      reason,
+    );
   }
 
   /** Core pipeline: rank students and create suggestions for the freed slot. */
@@ -323,9 +389,9 @@ export class SimulationService {
     operatorId: number,
     data: Awaited<ReturnType<typeof this.loadOperatorData>>,
     cancelledStudentId: string,
-    instructor: typeof data.instructors[number],
-    ac: typeof data.aircraft[number] | null,
-    activity: typeof data.activityTypes[number] | null,
+    instructor: (typeof data.instructors)[number],
+    ac: (typeof data.aircraft)[number] | null,
+    activity: (typeof data.activityTypes)[number] | null,
     slot: { start: Date; end: Date },
     cancellationReason: string,
   ): Promise<void> {
@@ -348,11 +414,13 @@ export class SimulationService {
       const [lastRes] = await db
         .select({ endTime: reservationHistory.endTime })
         .from(reservationHistory)
-        .where(and(
-          eq(reservationHistory.operatorId, operatorId),
-          eq(reservationHistory.studentId, stu.id),
-          eq(reservationHistory.status, 'completed'),
-        ))
+        .where(
+          and(
+            eq(reservationHistory.operatorId, operatorId),
+            eq(reservationHistory.studentId, stu.id),
+            eq(reservationHistory.status, 'completed'),
+          ),
+        )
         .orderBy(desc(reservationHistory.endTime))
         .limit(1);
       if (lastRes) lastFlightMap.set(stu.id, lastRes.endTime);
@@ -385,7 +453,7 @@ export class SimulationService {
 
     const weights: RankingWeights = {
       ...DEFAULT_RANKING_WEIGHTS,
-      ...(data.policy?.waitlistWeights as Partial<RankingWeights> ?? {}),
+      ...((data.policy?.waitlistWeights as Partial<RankingWeights>) ?? {}),
     };
 
     const ranked = rankWaitlistCandidates(rankingInputs, weights);
@@ -403,10 +471,26 @@ export class SimulationService {
       const insight = insightMap.get(candidate.studentId);
 
       const constraintResults: ConstraintResult[] = [
-        { passed: true, constraint: 'student_availability', details: `Student ${candidate.studentId} available for slot` },
-        { passed: true, constraint: 'instructor_availability', details: `Instructor ${instructor.firstName} ${instructor.lastName} available` },
-        { passed: true, constraint: 'daylight_hours', details: `Slot ${slot.start.getHours()}:00-${slot.end.getHours()}:00 within daylight` },
-        { passed: true, constraint: 'activity_type', details: activity ? `Activity: ${activity.name}` : 'General flight training' },
+        {
+          passed: true,
+          constraint: 'student_availability',
+          details: `Student ${candidate.studentId} available for slot`,
+        },
+        {
+          passed: true,
+          constraint: 'instructor_availability',
+          details: `Instructor ${instructor.firstName} ${instructor.lastName} available`,
+        },
+        {
+          passed: true,
+          constraint: 'daylight_hours',
+          details: `Slot ${slot.start.getHours()}:00-${slot.end.getHours()}:00 within daylight`,
+        },
+        {
+          passed: true,
+          constraint: 'activity_type',
+          details: activity ? `Activity: ${activity.name}` : 'General flight training',
+        },
       ];
 
       const policyNotes: string[] = [
@@ -414,7 +498,8 @@ export class SimulationService {
         `TTL: ${ttlHours}h`,
         `Alternatives shown: ${maxSuggestions}`,
       ];
-      if (insight?.isAtRisk) policyNotes.push(`At-risk student: ${insight.riskReason ?? 'needs attention'}`);
+      if (insight?.isAtRisk)
+        policyNotes.push(`At-risk student: ${insight.riskReason ?? 'needs attention'}`);
       if (insight?.isInactive) policyNotes.push('Inactive student — re-engagement priority');
       if (insight?.isCheckrideReady) policyNotes.push('Checkride-ready — high priority');
 
@@ -425,22 +510,25 @@ export class SimulationService {
         suggestionType: 'waitlist',
       });
 
-      const [inserted] = await db.insert(suggestions).values({
-        operatorId,
-        type: 'waitlist',
-        status: 'pending',
-        locationId: 'loc-001',
-        studentId: candidate.studentId,
-        instructorId: instructor.id,
-        aircraftId: ac?.id ?? null,
-        activityTypeId: activity?.id ?? null,
-        proposedStart: slot.start,
-        proposedEnd: slot.end,
-        rankingScore: candidate.score.toFixed(4),
-        rationale,
-        groupId,
-        expiresAt,
-      }).returning({ id: suggestions.id });
+      const [inserted] = await db
+        .insert(suggestions)
+        .values({
+          operatorId,
+          type: 'waitlist',
+          status: 'pending',
+          locationId: 'loc-001',
+          studentId: candidate.studentId,
+          instructorId: instructor.id,
+          aircraftId: ac?.id ?? null,
+          activityTypeId: activity?.id ?? null,
+          proposedStart: slot.start,
+          proposedEnd: slot.end,
+          rankingScore: candidate.score.toFixed(4),
+          rationale,
+          groupId,
+          expiresAt,
+        })
+        .returning({ id: suggestions.id });
 
       if (inserted) suggestionIds.push(inserted.id);
     }
@@ -470,7 +558,9 @@ export class SimulationService {
       });
     }
 
-    this.logger.log(`SIM: ${suggestionIds.length} waitlist suggestions created (group ${groupId.slice(0, 8)})`);
+    this.logger.log(
+      `SIM: ${suggestionIds.length} waitlist suggestions created (group ${groupId.slice(0, 8)})`,
+    );
   }
 
   // ─── Event: Weather ───────────────────────────────────────────────────
@@ -480,9 +570,10 @@ export class SimulationService {
     const scenario = this.pick(WEATHER_SCENARIOS);
 
     // Affected aircraft (weather grounds everything if severe)
-    const affectedAircraft = scenario.severity === 'grounded'
-      ? data.aircraft.map((a) => a.id)
-      : data.aircraft.slice(0, Math.ceil(data.aircraft.length / 2)).map((a) => a.id);
+    const affectedAircraft =
+      scenario.severity === 'grounded'
+        ? data.aircraft.map((a) => a.id)
+        : data.aircraft.slice(0, Math.ceil(data.aircraft.length / 2)).map((a) => a.id);
 
     const affectedStudents = data.students
       .slice(0, Math.ceil(data.students.length / 3))
@@ -535,7 +626,9 @@ export class SimulationService {
       },
     });
 
-    this.logger.log(`SIM weather: ${scenario.title} (${scenario.severity}) — ${affectedAircraft.length} aircraft affected`);
+    this.logger.log(
+      `SIM weather: ${scenario.title} (${scenario.severity}) — ${affectedAircraft.length} aircraft affected`,
+    );
   }
 
   // ─── Event: Flight Completion ─────────────────────────────────────────
@@ -570,12 +663,14 @@ export class SimulationService {
 
     // 2. Update student flight hours
     const newHours = Number(student.totalFlightHours) + flightHours;
-    await db.update(students)
+    await db
+      .update(students)
       .set({ totalFlightHours: newHours.toFixed(1), updatedAt: new Date() })
       .where(eq(students.id, student.id));
 
     // 3. Update student insights
-    await db.update(studentInsights)
+    await db
+      .update(studentInsights)
       .set({
         lastFlightDate: endTime,
         daysSinceLastFlight: 0,
@@ -583,10 +678,9 @@ export class SimulationService {
         isInactive: false,
         computedAt: new Date(),
       })
-      .where(and(
-        eq(studentInsights.operatorId, operatorId),
-        eq(studentInsights.studentId, student.id),
-      ));
+      .where(
+        and(eq(studentInsights.operatorId, operatorId), eq(studentInsights.studentId, student.id)),
+      );
 
     // 4. Audit event
     await db.insert(auditEvents).values({
@@ -608,7 +702,7 @@ export class SimulationService {
 
     this.logger.log(
       `SIM completion: ${student.firstName} ${student.lastName} flew ${flightHours.toFixed(1)}h ` +
-      `(total: ${newHours.toFixed(1)}h) with ${instructor.firstName}`,
+        `(total: ${newHours.toFixed(1)}h) with ${instructor.firstName}`,
     );
   }
 
@@ -640,16 +734,16 @@ export class SimulationService {
     });
 
     // 2. Mark student as at-risk
-    await db.update(studentInsights)
+    await db
+      .update(studentInsights)
       .set({
         isAtRisk: true,
         riskReason: `No-show on ${startTime.toLocaleDateString()} — follow up needed`,
         computedAt: new Date(),
       })
-      .where(and(
-        eq(studentInsights.operatorId, operatorId),
-        eq(studentInsights.studentId, student.id),
-      ));
+      .where(
+        and(eq(studentInsights.operatorId, operatorId), eq(studentInsights.studentId, student.id)),
+      );
 
     // 3. Flight alert
     await db.insert(flightAlerts).values({
@@ -657,7 +751,8 @@ export class SimulationService {
       alertType: 'safety',
       severity: 'warning',
       title: `No-show: ${student.firstName} ${student.lastName}`,
-      description: `Student did not appear for scheduled ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} flight. ` +
+      description:
+        `Student did not appear for scheduled ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} flight. ` +
         `${instructor ? `Instructor ${instructor.firstName} ${instructor.lastName} was waiting.` : ''} ` +
         `Aircraft and instructor time wasted. Recommend follow-up contact.`,
       studentId: student.id,
@@ -680,12 +775,18 @@ export class SimulationService {
       },
     });
 
-    this.logger.log(`SIM no-show: ${student.firstName} ${student.lastName} missed ${startTime.toLocaleTimeString()}`);
+    this.logger.log(
+      `SIM no-show: ${student.firstName} ${student.lastName} missed ${startTime.toLocaleTimeString()}`,
+    );
 
     // 5. Also generate waitlist suggestions for the freed slot (same as cancellation)
     if (data.instructors.length > 0 && instructor) {
       await this.generateWaitlistSuggestions(
-        operatorId, data, student.id, instructor, ac,
+        operatorId,
+        data,
+        student.id,
+        instructor,
+        ac,
         data.activityTypes.length > 0 ? this.pick(data.activityTypes) : null,
         { start: startTime, end: endTime },
         `No-show by ${student.firstName} ${student.lastName}`,
@@ -804,7 +905,7 @@ export class SimulationService {
 
     this.logger.log(
       `SIM instructor out: ${instructor.firstName} ${instructor.lastName} — "${reason}" ` +
-      `(${affectedStudents.length} students affected)`,
+        `(${affectedStudents.length} students affected)`,
     );
 
     // 3. Generate reschedule suggestions for affected students
@@ -828,8 +929,16 @@ export class SimulationService {
         const rationale = buildRationale({
           rankingBreakdown: { instructorSwap: 0.4, timePreference: 0.3, totalHours: 0.3 },
           constraintResults: [
-            { passed: true, constraint: 'alternate_instructor', details: `Reassigned to ${altInstructor.firstName} ${altInstructor.lastName}` },
-            { passed: true, constraint: 'student_availability', details: `${student.firstName} ${student.lastName} available` },
+            {
+              passed: true,
+              constraint: 'alternate_instructor',
+              details: `Reassigned to ${altInstructor.firstName} ${altInstructor.lastName}`,
+            },
+            {
+              passed: true,
+              constraint: 'student_availability',
+              details: `${student.firstName} ${student.lastName} available`,
+            },
           ],
           policyMatches: [
             `Triggered by: ${instructor.firstName} ${instructor.lastName} unavailable — "${reason}"`,
@@ -838,22 +947,25 @@ export class SimulationService {
           suggestionType: 'reschedule',
         });
 
-        const [inserted] = await db.insert(suggestions).values({
-          operatorId,
-          type: 'reschedule',
-          status: 'pending',
-          locationId: 'loc-001',
-          studentId,
-          instructorId: altInstructor.id,
-          aircraftId: ac?.id ?? null,
-          activityTypeId: activity?.id ?? null,
-          proposedStart: slot.start,
-          proposedEnd: slot.end,
-          rankingScore: '0.7500',
-          rationale,
-          groupId,
-          expiresAt,
-        }).returning({ id: suggestions.id });
+        const [inserted] = await db
+          .insert(suggestions)
+          .values({
+            operatorId,
+            type: 'reschedule',
+            status: 'pending',
+            locationId: 'loc-001',
+            studentId,
+            instructorId: altInstructor.id,
+            aircraftId: ac?.id ?? null,
+            activityTypeId: activity?.id ?? null,
+            proposedStart: slot.start,
+            proposedEnd: slot.end,
+            rankingScore: '0.7500',
+            rationale,
+            groupId,
+            expiresAt,
+          })
+          .returning({ id: suggestions.id });
 
         if (inserted) {
           const payload: AiEnrichPayload = { suggestionId: inserted.id, operatorId };

@@ -54,7 +54,9 @@ export default function TemplatesPage() {
   const [editStates, setEditStates] = useState<Map<string, TemplateEditState>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(TEMPLATE_TYPE_ORDER));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(TEMPLATE_TYPE_ORDER),
+  );
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const sectionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -121,7 +123,7 @@ export default function TemplatesPage() {
       gsap.fromTo(
         toastRef.current,
         { opacity: 0, y: 20, x: 20 },
-        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' }
+        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' },
       );
       const timer = setTimeout(() => {
         if (toastRef.current) {
@@ -308,7 +310,9 @@ export default function TemplatesPage() {
       {groupedTemplates.map((group) => (
         <div
           key={group.type}
-          ref={(el) => { sectionRefs.current.set(group.type, el); }}
+          ref={(el) => {
+            sectionRefs.current.set(group.type, el);
+          }}
           className="card"
           style={styles.sectionCard}
         >
@@ -342,7 +346,9 @@ export default function TemplatesPage() {
 
           {/* Section Content */}
           <div
-            ref={(el) => { contentRefs.current.set(group.type, el); }}
+            ref={(el) => {
+              contentRefs.current.set(group.type, el);
+            }}
             style={{
               overflow: expandedSections.has(group.type) ? 'visible' : 'hidden',
               height: expandedSections.has(group.type) ? 'auto' : 0,
@@ -358,13 +364,19 @@ export default function TemplatesPage() {
                   <div key={template.id} style={styles.templateCard}>
                     {/* Template Header */}
                     <div style={styles.templateHeader}>
-                      <span className={template.channel === 'email' ? 'dark-badge-email' : 'dark-badge-sms'}>
+                      <span
+                        className={
+                          template.channel === 'email' ? 'dark-badge-email' : 'dark-badge-sms'
+                        }
+                      >
                         {template.channel.toUpperCase()}
                       </span>
-                      <span style={{
-                        ...styles.statusDot,
-                        background: template.isActive ? '#22c55e' : '#565d73',
-                      }} />
+                      <span
+                        style={{
+                          ...styles.statusDot,
+                          background: template.isActive ? '#22c55e' : '#565d73',
+                        }}
+                      />
                       <span style={styles.statusText}>
                         {template.isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -390,10 +402,14 @@ export default function TemplatesPage() {
                         {template.channel === 'email' ? 'Body' : 'Message'}
                       </label>
                       <textarea
-                        ref={(el) => { textareaRefs.current.set(template.id, el); }}
+                        ref={(el) => {
+                          textareaRefs.current.set(template.id, el);
+                        }}
                         className="input"
                         value={state.bodyTemplate}
-                        onChange={(e) => updateEditState(template.id, 'bodyTemplate', e.target.value)}
+                        onChange={(e) =>
+                          updateEditState(template.id, 'bodyTemplate', e.target.value)
+                        }
                         rows={5}
                         placeholder="Template body with {{placeholders}}..."
                         style={{
@@ -431,20 +447,14 @@ export default function TemplatesPage() {
                             <strong>Subject:</strong> {renderPreview(state.subject)}
                           </div>
                         )}
-                        <div style={styles.previewBody}>
-                          {renderPreview(state.bodyTemplate)}
-                        </div>
+                        <div style={styles.previewBody}>{renderPreview(state.bodyTemplate)}</div>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div style={styles.actions}>
-                      {state.error && (
-                        <span style={styles.actionError}>{state.error}</span>
-                      )}
-                      {state.saved && !state.dirty && (
-                        <span style={styles.actionSaved}>Saved</span>
-                      )}
+                      {state.error && <span style={styles.actionError}>{state.error}</span>}
+                      {state.saved && !state.dirty && <span style={styles.actionSaved}>Saved</span>}
                       <button
                         type="button"
                         className="btn btn-primary btn-sm"

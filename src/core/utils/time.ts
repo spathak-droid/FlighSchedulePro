@@ -82,7 +82,9 @@ export function fromFspTime(fspTime: string, timezone: string): Date {
   // Extract components from the FSP time string
   const match = fspTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
   if (!match) {
-    throw new Error(`Invalid FSP time format: "${fspTime}". Expected "YYYY-MM-DDTHH:mm" or "YYYY-MM-DDTHH:mm:ss".`);
+    throw new Error(
+      `Invalid FSP time format: "${fspTime}". Expected "YYYY-MM-DDTHH:mm" or "YYYY-MM-DDTHH:mm:ss".`,
+    );
   }
 
   const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr] = match;

@@ -11,7 +11,9 @@ vi.mock('../../../../../src/db/index.js', () => {
 
   const mockSelectLimit = vi.fn().mockResolvedValue([]);
   const mockSelectWhere = vi.fn().mockReturnValue({ limit: mockSelectLimit });
-  const mockSelectFrom = vi.fn().mockReturnValue({ where: mockSelectWhere, orderBy: vi.fn().mockResolvedValue([]) });
+  const mockSelectFrom = vi
+    .fn()
+    .mockReturnValue({ where: mockSelectWhere, orderBy: vi.fn().mockResolvedValue([]) });
 
   const mockUpdateReturning = vi.fn().mockResolvedValue([{}]);
   const mockUpdateWhere = vi.fn().mockReturnValue({ returning: mockUpdateReturning });
@@ -65,7 +67,10 @@ vi.mock('drizzle-orm', () => ({
 
 import { db } from '../../../../../src/db/index.js';
 import { NotificationService } from '../../../../../src/api/modules/notifications/notification.service.js';
-import type { SmsProvider, SmsResult } from '../../../../../src/api/modules/notifications/sms-provider.interface.js';
+import type {
+  SmsProvider,
+  SmsResult,
+} from '../../../../../src/api/modules/notifications/sms-provider.interface.js';
 import type { AuditService } from '../../../../../src/api/modules/activity/audit.service.js';
 import type { EmailService } from '../../../../../src/api/modules/notifications/email.service.js';
 import type { NotificationDispatchParams } from '../../../../../src/api/modules/notifications/notification.service.js';
@@ -104,7 +109,9 @@ function createMockEmailService(): EmailService {
   } as unknown as EmailService;
 }
 
-function makeDispatchParams(overrides: Partial<NotificationDispatchParams> = {}): NotificationDispatchParams {
+function makeDispatchParams(
+  overrides: Partial<NotificationDispatchParams> = {},
+): NotificationDispatchParams {
   return {
     notificationType: 'waitlist',
     recipientType: 'student',
@@ -160,31 +167,23 @@ describe('NotificationService', () => {
     });
 
     it('handles multiple occurrences of the same variable', () => {
-      const result = service.renderTemplate(
-        '',
-        '{{name}} booked. Confirmation for {{name}}.',
-        { name: 'Alice' },
-      );
+      const result = service.renderTemplate('', '{{name}} booked. Confirmation for {{name}}.', {
+        name: 'Alice',
+      });
 
       expect(result.body).toBe('Alice booked. Confirmation for Alice.');
     });
 
     it('leaves unreferenced placeholders as-is', () => {
-      const result = service.renderTemplate(
-        '',
-        'Hello {{name}}, your {{unknown}} is ready.',
-        { name: 'Bob' },
-      );
+      const result = service.renderTemplate('', 'Hello {{name}}, your {{unknown}} is ready.', {
+        name: 'Bob',
+      });
 
       expect(result.body).toBe('Hello Bob, your {{unknown}} is ready.');
     });
 
     it('handles empty variables object', () => {
-      const result = service.renderTemplate(
-        'Subject {{var}}',
-        'Body {{var}}',
-        {},
-      );
+      const result = service.renderTemplate('Subject {{var}}', 'Body {{var}}', {});
 
       expect(result.subject).toBe('Subject {{var}}');
       expect(result.body).toBe('Body {{var}}');
@@ -197,13 +196,11 @@ describe('NotificationService', () => {
     });
 
     it('handles special characters in variable values', () => {
-      const result = service.renderTemplate(
-        '',
-        'Hello {{name}}!',
-        { name: 'O\'Brien & Sons <LLC>' },
-      );
+      const result = service.renderTemplate('', 'Hello {{name}}!', {
+        name: "O'Brien & Sons <LLC>",
+      });
 
-      expect(result.body).toBe('Hello O\'Brien & Sons <LLC>!');
+      expect(result.body).toBe("Hello O'Brien & Sons <LLC>!");
     });
   });
 
@@ -226,7 +223,9 @@ describe('NotificationService', () => {
     });
 
     it('does not send email when recipient has no email address', async () => {
-      mocks.mockSelectLimit.mockResolvedValueOnce([{ notificationPreferences: { emailEnabled: true } }]);
+      mocks.mockSelectLimit.mockResolvedValueOnce([
+        { notificationPreferences: { emailEnabled: true } },
+      ]);
 
       const params = makeDispatchParams({ recipientEmail: undefined });
       const result = await service.dispatch(1, params);
@@ -246,10 +245,7 @@ describe('NotificationService', () => {
       const result = await service.dispatch(1, params);
 
       expect(result.smsSent).toBe(true);
-      expect(smsProvider.send).toHaveBeenCalledWith(
-        '+15551234567',
-        expect.any(String),
-      );
+      expect(smsProvider.send).toHaveBeenCalledWith('+15551234567', expect.any(String));
     });
 
     it('does not send SMS when SMS is disabled', async () => {
@@ -277,9 +273,7 @@ describe('NotificationService', () => {
 
     it('records SMS failure in audit when SMS provider returns error', async () => {
       mocks.mockSelectLimit
-        .mockResolvedValueOnce([
-          { notificationPreferences: { smsEnabled: true } },
-        ])
+        .mockResolvedValueOnce([{ notificationPreferences: { smsEnabled: true } }])
         // Template lookup
         .mockResolvedValueOnce([]);
 
@@ -302,9 +296,7 @@ describe('NotificationService', () => {
 
     it('creates audit event on successful SMS send', async () => {
       mocks.mockSelectLimit
-        .mockResolvedValueOnce([
-          { notificationPreferences: { smsEnabled: true } },
-        ])
+        .mockResolvedValueOnce([{ notificationPreferences: { smsEnabled: true } }])
         // Template lookup
         .mockResolvedValueOnce([]);
 
@@ -380,9 +372,7 @@ describe('NotificationService', () => {
 
     it('renders template with provided variables before sending SMS', async () => {
       mocks.mockSelectLimit
-        .mockResolvedValueOnce([
-          { notificationPreferences: { smsEnabled: true } },
-        ])
+        .mockResolvedValueOnce([{ notificationPreferences: { smsEnabled: true } }])
         // Template with variables
         .mockResolvedValueOnce([
           {

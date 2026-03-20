@@ -42,11 +42,16 @@ export class AiService {
   private openAiModel: string;
 
   constructor(@Optional() private readonly config?: ConfigService) {
-    const orKey = this.config?.get<string>('OPEN_ROUTER_API_KEY') ?? process.env.OPEN_ROUTER_API_KEY;
+    const orKey =
+      this.config?.get<string>('OPEN_ROUTER_API_KEY') ?? process.env.OPEN_ROUTER_API_KEY;
     const oaiKey = this.config?.get<string>('OPENAI_API_KEY') ?? process.env.OPENAI_API_KEY;
 
-    this.openRouterModel = this.config?.get<string>('OPEN_ROUTER_MODEL') ?? process.env.OPEN_ROUTER_MODEL ?? 'anthropic/claude-haiku-4.5';
-    this.openAiModel = this.config?.get<string>('OPEN_AI_MODEL') ?? process.env.OPEN_AI_MODEL ?? 'gpt-4.1-nano';
+    this.openRouterModel =
+      this.config?.get<string>('OPEN_ROUTER_MODEL') ??
+      process.env.OPEN_ROUTER_MODEL ??
+      'anthropic/claude-haiku-4.5';
+    this.openAiModel =
+      this.config?.get<string>('OPEN_AI_MODEL') ?? process.env.OPEN_AI_MODEL ?? 'gpt-4.1-nano';
 
     if (orKey) {
       this.openRouterClient = new OpenAI({
@@ -94,7 +99,8 @@ export class AiService {
     ];
 
     if (input.studentName) lines.push(`Student: ${input.studentName}`);
-    if (input.totalFlightHours !== undefined) lines.push(`Total flight hours: ${input.totalFlightHours}h`);
+    if (input.totalFlightHours !== undefined)
+      lines.push(`Total flight hours: ${input.totalFlightHours}h`);
     if (input.timeSinceLastFlight !== null && input.timeSinceLastFlight !== undefined) {
       lines.push(`Time since last flight: ${Math.round(input.timeSinceLastFlight)}h`);
     }
@@ -117,17 +123,28 @@ export class AiService {
     }
 
     // Student insight context — helps AI generate more specific rationale
-    if (input.isInactive || input.isCheckrideReady || input.isAtRisk || input.daysSinceLastFlight !== undefined) {
+    if (
+      input.isInactive ||
+      input.isCheckrideReady ||
+      input.isAtRisk ||
+      input.daysSinceLastFlight !== undefined
+    ) {
       lines.push('');
       lines.push('Student insights:');
       if (input.isInactive && input.daysSinceLastFlight !== undefined) {
-        lines.push(`- INACTIVE: Student has not flown in ${input.daysSinceLastFlight} days — risk of losing training momentum`);
+        lines.push(
+          `- INACTIVE: Student has not flown in ${input.daysSinceLastFlight} days — risk of losing training momentum`,
+        );
       }
       if (input.isCheckrideReady) {
-        lines.push('- CHECKRIDE READY: Student is at 90%+ enrollment completion — prioritize scheduling to maintain checkride readiness');
+        lines.push(
+          '- CHECKRIDE READY: Student is at 90%+ enrollment completion — prioritize scheduling to maintain checkride readiness',
+        );
       }
       if (input.isAtRisk) {
-        lines.push('- AT RISK: Flight gaps are increasing — student may be disengaging from training');
+        lines.push(
+          '- AT RISK: Flight gaps are increasing — student may be disengaging from training',
+        );
       }
       if (input.daysSinceLastFlight !== undefined && !input.isInactive) {
         lines.push(`- Days since last flight: ${input.daysSinceLastFlight}`);
@@ -137,7 +154,9 @@ export class AiService {
     lines.push('');
     lines.push('Respond in EXACTLY this JSON format, no markdown:');
     lines.push('{');
-    lines.push('  "summary": "2-3 sentence natural language explanation of why this suggestion was made and why it is a good fit. Be specific about the student context.",');
+    lines.push(
+      '  "summary": "2-3 sentence natural language explanation of why this suggestion was made and why it is a good fit. Be specific about the student context.",',
+    );
     lines.push('  "riskLevel": "low|medium|high",');
     lines.push('  "riskReason": "1 sentence explaining the risk classification"');
     lines.push('}');
@@ -196,11 +215,14 @@ export class AiService {
   private parseResponse(content: string, model: string): AiRationaleResult | null {
     try {
       // Strip markdown code fences if present
-      const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const cleaned = content
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .trim();
       const parsed = JSON.parse(cleaned);
 
       const riskLevel = ['low', 'medium', 'high'].includes(parsed.riskLevel)
-        ? parsed.riskLevel as 'low' | 'medium' | 'high'
+        ? (parsed.riskLevel as 'low' | 'medium' | 'high')
         : 'medium';
 
       return {
@@ -211,9 +233,7 @@ export class AiService {
         aiEnriched: true,
       };
     } catch (err) {
-      this.logger.warn(
-        `Failed to parse AI response: ${err instanceof Error ? err.message : err}`,
-      );
+      this.logger.warn(`Failed to parse AI response: ${err instanceof Error ? err.message : err}`);
       return null;
     }
   }

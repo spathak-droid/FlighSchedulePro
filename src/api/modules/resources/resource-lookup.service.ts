@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '../../../db/index.js';
 import {
-  students, instructors, aircraft, activityTypes, reservationHistory,
+  students,
+  instructors,
+  aircraft,
+  activityTypes,
+  reservationHistory,
 } from '../../../db/schema/index.js';
 import { eq, and, desc, asc, gt, sql, ilike } from 'drizzle-orm';
 
@@ -37,11 +41,13 @@ export class ResourceLookupService {
     const [lastFlight] = await db
       .select({ endTime: reservationHistory.endTime })
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.operatorId, operatorId),
-        eq(reservationHistory.studentId, studentId),
-        eq(reservationHistory.status, 'completed'),
-      ))
+      .where(
+        and(
+          eq(reservationHistory.operatorId, operatorId),
+          eq(reservationHistory.studentId, studentId),
+          eq(reservationHistory.status, 'completed'),
+        ),
+      )
       .orderBy(desc(reservationHistory.endTime))
       .limit(1);
 
@@ -53,11 +59,13 @@ export class ResourceLookupService {
     const [nextFlight] = await db
       .select({ startTime: reservationHistory.startTime })
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.operatorId, operatorId),
-        eq(reservationHistory.studentId, studentId),
-        gt(reservationHistory.startTime, now),
-      ))
+      .where(
+        and(
+          eq(reservationHistory.operatorId, operatorId),
+          eq(reservationHistory.studentId, studentId),
+          gt(reservationHistory.startTime, now),
+        ),
+      )
       .orderBy(asc(reservationHistory.startTime))
       .limit(1);
 
@@ -81,11 +89,13 @@ export class ResourceLookupService {
     const [result] = await db
       .select({ id: students.id })
       .from(students)
-      .where(and(
-        eq(students.operatorId, operatorId),
-        ilike(students.firstName, firstName),
-        ilike(students.lastName, lastName),
-      ))
+      .where(
+        and(
+          eq(students.operatorId, operatorId),
+          ilike(students.firstName, firstName),
+          ilike(students.lastName, lastName),
+        ),
+      )
       .limit(1);
 
     return result?.id ?? null;
@@ -104,11 +114,13 @@ export class ResourceLookupService {
     const [result] = await db
       .select({ id: instructors.id })
       .from(instructors)
-      .where(and(
-        eq(instructors.operatorId, operatorId),
-        ilike(instructors.firstName, firstName),
-        ilike(instructors.lastName, lastName),
-      ))
+      .where(
+        and(
+          eq(instructors.operatorId, operatorId),
+          ilike(instructors.firstName, firstName),
+          ilike(instructors.lastName, lastName),
+        ),
+      )
       .limit(1);
 
     return result?.id ?? null;
@@ -125,10 +137,7 @@ export class ResourceLookupService {
     const [result] = await db
       .select({ id: aircraft.id })
       .from(aircraft)
-      .where(and(
-        eq(aircraft.operatorId, operatorId),
-        eq(aircraft.registration, registration),
-      ))
+      .where(and(eq(aircraft.operatorId, operatorId), eq(aircraft.registration, registration)))
       .limit(1);
 
     return result?.id ?? null;
@@ -141,10 +150,7 @@ export class ResourceLookupService {
     const [result] = await db
       .select({ id: activityTypes.id })
       .from(activityTypes)
-      .where(and(
-        eq(activityTypes.operatorId, operatorId),
-        ilike(activityTypes.name, name),
-      ))
+      .where(and(eq(activityTypes.operatorId, operatorId), ilike(activityTypes.name, name)))
       .limit(1);
 
     return result?.id ?? null;

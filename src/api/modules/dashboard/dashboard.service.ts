@@ -62,12 +62,7 @@ export class DashboardService {
       db
         .select({ total: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(
-          and(
-            eq(suggestions.operatorId, operatorId),
-            eq(suggestions.status, 'pending'),
-          ),
-        ),
+        .where(and(eq(suggestions.operatorId, operatorId), eq(suggestions.status, 'pending'))),
 
       // Approved today count
       db
@@ -134,9 +129,7 @@ export class DashboardService {
     const totalDecisions = approved30d + declined30d;
 
     const acceptanceRate =
-      totalDecisions > 0
-        ? Math.round((approved30d / totalDecisions) * 10000) / 100
-        : null;
+      totalDecisions > 0 ? Math.round((approved30d / totalDecisions) * 10000) / 100 : null;
 
     return {
       pendingSuggestions: pending,
@@ -206,7 +199,9 @@ export class DashboardService {
 
     const result = await db
       .select({
-        avgHours: sql<number | null>`avg(extract(epoch from (${suggestions.approvedAt} - ${suggestions.createdAt})) / 3600.0)::float`,
+        avgHours: sql<
+          number | null
+        >`avg(extract(epoch from (${suggestions.approvedAt} - ${suggestions.createdAt})) / 3600.0)::float`,
       })
       .from(suggestions)
       .where(
@@ -241,12 +236,7 @@ export class DashboardService {
           oldestCreatedAt: sql<string | null>`min(${suggestions.createdAt})`,
         })
         .from(suggestions)
-        .where(
-          and(
-            eq(suggestions.operatorId, operatorId),
-            eq(suggestions.status, 'pending'),
-          ),
-        ),
+        .where(and(eq(suggestions.operatorId, operatorId), eq(suggestions.status, 'pending'))),
 
       // Expiration rate: expired / (approved + declined + expired) in last 30 days
       db
@@ -256,10 +246,7 @@ export class DashboardService {
         })
         .from(suggestions)
         .where(
-          and(
-            eq(suggestions.operatorId, operatorId),
-            gte(suggestions.updatedAt, thirtyDaysAgo),
-          ),
+          and(eq(suggestions.operatorId, operatorId), gte(suggestions.updatedAt, thirtyDaysAgo)),
         ),
     ]);
 
@@ -268,17 +255,15 @@ export class DashboardService {
     let oldestPendingAge = 0;
     if (oldestCreatedAtStr) {
       const oldestDate = new Date(oldestCreatedAtStr);
-      oldestPendingAge = Math.round(((Date.now() - oldestDate.getTime()) / (1000 * 60 * 60)) * 10) / 10;
+      oldestPendingAge =
+        Math.round(((Date.now() - oldestDate.getTime()) / (1000 * 60 * 60)) * 10) / 10;
     }
 
     const timeToFill = await this.getTimeToFill(operatorId);
 
     const expired30d = expirationResult[0]?.expired ?? 0;
     const total30d = expirationResult[0]?.total ?? 0;
-    const expirationRate =
-      total30d > 0
-        ? Math.round((expired30d / total30d) * 10000) / 100
-        : 0;
+    const expirationRate = total30d > 0 ? Math.round((expired30d / total30d) * 10000) / 100 : 0;
 
     return {
       pendingCount,

@@ -87,16 +87,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : String(exception),
       );
       if (exception instanceof Error) {
-        this.logger.error(`Exception name: ${exception.constructor.name}, message: "${exception.message}"`);
+        this.logger.error(
+          `Exception name: ${exception.constructor.name}, message: "${exception.message}"`,
+        );
         if ('cause' in exception) this.logger.error(`Cause: ${String(exception.cause)}`);
       }
 
       body = {
         error: 'INTERNAL_ERROR',
         message:
-          process.env.NODE_ENV === 'production'
-            ? 'An unexpected error occurred'
-            : errorMessage,
+          process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : errorMessage,
         correlationId: getCorrelationId(),
       };
     }

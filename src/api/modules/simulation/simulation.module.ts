@@ -4,9 +4,7 @@ import { SimulationService } from './simulation.service.js';
 import { SimulationController } from './simulation.controller.js';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: 'ai-enrich-suggestion' }),
-  ],
+  imports: [BullModule.registerQueue({ name: 'ai-enrich-suggestion' })],
   controllers: [SimulationController],
   providers: [SimulationService],
 })

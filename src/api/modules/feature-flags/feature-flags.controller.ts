@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Param,
-  Body,
-  Req,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Put, Param, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { FeatureFlagService } from './feature-flag.service.js';
 
 interface AuthenticatedRequest {

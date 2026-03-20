@@ -77,14 +77,10 @@ export function determineNextEvent(
   }
 
   // Sort lessons by order to ensure we pick the correct next one
-  const sortedLessons = [...progress.lessons].sort(
-    (a, b) => a.order - b.order,
-  );
+  const sortedLessons = [...progress.lessons].sort((a, b) => a.order - b.order);
 
   // Find the first uncompleted lesson
-  const nextLesson = sortedLessons.find(
-    (lesson: FspEnrollmentLesson) => !lesson.isCompleted,
-  );
+  const nextLesson = sortedLessons.find((lesson: FspEnrollmentLesson) => !lesson.isCompleted);
 
   if (!nextLesson) {
     // All lessons appear completed (but completedLessons < totalLessons).
@@ -97,8 +93,7 @@ export function determineNextEvent(
   // to ensure we get the right student's event entry.
   const matchingEvent = schedulableEvents.find(
     (event) =>
-      event.enrollmentId === progress.enrollmentId &&
-      event.lessonId === nextLesson.lessonId,
+      event.enrollmentId === progress.enrollmentId && event.lessonId === nextLesson.lessonId,
   );
 
   if (!matchingEvent) {

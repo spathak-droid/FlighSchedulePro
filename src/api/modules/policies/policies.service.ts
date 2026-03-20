@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db } from '../../../db/index.js';
 import { schedulingPolicies } from '../../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -107,24 +103,21 @@ export class PoliciesService {
 
     if (
       data.rescheduleAlternativesCount !== undefined &&
-      (data.rescheduleAlternativesCount < 3 ||
-        data.rescheduleAlternativesCount > 10)
+      (data.rescheduleAlternativesCount < 3 || data.rescheduleAlternativesCount > 10)
     ) {
       errors.push('rescheduleAlternativesCount must be between 3 and 10');
     }
 
     if (
       data.searchWindowInitialDays !== undefined &&
-      (data.searchWindowInitialDays < 1 ||
-        data.searchWindowInitialDays > 28)
+      (data.searchWindowInitialDays < 1 || data.searchWindowInitialDays > 28)
     ) {
       errors.push('searchWindowInitialDays must be between 1 and 28');
     }
 
     if (
       data.searchWindowIncrementDays !== undefined &&
-      (data.searchWindowIncrementDays < 1 ||
-        data.searchWindowIncrementDays > 14)
+      (data.searchWindowIncrementDays < 1 || data.searchWindowIncrementDays > 14)
     ) {
       errors.push('searchWindowIncrementDays must be between 1 and 14');
     }

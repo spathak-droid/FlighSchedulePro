@@ -34,10 +34,7 @@ export class AutoApproveService {
    * - { riskThreshold: 'low' } — only auto-approve low-risk (default)
    * - { riskThreshold: 'medium' } — auto-approve low and medium risk
    */
-  async checkAndAutoApprove(
-    operatorId: number,
-    suggestionId: string,
-  ): Promise<AutoApproveResult> {
+  async checkAndAutoApprove(operatorId: number, suggestionId: string): Promise<AutoApproveResult> {
     // 1. Check if auto_approve flag is enabled
     const isEnabled = await this.featureFlagService.isEnabled(operatorId, 'auto_approve');
     if (!isEnabled) {
@@ -48,12 +45,7 @@ export class AutoApproveService {
     const [suggestion] = await db
       .select()
       .from(suggestions)
-      .where(
-        and(
-          eq(suggestions.id, suggestionId),
-          eq(suggestions.operatorId, operatorId),
-        ),
-      )
+      .where(and(eq(suggestions.id, suggestionId), eq(suggestions.operatorId, operatorId)))
       .limit(1);
 
     if (!suggestion) {
@@ -61,7 +53,10 @@ export class AutoApproveService {
     }
 
     if (suggestion.status !== 'pending') {
-      return { autoApproved: false, reason: `suggestion status is '${suggestion.status}', not 'pending'` };
+      return {
+        autoApproved: false,
+        reason: `suggestion status is '${suggestion.status}', not 'pending'`,
+      };
     }
 
     // 3. Check AI enrichment
@@ -79,9 +74,7 @@ export class AutoApproveService {
     const flagConfig = await this.featureFlagService.getConfig(operatorId, 'auto_approve');
     const riskThreshold = (flagConfig.riskThreshold as string) ?? 'low';
 
-    const allowedRiskLevels: string[] = riskThreshold === 'medium'
-      ? ['low', 'medium']
-      : ['low'];
+    const allowedRiskLevels: string[] = riskThreshold === 'medium' ? ['low', 'medium'] : ['low'];
 
     if (!allowedRiskLevels.includes(riskLevel)) {
       return {
@@ -95,12 +88,7 @@ export class AutoApproveService {
       // Use empty FSP token — mock mode doesn't need a real token
       const fspToken = '';
 
-      await this.suggestionsService.approve(
-        operatorId,
-        suggestionId,
-        'system-auto',
-        fspToken,
-      );
+      await this.suggestionsService.approve(operatorId, suggestionId, 'system-auto', fspToken);
 
       // Create specific audit event for auto-approval
       await this.auditService.create({
@@ -127,9 +115,7 @@ export class AutoApproveService {
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      this.logger.warn(
-        `Auto-approve failed for suggestion ${suggestionId}: ${errorMsg}`,
-      );
+      this.logger.warn(`Auto-approve failed for suggestion ${suggestionId}: ${errorMsg}`);
       return {
         autoApproved: false,
         reason: `auto-approve failed: ${errorMsg}`,

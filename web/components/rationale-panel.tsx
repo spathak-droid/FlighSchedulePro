@@ -24,7 +24,15 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
         gsap.fromTo(
           body,
           { height: 0, opacity: 0 },
-          { height, opacity: 1, duration: 0.35, ease: 'power2.out', onComplete: () => { body.style.height = 'auto'; } }
+          {
+            height,
+            opacity: 1,
+            duration: 0.35,
+            ease: 'power2.out',
+            onComplete: () => {
+              body.style.height = 'auto';
+            },
+          },
         );
       }
     } else {
@@ -35,7 +43,9 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
           opacity: 0,
           duration: 0.25,
           ease: 'power2.in',
-          onComplete: () => { body.style.display = 'none'; },
+          onComplete: () => {
+            body.style.display = 'none';
+          },
         });
       }
     }
@@ -93,20 +103,30 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
               <div style={styles.aiBadgeRow}>
                 <span style={styles.aiBadge}>AI</span>
                 {rationale.riskLevel && (
-                  <span style={{
-                    ...styles.riskBadge,
-                    background: rationale.riskLevel === 'low' ? 'rgba(34,197,94,0.1)' : rationale.riskLevel === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                    color: rationale.riskLevel === 'low' ? '#16a34a' : rationale.riskLevel === 'medium' ? '#d97706' : '#dc2626',
-                  }}>
+                  <span
+                    style={{
+                      ...styles.riskBadge,
+                      background:
+                        rationale.riskLevel === 'low'
+                          ? 'rgba(34,197,94,0.1)'
+                          : rationale.riskLevel === 'medium'
+                            ? 'rgba(245,158,11,0.1)'
+                            : 'rgba(239,68,68,0.1)',
+                      color:
+                        rationale.riskLevel === 'low'
+                          ? '#16a34a'
+                          : rationale.riskLevel === 'medium'
+                            ? '#d97706'
+                            : '#dc2626',
+                    }}
+                  >
                     {rationale.riskLevel} risk
                   </span>
                 )}
               </div>
             )}
             <p style={styles.summaryText}>{rationale.aiSummary || rationale.summary}</p>
-            {rationale.riskReason && (
-              <p style={styles.riskReasonText}>{rationale.riskReason}</p>
-            )}
+            {rationale.riskReason && <p style={styles.riskReasonText}>{rationale.riskReason}</p>}
           </div>
         )}
 
@@ -116,7 +136,15 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
             <ul style={styles.list}>
               {rationale.inputs.map((item, i) => (
                 <li key={i} style={styles.listItem}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  >
                     <polyline points="9 11 12 14 22 4" />
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                   </svg>
@@ -133,7 +161,15 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
             <ul style={styles.list}>
               {rationale.constraints.map((item, i) => (
                 <li key={i} style={styles.listItem}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="2"
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  >
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -151,7 +187,15 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
             <ul style={styles.list}>
               {rationale.policies.map((item, i) => (
                 <li key={i} style={styles.listItem}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   <span>{item}</span>

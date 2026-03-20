@@ -76,7 +76,10 @@ export default function InsightsPanel() {
         <div style={styles.grid}>
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="insight-card" style={{ ...styles.card, opacity: 0.5 }}>
-              <div className="skeleton" style={{ width: 120, height: 12, borderRadius: 4, marginBottom: 12 }} />
+              <div
+                className="skeleton"
+                style={{ width: 120, height: 12, borderRadius: 4, marginBottom: 12 }}
+              />
               <div className="skeleton" style={{ width: 60, height: 32, borderRadius: 6 }} />
             </div>
           ))}
@@ -128,8 +131,23 @@ export default function InsightsPanel() {
           onKeyDown={(e) => e.key === 'Enter' && toggleCard('inactive')}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                color: '#f59e0b',
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -172,8 +190,23 @@ export default function InsightsPanel() {
           onKeyDown={(e) => e.key === 'Enter' && toggleCard('checkride')}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                color: '#22c55e',
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -194,7 +227,8 @@ export default function InsightsPanel() {
                 <div key={s.studentId} style={styles.studentRow}>
                   <span style={styles.studentName}>{s.studentName}</span>
                   <span style={{ ...styles.studentMeta, color: '#22c55e' }}>
-                    {s.completedLessons}/{s.totalLessons} lessons ({s.enrollmentProgress.toFixed(0)}%)
+                    {s.completedLessons}/{s.totalLessons} lessons ({s.enrollmentProgress.toFixed(0)}
+                    %)
                   </span>
                 </div>
               ))}
@@ -215,8 +249,23 @@ export default function InsightsPanel() {
           onKeyDown={(e) => e.key === 'Enter' && toggleCard('atRisk')}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                color: '#ef4444',
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -237,9 +286,7 @@ export default function InsightsPanel() {
               {insights.atRisk.map((s) => (
                 <div key={s.studentId} style={styles.studentRow}>
                   <span style={styles.studentName}>{s.studentName}</span>
-                  <span style={{ ...styles.studentMeta, color: '#ef4444' }}>
-                    {s.riskReason}
-                  </span>
+                  <span style={{ ...styles.studentMeta, color: '#ef4444' }}>{s.riskReason}</span>
                 </div>
               ))}
             </div>

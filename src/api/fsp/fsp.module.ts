@@ -14,12 +14,6 @@ import { FspTrainingService } from './fsp-training.service.js';
     FspResourceService,
     FspTrainingService,
   ],
-  exports: [
-    FspClient,
-    FspAuthService,
-    FspScheduleService,
-    FspResourceService,
-    FspTrainingService,
-  ],
+  exports: [FspClient, FspAuthService, FspScheduleService, FspResourceService, FspTrainingService],
 })
 export class FspModule {}

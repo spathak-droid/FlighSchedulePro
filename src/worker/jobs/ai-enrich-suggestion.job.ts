@@ -61,7 +61,11 @@ export class AiEnrichSuggestionJob extends WorkerHost {
         : [null];
 
       const [instructor] = suggestion.instructorId
-        ? await db.select().from(instructors).where(eq(instructors.id, suggestion.instructorId)).limit(1)
+        ? await db
+            .select()
+            .from(instructors)
+            .where(eq(instructors.id, suggestion.instructorId))
+            .limit(1)
         : [null];
 
       const [craft] = suggestion.aircraftId
@@ -69,7 +73,11 @@ export class AiEnrichSuggestionJob extends WorkerHost {
         : [null];
 
       const [activity] = suggestion.activityTypeId
-        ? await db.select().from(activityTypes).where(eq(activityTypes.id, suggestion.activityTypeId)).limit(1)
+        ? await db
+            .select()
+            .from(activityTypes)
+            .where(eq(activityTypes.id, suggestion.activityTypeId))
+            .limit(1)
         : [null];
 
       // Build AI input
@@ -78,16 +86,25 @@ export class AiEnrichSuggestionJob extends WorkerHost {
         suggestionType: suggestion.type as AiRationaleInput['suggestionType'],
         studentName: student ? `${student.firstName} ${student.lastName}` : undefined,
         totalFlightHours: student ? Number(student.totalFlightHours) : undefined,
-        timeSinceLastFlight: (existingRationale?.inputs as Record<string, unknown>)?.timeSinceLastFlight as number | undefined ?? undefined,
+        timeSinceLastFlight:
+          ((existingRationale?.inputs as Record<string, unknown>)?.timeSinceLastFlight as
+            | number
+            | undefined) ?? undefined,
         enrollmentProgress: suggestion.enrollmentId
           ? `Course ${suggestion.courseId}, Lesson ${suggestion.lessonId}`
           : undefined,
         proposedStart: suggestion.proposedStart.toLocaleString('en-US', {
-          weekday: 'short', month: 'short', day: 'numeric',
-          hour: 'numeric', minute: '2-digit', hour12: true,
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
         }),
         proposedEnd: suggestion.proposedEnd.toLocaleString('en-US', {
-          hour: 'numeric', minute: '2-digit', hour12: true,
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
         }),
         activityType: activity?.name,
         instructorName: instructor ? `${instructor.firstName} ${instructor.lastName}` : undefined,
@@ -97,7 +114,7 @@ export class AiEnrichSuggestionJob extends WorkerHost {
         constraintsPassed: this.extractConstraints(existingRationale, true),
         constraintsFailed: this.extractConstraints(existingRationale, false),
         policyNotes: Array.isArray(existingRationale?.policies)
-          ? existingRationale.policies as string[]
+          ? (existingRationale.policies as string[])
           : Object.keys((existingRationale?.policies as Record<string, unknown>) ?? {}),
       };
 
@@ -126,7 +143,7 @@ export class AiEnrichSuggestionJob extends WorkerHost {
 
       this.logger.log(
         `AI enriched suggestion ${suggestionId.slice(0, 8)}... ` +
-        `(risk=${result.riskLevel}, model=${result.aiModel})`,
+          `(risk=${result.riskLevel}, model=${result.aiModel})`,
       );
 
       // ── Auto-approve check ────────────────────────────────────────
@@ -143,16 +160,19 @@ export class AiEnrichSuggestionJob extends WorkerHost {
    * After AI enrichment, check if the suggestion qualifies for auto-approval.
    * Conditions: auto_approve flag enabled, risk level meets threshold.
    */
-  private async tryAutoApprove(operatorId: number, suggestionId: string, riskLevel: string): Promise<void> {
+  private async tryAutoApprove(
+    operatorId: number,
+    suggestionId: string,
+    riskLevel: string,
+  ): Promise<void> {
     try {
       // Check auto_approve feature flag
       const [flag] = await db
         .select()
         .from(featureFlags)
-        .where(and(
-          eq(featureFlags.operatorId, operatorId),
-          eq(featureFlags.flagName, 'auto_approve'),
-        ))
+        .where(
+          and(eq(featureFlags.operatorId, operatorId), eq(featureFlags.flagName, 'auto_approve')),
+        )
         .limit(1);
 
       if (!flag?.enabled) return;
@@ -178,11 +198,13 @@ export class AiEnrichSuggestionJob extends WorkerHost {
           approvedAt: now,
           updatedAt: now,
         })
-        .where(and(
-          eq(suggestions.id, suggestionId),
-          eq(suggestions.operatorId, operatorId),
-          eq(suggestions.status, 'pending'),
-        ));
+        .where(
+          and(
+            eq(suggestions.id, suggestionId),
+            eq(suggestions.operatorId, operatorId),
+            eq(suggestions.status, 'pending'),
+          ),
+        );
 
       // Audit event
       await db.insert(auditEvents).values({

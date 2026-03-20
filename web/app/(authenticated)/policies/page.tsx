@@ -52,16 +52,19 @@ export default function PoliciesPage() {
   // Derived state: auto_approve flag
   const autoApproveFlag = flags.find((f) => f.flagName === 'auto_approve');
   const autoApproveEnabled = autoApproveFlag?.enabled ?? false;
-  const autoApproveThreshold =
-    (autoApproveFlag?.config?.riskThreshold as string) ?? 'low';
+  const autoApproveThreshold = (autoApproveFlag?.config?.riskThreshold as string) ?? 'low';
 
   // Fetch policies and feature flags on mount
   useEffect(() => {
     async function fetchData() {
       try {
         const [policiesRes, flagsRes] = await Promise.all([
-          api.get<{ data: Partial<SchedulingPolicies> }>('/policies').catch(() => ({ data: {} as Partial<SchedulingPolicies> })),
-          api.get<{ data: FeatureFlag[] }>('/feature-flags').catch(() => ({ data: [] as FeatureFlag[] })),
+          api
+            .get<{ data: Partial<SchedulingPolicies> }>('/policies')
+            .catch(() => ({ data: {} as Partial<SchedulingPolicies> })),
+          api
+            .get<{ data: FeatureFlag[] }>('/feature-flags')
+            .catch(() => ({ data: [] as FeatureFlag[] })),
         ]);
 
         const raw = policiesRes.data;
@@ -109,7 +112,7 @@ export default function PoliciesPage() {
       gsap.fromTo(
         toastRef.current,
         { opacity: 0, y: 20, x: 20 },
-        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' }
+        { opacity: 1, y: 0, x: 0, duration: 0.4, ease: 'power2.out' },
       );
       const timer = setTimeout(() => {
         if (toastRef.current) {
@@ -127,25 +130,29 @@ export default function PoliciesPage() {
   }, [toast]);
 
   /** Toggle a feature flag on/off */
-  const handleToggleFlag = useCallback(async (flagName: string, enabled: boolean, config?: Record<string, unknown>) => {
-    setFlagUpdating(flagName);
-    try {
-      const payload: { enabled: boolean; config?: Record<string, unknown> } = { enabled };
-      if (config !== undefined) {
-        payload.config = config;
+  const handleToggleFlag = useCallback(
+    async (flagName: string, enabled: boolean, config?: Record<string, unknown>) => {
+      setFlagUpdating(flagName);
+      try {
+        const payload: { enabled: boolean; config?: Record<string, unknown> } = { enabled };
+        if (config !== undefined) {
+          payload.config = config;
+        }
+        const res = await api.put<{ data: FeatureFlag }>(`/feature-flags/${flagName}`, payload);
+        setFlags((prev) => prev.map((f) => (f.flagName === flagName ? res.data : f)));
+        setToast({
+          message: `${FLAG_LABELS[flagName] ?? flagName} ${enabled ? 'enabled' : 'disabled'}`,
+          type: 'success',
+        });
+      } catch (err) {
+        const msg = err instanceof ApiRequestError ? err.message : 'Failed to update flag';
+        setToast({ message: msg, type: 'error' });
+      } finally {
+        setFlagUpdating(null);
       }
-      const res = await api.put<{ data: FeatureFlag }>(`/feature-flags/${flagName}`, payload);
-      setFlags((prev) =>
-        prev.map((f) => (f.flagName === flagName ? res.data : f)),
-      );
-      setToast({ message: `${FLAG_LABELS[flagName] ?? flagName} ${enabled ? 'enabled' : 'disabled'}`, type: 'success' });
-    } catch (err) {
-      const msg = err instanceof ApiRequestError ? err.message : 'Failed to update flag';
-      setToast({ message: msg, type: 'error' });
-    } finally {
-      setFlagUpdating(null);
-    }
-  }, []);
+    },
+    [],
+  );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -197,7 +204,10 @@ export default function PoliciesPage() {
     }
   }
 
-  function updateWeight(key: 'timeSinceLastFlight' | 'timeUntilNextFlight' | 'totalHours', value: number) {
+  function updateWeight(
+    key: 'timeSinceLastFlight' | 'timeUntilNextFlight' | 'totalHours',
+    value: number,
+  ) {
     setPolicies((prev) => ({
       ...prev,
       waitlistWeights: {
@@ -235,7 +245,9 @@ export default function PoliciesPage() {
       <form onSubmit={handleSubmit} style={styles.form}>
         {/* Waitlist Priority Weights */}
         <div
-          ref={(el) => { cardsRef.current[0] = el; }}
+          ref={(el) => {
+            cardsRef.current[0] = el;
+          }}
           className="card"
           style={styles.card}
         >
@@ -344,12 +356,22 @@ export default function PoliciesPage() {
 
         {/* Search Window */}
         <div
-          ref={(el) => { cardsRef.current[1] = el; }}
+          ref={(el) => {
+            cardsRef.current[1] = el;
+          }}
           className="card"
           style={styles.card}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }}>S</div>
+            <div
+              style={{
+                ...styles.cardIcon,
+                background: 'rgba(139, 92, 246, 0.15)',
+                color: '#a78bfa',
+              }}
+            >
+              S
+            </div>
             <div>
               <h2 style={styles.cardTitle}>Search Window</h2>
               <p style={styles.cardDesc}>
@@ -360,7 +382,9 @@ export default function PoliciesPage() {
 
           <div style={styles.inputGrid}>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>Initial Days</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                Initial Days
+              </label>
               <input
                 className="input"
                 type="number"
@@ -368,12 +392,17 @@ export default function PoliciesPage() {
                 max={90}
                 value={policies.searchWindowInitialDays}
                 onChange={(e) =>
-                  setPolicies((prev) => ({ ...prev, searchWindowInitialDays: parseInt(e.target.value) || 7 }))
+                  setPolicies((prev) => ({
+                    ...prev,
+                    searchWindowInitialDays: parseInt(e.target.value) || 7,
+                  }))
                 }
               />
             </div>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>Increment Days</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                Increment Days
+              </label>
               <input
                 className="input"
                 type="number"
@@ -381,12 +410,17 @@ export default function PoliciesPage() {
                 max={30}
                 value={policies.searchWindowIncrementDays}
                 onChange={(e) =>
-                  setPolicies((prev) => ({ ...prev, searchWindowIncrementDays: parseInt(e.target.value) || 7 }))
+                  setPolicies((prev) => ({
+                    ...prev,
+                    searchWindowIncrementDays: parseInt(e.target.value) || 7,
+                  }))
                 }
               />
             </div>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>Max Days</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                Max Days
+              </label>
               <input
                 className="input"
                 type="number"
@@ -394,7 +428,10 @@ export default function PoliciesPage() {
                 max={90}
                 value={policies.searchWindowMaxDays}
                 onChange={(e) =>
-                  setPolicies((prev) => ({ ...prev, searchWindowMaxDays: parseInt(e.target.value) || 28 }))
+                  setPolicies((prev) => ({
+                    ...prev,
+                    searchWindowMaxDays: parseInt(e.target.value) || 28,
+                  }))
                 }
               />
             </div>
@@ -423,12 +460,22 @@ export default function PoliciesPage() {
 
         {/* Suggestion Settings */}
         <div
-          ref={(el) => { cardsRef.current[2] = el; }}
+          ref={(el) => {
+            cardsRef.current[2] = el;
+          }}
           className="card"
           style={styles.card}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, background: 'rgba(20, 184, 166, 0.15)', color: '#2dd4bf' }}>A</div>
+            <div
+              style={{
+                ...styles.cardIcon,
+                background: 'rgba(20, 184, 166, 0.15)',
+                color: '#2dd4bf',
+              }}
+            >
+              A
+            </div>
             <div>
               <h2 style={styles.cardTitle}>Suggestion Settings</h2>
               <p style={styles.cardDesc}>
@@ -439,7 +486,9 @@ export default function PoliciesPage() {
 
           <div style={styles.inputGrid}>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>Alternatives Count</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                Alternatives Count
+              </label>
               <input
                 className="input"
                 type="number"
@@ -456,7 +505,9 @@ export default function PoliciesPage() {
               <span style={styles.inputHint}>3-10 alternatives per reschedule</span>
             </div>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>TTL (hours)</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                TTL (hours)
+              </label>
               <input
                 className="input"
                 type="number"
@@ -464,13 +515,18 @@ export default function PoliciesPage() {
                 max={168}
                 value={policies.suggestionTtlHours}
                 onChange={(e) =>
-                  setPolicies((prev) => ({ ...prev, suggestionTtlHours: parseInt(e.target.value) || 24 }))
+                  setPolicies((prev) => ({
+                    ...prev,
+                    suggestionTtlHours: parseInt(e.target.value) || 24,
+                  }))
                 }
               />
               <span style={styles.inputHint}>Hours before a suggestion expires</span>
             </div>
             <div style={styles.inputGroup}>
-              <label className="dark-label" style={styles.inputLabel}>Polling Interval (min)</label>
+              <label className="dark-label" style={styles.inputLabel}>
+                Polling Interval (min)
+              </label>
               <input
                 className="input"
                 type="number"
@@ -478,7 +534,10 @@ export default function PoliciesPage() {
                 max={5}
                 value={policies.pollingIntervalMinutes}
                 onChange={(e) =>
-                  setPolicies((prev) => ({ ...prev, pollingIntervalMinutes: parseInt(e.target.value) || 5 }))
+                  setPolicies((prev) => ({
+                    ...prev,
+                    pollingIntervalMinutes: parseInt(e.target.value) || 5,
+                  }))
                 }
               />
               <span style={styles.inputHint}>2-5 minutes (FSP rate limits)</span>
@@ -488,17 +547,25 @@ export default function PoliciesPage() {
 
         {/* Notifications */}
         <div
-          ref={(el) => { cardsRef.current[3] = el; }}
+          ref={(el) => {
+            cardsRef.current[3] = el;
+          }}
           className="card"
           style={styles.card}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>N</div>
+            <div
+              style={{
+                ...styles.cardIcon,
+                background: 'rgba(245, 158, 11, 0.15)',
+                color: '#fbbf24',
+              }}
+            >
+              N
+            </div>
             <div>
               <h2 style={styles.cardTitle}>Notifications</h2>
-              <p style={styles.cardDesc}>
-                Enable or disable notification channels for students.
-              </p>
+              <p style={styles.cardDesc}>Enable or disable notification channels for students.</p>
             </div>
           </div>
 
@@ -551,16 +618,27 @@ export default function PoliciesPage() {
 
         {/* Automation */}
         <div
-          ref={(el) => { cardsRef.current[4] = el; }}
+          ref={(el) => {
+            cardsRef.current[4] = el;
+          }}
           className="card"
           style={styles.card}
         >
           <div style={styles.cardHeader}>
-            <div style={{ ...styles.cardIcon, background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}>M</div>
+            <div
+              style={{
+                ...styles.cardIcon,
+                background: 'rgba(168, 85, 247, 0.15)',
+                color: '#c084fc',
+              }}
+            >
+              M
+            </div>
             <div>
               <h2 style={styles.cardTitle}>Automation</h2>
               <p style={styles.cardDesc}>
-                Configure autonomous scheduling behavior. Auto-approve requires AI enrichment and risk assessment.
+                Configure autonomous scheduling behavior. Auto-approve requires AI enrichment and
+                risk assessment.
               </p>
             </div>
           </div>
@@ -577,7 +655,11 @@ export default function PoliciesPage() {
                 type="button"
                 className={`dark-toggle${autoApproveEnabled ? ' active' : ''}`}
                 disabled={flagUpdating === 'auto_approve'}
-                onClick={() => handleToggleFlag('auto_approve', !autoApproveEnabled, { riskThreshold: autoApproveThreshold })}
+                onClick={() =>
+                  handleToggleFlag('auto_approve', !autoApproveEnabled, {
+                    riskThreshold: autoApproveThreshold,
+                  })
+                }
                 aria-label="Toggle auto-approve"
               />
             </div>
@@ -588,7 +670,9 @@ export default function PoliciesPage() {
                 <div style={styles.toggleRow}>
                   <div>
                     <div style={styles.toggleLabel}>Risk Threshold</div>
-                    <div style={styles.toggleDesc}>Which risk levels qualify for automatic approval</div>
+                    <div style={styles.toggleDesc}>
+                      Which risk levels qualify for automatic approval
+                    </div>
                   </div>
                   <select
                     className="input"
@@ -611,12 +695,22 @@ export default function PoliciesPage() {
         {/* Feature Flags */}
         {flags.length > 0 && (
           <div
-            ref={(el) => { cardsRef.current[5] = el; }}
+            ref={(el) => {
+              cardsRef.current[5] = el;
+            }}
             className="card"
             style={styles.card}
           >
             <div style={styles.cardHeader}>
-              <div style={{ ...styles.cardIcon, background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' }}>F</div>
+              <div
+                style={{
+                  ...styles.cardIcon,
+                  background: 'rgba(34, 197, 94, 0.15)',
+                  color: '#4ade80',
+                }}
+              >
+                F
+              </div>
               <div>
                 <h2 style={styles.cardTitle}>Feature Flags</h2>
                 <p style={styles.cardDesc}>
@@ -634,9 +728,7 @@ export default function PoliciesPage() {
                       <div style={styles.toggleLabel}>
                         {FLAG_LABELS[flag.flagName] ?? flag.flagName}
                       </div>
-                      <div style={styles.toggleDesc}>
-                        {flag.description || flag.flagName}
-                      </div>
+                      <div style={styles.toggleDesc}>{flag.description || flag.flagName}</div>
                     </div>
                     <button
                       type="button"
@@ -654,17 +746,16 @@ export default function PoliciesPage() {
 
         {/* Save Button */}
         <div
-          ref={(el) => { cardsRef.current[6] = el; }}
+          ref={(el) => {
+            cardsRef.current[6] = el;
+          }}
           className="card"
           style={{ ...styles.card, padding: '20px 24px' }}
         >
-          <button
-            ref={saveBtnRef}
-            type="submit"
-            disabled={saving}
-            style={styles.saveBtn}
-          >
-            {saving && <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />}
+          <button ref={saveBtnRef} type="submit" disabled={saving} style={styles.saveBtn}>
+            {saving && (
+              <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+            )}
             {saving ? 'Saving...' : 'Save Policies'}
           </button>
         </div>

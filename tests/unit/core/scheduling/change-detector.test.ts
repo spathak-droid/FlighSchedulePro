@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  hashSchedule,
-  detectOpenings,
-} from '../../../../src/core/scheduling/change-detector.js';
+import { hashSchedule, detectOpenings } from '../../../../src/core/scheduling/change-detector.js';
 import type { ScheduleOpening } from '../../../../src/core/scheduling/change-detector.js';
 import type { FspScheduleEvent } from '../../../../src/api/fsp/fsp.types.js';
 
@@ -34,7 +31,10 @@ describe('hashSchedule', () => {
   });
 
   it('returns the same hash for the same events', () => {
-    const events = [makeEvent(), makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T14:00:00' })];
+    const events = [
+      makeEvent(),
+      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T14:00:00' }),
+    ];
     const hash1 = hashSchedule(events);
     const hash2 = hashSchedule([...events]);
     expect(hash1).toBe(hash2);
@@ -114,11 +114,19 @@ describe('detectOpenings', () => {
 
   it('detects a cancellation opening when an event is removed', () => {
     const previous = [
-      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T08:00:00', End: '2024-03-15T10:00:00' }),
+      makeEvent({
+        CustomerName: 'Alice',
+        Start: '2024-03-15T08:00:00',
+        End: '2024-03-15T10:00:00',
+      }),
       makeEvent({ CustomerName: 'Bob', Start: '2024-03-15T10:00:00', End: '2024-03-15T12:00:00' }),
     ];
     const current = [
-      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T08:00:00', End: '2024-03-15T10:00:00' }),
+      makeEvent({
+        CustomerName: 'Alice',
+        Start: '2024-03-15T08:00:00',
+        End: '2024-03-15T10:00:00',
+      }),
     ];
 
     const result = detectOpenings(previous, current, 'loc-1');
@@ -184,10 +192,12 @@ describe('detectOpenings', () => {
     const gaps = result.filter((o) => o.type === 'gap');
 
     // Gap from 08:20 to 08:40 = 20 minutes, should be filtered out
-    expect(gaps.every((g) => {
-      const durationMin = (g.end.getTime() - g.start.getTime()) / 60_000;
-      return durationMin >= 30;
-    })).toBe(true);
+    expect(
+      gaps.every((g) => {
+        const durationMin = (g.end.getTime() - g.start.getTime()) / 60_000;
+        return durationMin >= 30;
+      }),
+    ).toBe(true);
   });
 
   it('does not report gaps that already existed in previous schedule', () => {
@@ -228,9 +238,7 @@ describe('detectOpenings', () => {
   });
 
   it('cancellation openings include previousReservation details', () => {
-    const previous = [
-      makeEvent({ CustomerName: 'Alice', Title: 'Solo Practice' }),
-    ];
+    const previous = [makeEvent({ CustomerName: 'Alice', Title: 'Solo Practice' })];
 
     const result = detectOpenings(previous, [], 'loc-1');
     const cancellation = result.find((o) => o.type === 'cancellation');

@@ -28,24 +28,109 @@ function relativeTime(timestamp: string): string {
   }
 }
 
-function eventMeta(eventType: string): { label: string; dotColor: string; badgeBg: string; badgeColor: string } {
-  const map: Record<string, { label: string; dotColor: string; badgeBg: string; badgeColor: string }> = {
-    suggestion_approved: { label: 'Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
-    suggestion_declined: { label: 'Declined', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
-    suggestion_expired: { label: 'Expired', dotColor: '#6b7280', badgeBg: 'rgba(100,116,139,0.1)', badgeColor: '#64748b' },
-    suggestion_created: { label: 'Created', dotColor: '#3b82f6', badgeBg: 'rgba(59,130,246,0.1)', badgeColor: '#2563eb' },
-    suggestion_auto_approved: { label: 'Auto-Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
-    bulk_approve: { label: 'Bulk Approve', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
-    bulk_decline: { label: 'Bulk Decline', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
-    policy_updated: { label: 'Policy', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
-    flight_cancelled: { label: 'Cancellation', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
-    flight_completed: { label: 'Flight Done', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
-    student_no_show: { label: 'No-Show', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
-    disruption_detected: { label: 'Disruption', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
-    maintenance_alert: { label: 'Maintenance', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
-    instructor_unavailable: { label: 'Instructor Out', dotColor: '#8b5cf6', badgeBg: 'rgba(139,92,246,0.1)', badgeColor: '#7c3aed' },
+function eventMeta(eventType: string): {
+  label: string;
+  dotColor: string;
+  badgeBg: string;
+  badgeColor: string;
+} {
+  const map: Record<
+    string,
+    { label: string; dotColor: string; badgeBg: string; badgeColor: string }
+  > = {
+    suggestion_approved: {
+      label: 'Approved',
+      dotColor: '#22c55e',
+      badgeBg: 'rgba(34,197,94,0.1)',
+      badgeColor: '#16a34a',
+    },
+    suggestion_declined: {
+      label: 'Declined',
+      dotColor: '#ef4444',
+      badgeBg: 'rgba(239,68,68,0.1)',
+      badgeColor: '#dc2626',
+    },
+    suggestion_expired: {
+      label: 'Expired',
+      dotColor: '#6b7280',
+      badgeBg: 'rgba(100,116,139,0.1)',
+      badgeColor: '#64748b',
+    },
+    suggestion_created: {
+      label: 'Created',
+      dotColor: '#3b82f6',
+      badgeBg: 'rgba(59,130,246,0.1)',
+      badgeColor: '#2563eb',
+    },
+    suggestion_auto_approved: {
+      label: 'Auto-Approved',
+      dotColor: '#22c55e',
+      badgeBg: 'rgba(34,197,94,0.1)',
+      badgeColor: '#16a34a',
+    },
+    bulk_approve: {
+      label: 'Bulk Approve',
+      dotColor: '#22c55e',
+      badgeBg: 'rgba(34,197,94,0.1)',
+      badgeColor: '#16a34a',
+    },
+    bulk_decline: {
+      label: 'Bulk Decline',
+      dotColor: '#ef4444',
+      badgeBg: 'rgba(239,68,68,0.1)',
+      badgeColor: '#dc2626',
+    },
+    policy_updated: {
+      label: 'Policy',
+      dotColor: '#f59e0b',
+      badgeBg: 'rgba(245,158,11,0.1)',
+      badgeColor: '#d97706',
+    },
+    flight_cancelled: {
+      label: 'Cancellation',
+      dotColor: '#ef4444',
+      badgeBg: 'rgba(239,68,68,0.1)',
+      badgeColor: '#dc2626',
+    },
+    flight_completed: {
+      label: 'Flight Done',
+      dotColor: '#22c55e',
+      badgeBg: 'rgba(34,197,94,0.1)',
+      badgeColor: '#16a34a',
+    },
+    student_no_show: {
+      label: 'No-Show',
+      dotColor: '#f59e0b',
+      badgeBg: 'rgba(245,158,11,0.1)',
+      badgeColor: '#d97706',
+    },
+    disruption_detected: {
+      label: 'Disruption',
+      dotColor: '#ef4444',
+      badgeBg: 'rgba(239,68,68,0.1)',
+      badgeColor: '#dc2626',
+    },
+    maintenance_alert: {
+      label: 'Maintenance',
+      dotColor: '#f59e0b',
+      badgeBg: 'rgba(245,158,11,0.1)',
+      badgeColor: '#d97706',
+    },
+    instructor_unavailable: {
+      label: 'Instructor Out',
+      dotColor: '#8b5cf6',
+      badgeBg: 'rgba(139,92,246,0.1)',
+      badgeColor: '#7c3aed',
+    },
   };
-  return map[eventType] || { label: eventType.replace(/_/g, ' '), dotColor: '#6b7280', badgeBg: 'rgba(100,116,139,0.1)', badgeColor: '#64748b' };
+  return (
+    map[eventType] || {
+      label: eventType.replace(/_/g, ' '),
+      dotColor: '#6b7280',
+      badgeBg: 'rgba(100,116,139,0.1)',
+      badgeColor: '#64748b',
+    }
+  );
 }
 
 interface ActivityFeedProps {
@@ -53,7 +138,10 @@ interface ActivityFeedProps {
   refreshInterval?: number;
 }
 
-export default function ActivityFeed({ compact = false, refreshInterval = 30000 }: ActivityFeedProps) {
+export default function ActivityFeed({
+  compact = false,
+  refreshInterval = 30000,
+}: ActivityFeedProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -62,25 +150,31 @@ export default function ActivityFeed({ compact = false, refreshInterval = 30000 
   const listRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
 
-  const fetchEvents = useCallback(async (pageNum: number, append: boolean) => {
-    try {
-      const res = await api.get<PaginatedResponse<ActivityEvent>>('/activity', {
-        page: pageNum,
-        pageSize: compact ? 10 : 20,
-      });
-      if (append) {
-        setEvents((prev) => [...prev, ...res.data]);
-      } else {
-        setEvents(res.data);
+  const fetchEvents = useCallback(
+    async (pageNum: number, append: boolean) => {
+      try {
+        const res = await api.get<PaginatedResponse<ActivityEvent>>('/activity', {
+          page: pageNum,
+          pageSize: compact ? 10 : 20,
+        });
+        if (append) {
+          setEvents((prev) => [...prev, ...res.data]);
+        } else {
+          setEvents(res.data);
+        }
+        setHasMore(
+          res.data.length > 0 &&
+            res.pagination.page * res.pagination.pageSize < res.pagination.total,
+        );
+      } catch {
+        // Silently fail for activity feed
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-      setHasMore(res.data.length > 0 && res.pagination.page * res.pagination.pageSize < res.pagination.total);
-    } catch {
-      // Silently fail for activity feed
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [compact]);
+    },
+    [compact],
+  );
 
   useEffect(() => {
     fetchEvents(1, false);
@@ -105,7 +199,7 @@ export default function ActivityFeed({ compact = false, refreshInterval = 30000 
       gsap.fromTo(
         newItems,
         { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.3, ease: 'power2.out', stagger: 0.04 }
+        { opacity: 1, x: 0, duration: 0.3, ease: 'power2.out', stagger: 0.04 },
       );
     }
     prevCountRef.current = events.length;
@@ -143,7 +237,14 @@ export default function ActivityFeed({ compact = false, refreshInterval = 30000 
           <h3 style={titleStyle}>Recent Activity</h3>
         </div>
         <div style={styles.emptyState}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth="1.5"
+          >
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>

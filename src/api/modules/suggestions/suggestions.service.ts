@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { db } from '../../../db/index.js';
@@ -172,9 +167,7 @@ export class SuggestionsService {
       .returning();
 
     if (!locked) {
-      throw new ConflictException(
-        `Suggestion ${id} was modified concurrently — please retry`,
-      );
+      throw new ConflictException(`Suggestion ${id} was modified concurrently — please retry`);
     }
 
     // Step 3: Build FSP reservation request from suggestion fields
@@ -303,10 +296,7 @@ export class SuggestionsService {
           .update(suggestions)
           .set({ status: 'expired', expiredReason: 'slot_filled', updatedAt: now })
           .where(
-            and(
-              eq(suggestions.groupId, suggestion.groupId),
-              eq(suggestions.status, 'pending'),
-            ),
+            and(eq(suggestions.groupId, suggestion.groupId), eq(suggestions.status, 'pending')),
           );
       }
 
@@ -379,14 +369,10 @@ export class SuggestionsService {
           fspReservationId: createResult.id ?? undefined,
         };
 
-        await this.notificationQueue.add(
-          `notify-${id}-${Date.now()}`,
-          notificationData,
-          {
-            attempts: 3,
-            backoff: { type: 'exponential', delay: 5000 },
-          },
-        );
+        await this.notificationQueue.add(`notify-${id}-${Date.now()}`, notificationData, {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+        });
 
         this.logger.log(`Notification job enqueued for suggestion ${id}`);
       } catch (notifyError) {
@@ -396,19 +382,14 @@ export class SuggestionsService {
         );
       }
 
-      this.logger.log(
-        `Suggestion ${id} approved — FSP reservation ${createResult.id}`,
-      );
+      this.logger.log(`Suggestion ${id} approved — FSP reservation ${createResult.id}`);
 
       return { suggestion: approved!, reservation: createResult };
     } catch (error) {
       // Step 7: On unexpected FSP error, revert to pending
-      this.logger.error(
-        `Unexpected error approving suggestion ${id}: ${error}`,
-      );
+      this.logger.error(`Unexpected error approving suggestion ${id}: ${error}`);
 
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       await db
         .update(suggestions)
@@ -468,9 +449,7 @@ export class SuggestionsService {
       .returning();
 
     if (!declined) {
-      throw new ConflictException(
-        `Suggestion ${id} was modified concurrently — please retry`,
-      );
+      throw new ConflictException(`Suggestion ${id} was modified concurrently — please retry`);
     }
 
     await this.auditService.create({
@@ -524,15 +503,13 @@ export class SuggestionsService {
             id,
             status: 'failed',
             error:
-              result.reservation?.errors
-                ?.map((e) => e.message)
-                .join('; ') ?? 'FSP validation or creation failed',
+              result.reservation?.errors?.map((e) => e.message).join('; ') ??
+              'FSP validation or creation failed',
           });
           failed++;
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         results.push({
           id,
           status: 'failed',
@@ -568,8 +545,7 @@ export class SuggestionsService {
         results.push({ id, status: 'declined' });
         declined++;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         results.push({
           id,
           status: 'failed',

@@ -77,7 +77,11 @@ describe('detectCancellations', () => {
     const previous = [makeEvent({ CustomerName: 'Alice' })];
     const current = [
       makeEvent({ CustomerName: 'Alice' }),
-      makeEvent({ CustomerName: 'NewStudent', Start: '2024-03-15T14:00:00', End: '2024-03-15T16:00:00' }),
+      makeEvent({
+        CustomerName: 'NewStudent',
+        Start: '2024-03-15T14:00:00',
+        End: '2024-03-15T16:00:00',
+      }),
     ];
 
     const result = detectCancellations(previous, current, 'loc-1');
@@ -102,12 +106,24 @@ describe('detectCancellations', () => {
   it('uses composite key (Start|End|CustomerName|InstructorName|AircraftName)', () => {
     // Same customer but different time -> counts as different event
     const previous = [
-      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T08:00:00', End: '2024-03-15T10:00:00' }),
-      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T14:00:00', End: '2024-03-15T16:00:00' }),
+      makeEvent({
+        CustomerName: 'Alice',
+        Start: '2024-03-15T08:00:00',
+        End: '2024-03-15T10:00:00',
+      }),
+      makeEvent({
+        CustomerName: 'Alice',
+        Start: '2024-03-15T14:00:00',
+        End: '2024-03-15T16:00:00',
+      }),
     ];
     // Only the morning event remains
     const current = [
-      makeEvent({ CustomerName: 'Alice', Start: '2024-03-15T08:00:00', End: '2024-03-15T10:00:00' }),
+      makeEvent({
+        CustomerName: 'Alice',
+        Start: '2024-03-15T08:00:00',
+        End: '2024-03-15T10:00:00',
+      }),
     ];
 
     const result = detectCancellations(previous, current, 'loc-1');

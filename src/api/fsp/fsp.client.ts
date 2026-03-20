@@ -120,7 +120,12 @@ export class FspClient {
     return this.request<T>('GET', this.curriculumBaseUrl, path, operatorId, token);
   }
 
-  async curriculumPost<T>(operatorId: number, path: string, token: string, body?: unknown): Promise<T> {
+  async curriculumPost<T>(
+    operatorId: number,
+    path: string,
+    token: string,
+    body?: unknown,
+  ): Promise<T> {
     return this.request<T>('POST', this.curriculumBaseUrl, path, operatorId, token, body);
   }
 
@@ -174,7 +179,7 @@ export class FspClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-subscription-key': this.subscriptionKey,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
 
     this.logger.debug(`AUTH GET ${url}`);
@@ -202,7 +207,7 @@ export class FspClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-subscription-key': this.subscriptionKey,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
 
     this.logger.debug(`AUTH DELETE ${url}`);
@@ -260,7 +265,7 @@ export class FspClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-subscription-key': this.subscriptionKey,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
 
     this.logger.debug(`${method} ${url} [operator=${operatorId}, attempt=${attempt}]`);
@@ -284,10 +289,7 @@ export class FspClient {
 
     // 429 Too Many Requests → exponential backoff & retry
     if (response.status === 429 && attempt < this.MAX_RETRIES) {
-      const backoff = Math.min(
-        this.INITIAL_BACKOFF_MS * Math.pow(2, attempt),
-        this.MAX_BACKOFF_MS,
-      );
+      const backoff = Math.min(this.INITIAL_BACKOFF_MS * Math.pow(2, attempt), this.MAX_BACKOFF_MS);
       this.logger.warn(
         `Rate limited by FSP (429) for operator ${operatorId}. ` +
           `Retrying in ${backoff}ms (attempt ${attempt + 1}/${this.MAX_RETRIES})`,

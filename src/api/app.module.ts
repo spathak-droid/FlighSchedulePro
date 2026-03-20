@@ -19,6 +19,7 @@ import { SolverModule } from './modules/solver/solver.module.js';
 import { FlightAlertsModule } from './modules/alerts/flight-alerts.module.js';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module.js';
 import { SimulationModule } from './modules/simulation/simulation.module.js';
+import { AskModule } from './modules/ask/ask.module.js';
 import { AuthGuard } from './common/guards/auth.guard.js';
 import { TenantGuard } from './common/guards/tenant.guard.js';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor.js';
@@ -66,6 +67,7 @@ import { MockSuggestionsSeeder } from './fsp/mock/mock-suggestions-seeder.js';
     FlightAlertsModule,
     FeatureFlagsModule,
     SimulationModule,
+    AskModule,
   ],
   providers: [
     // Global exception filter — catches all unhandled exceptions

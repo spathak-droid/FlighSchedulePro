@@ -76,7 +76,8 @@ function isUserAvailable(
 
       return {
         available: false,
-        reason: `Proposed time ${formatMinutes(propStartMin)}-${formatMinutes(propEndMin)} ` +
+        reason:
+          `Proposed time ${formatMinutes(propStartMin)}-${formatMinutes(propEndMin)} ` +
           `outside override window ${formatMinutes(overrideStart)}-${formatMinutes(overrideEnd)} ` +
           `for user ${userId} on ${proposedDateStr}`,
       };
@@ -86,9 +87,7 @@ function isUserAvailable(
   // No override for this date — check recurring weekly schedule
   const dayOfWeek = proposedStart.getDay(); // 0=Sunday
 
-  const matchingEntries = userAvail.availabilities.filter(
-    (entry) => entry.dayOfWeek === dayOfWeek,
-  );
+  const matchingEntries = userAvail.availabilities.filter((entry) => entry.dayOfWeek === dayOfWeek);
 
   if (matchingEntries.length === 0) {
     return {
@@ -112,7 +111,8 @@ function isUserAvailable(
 
   return {
     available: false,
-    reason: `Proposed time ${formatMinutes(propStartMin)}-${formatMinutes(propEndMin)} ` +
+    reason:
+      `Proposed time ${formatMinutes(propStartMin)}-${formatMinutes(propEndMin)} ` +
       `does not fit within any availability window for user ${userId} on ${getDayName(dayOfWeek)}`,
   };
 }
@@ -207,8 +207,10 @@ export function evaluateConstraints(
     const dawnMinutes = parseTimeFromFspDateTime(twilight.startDate);
     const duskMinutes = parseTimeFromFspDateTime(twilight.endDate);
 
-    const propStartMin = constraints.proposedStart.getHours() * 60 + constraints.proposedStart.getMinutes();
-    const propEndMin = constraints.proposedEnd.getHours() * 60 + constraints.proposedEnd.getMinutes();
+    const propStartMin =
+      constraints.proposedStart.getHours() * 60 + constraints.proposedStart.getMinutes();
+    const propEndMin =
+      constraints.proposedEnd.getHours() * 60 + constraints.proposedEnd.getMinutes();
 
     const withinDaylight = propStartMin >= dawnMinutes && propEndMin <= duskMinutes;
 
@@ -224,7 +226,8 @@ export function evaluateConstraints(
 
   // ── Constraint 4: Activity type present ────────────────────────────────
 
-  const hasActivityType = !!constraints.activityTypeId && constraints.activityTypeId.trim().length > 0;
+  const hasActivityType =
+    !!constraints.activityTypeId && constraints.activityTypeId.trim().length > 0;
 
   results.push({
     passed: hasActivityType,

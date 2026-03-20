@@ -29,10 +29,7 @@ export class FlightAlertsController {
    * Resolves a specific flight alert.
    */
   @Post(':id/resolve')
-  async resolveAlert(
-    @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  async resolveAlert(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     const alert = await this.alertsService.resolveAlert(id, req.user.userId);
     return { data: alert };
   }

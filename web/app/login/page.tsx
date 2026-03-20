@@ -131,23 +131,90 @@ export default function LoginPage() {
       <div className="login-airplane">
         <svg viewBox="0 0 240 360" fill="none" xmlns="http://www.w3.org/2000/svg">
           <ellipse cx="120" cy="340" rx="60" ry="8" fill="rgba(0,0,0,0.12)" />
-          <path d="M120 10C112 10 106 30 104 60L104 280C104 300 108 320 120 340C132 320 136 300 136 280L136 60C134 30 128 10 120 10Z" fill="#f0f2f5" stroke="#d1d5db" strokeWidth="0.5" />
+          <path
+            d="M120 10C112 10 106 30 104 60L104 280C104 300 108 320 120 340C132 320 136 300 136 280L136 60C134 30 128 10 120 10Z"
+            fill="#f0f2f5"
+            stroke="#d1d5db"
+            strokeWidth="0.5"
+          />
           <ellipse cx="120" cy="28" rx="6" ry="10" fill="#14532d" opacity="0.8" />
           <ellipse cx="120" cy="28" rx="4" ry="8" fill="#166534" opacity="0.5" />
-          <line x1="120" y1="45" x2="120" y2="310" stroke="#cdd3dc" strokeWidth="0.8" strokeDasharray="3,4" />
-          <path d="M104 130L14 185C10 187 10 192 14 193L42 198L104 168Z" fill="#e2e6ec" stroke="#c8cdd5" strokeWidth="0.5" />
+          <line
+            x1="120"
+            y1="45"
+            x2="120"
+            y2="310"
+            stroke="#cdd3dc"
+            strokeWidth="0.8"
+            strokeDasharray="3,4"
+          />
+          <path
+            d="M104 130L14 185C10 187 10 192 14 193L42 198L104 168Z"
+            fill="#e2e6ec"
+            stroke="#c8cdd5"
+            strokeWidth="0.5"
+          />
           <path d="M104 135L22 186L26 188L104 140Z" fill="#15803d" opacity="0.6" />
-          <path d="M136 130L226 185C230 187 230 192 226 193L198 198L136 168Z" fill="#e2e6ec" stroke="#c8cdd5" strokeWidth="0.5" />
+          <path
+            d="M136 130L226 185C230 187 230 192 226 193L198 198L136 168Z"
+            fill="#e2e6ec"
+            stroke="#c8cdd5"
+            strokeWidth="0.5"
+          />
           <path d="M136 135L218 186L214 188L136 140Z" fill="#15803d" opacity="0.6" />
-          <rect x="48" y="172" width="12" height="24" rx="5" fill="#bcc3d0" stroke="#a0a8b8" strokeWidth="0.5" />
+          <rect
+            x="48"
+            y="172"
+            width="12"
+            height="24"
+            rx="5"
+            fill="#bcc3d0"
+            stroke="#a0a8b8"
+            strokeWidth="0.5"
+          />
           <ellipse cx="54" cy="172" rx="5" ry="3" fill="#9ca3af" />
-          <rect x="180" y="172" width="12" height="24" rx="5" fill="#bcc3d0" stroke="#a0a8b8" strokeWidth="0.5" />
+          <rect
+            x="180"
+            y="172"
+            width="12"
+            height="24"
+            rx="5"
+            fill="#bcc3d0"
+            stroke="#a0a8b8"
+            strokeWidth="0.5"
+          />
           <ellipse cx="186" cy="172" rx="5" ry="3" fill="#9ca3af" />
-          <path d="M108 285L72 310C70 312 71 316 74 316L90 318L108 300Z" fill="#e2e6ec" stroke="#c8cdd5" strokeWidth="0.5" />
-          <path d="M132 285L168 310C170 312 169 316 166 316L150 318L132 300Z" fill="#e2e6ec" stroke="#c8cdd5" strokeWidth="0.5" />
+          <path
+            d="M108 285L72 310C70 312 71 316 74 316L90 318L108 300Z"
+            fill="#e2e6ec"
+            stroke="#c8cdd5"
+            strokeWidth="0.5"
+          />
+          <path
+            d="M132 285L168 310C170 312 169 316 166 316L150 318L132 300Z"
+            fill="#e2e6ec"
+            stroke="#c8cdd5"
+            strokeWidth="0.5"
+          />
           <path d="M118 295L120 330L122 295Z" fill="#15803d" opacity="0.5" />
-          <line x1="111" y1="35" x2="111" y2="310" stroke="#15803d" strokeWidth="1.5" opacity="0.4" />
-          <line x1="129" y1="35" x2="129" y2="310" stroke="#15803d" strokeWidth="1.5" opacity="0.4" />
+          <line
+            x1="111"
+            y1="35"
+            x2="111"
+            y2="310"
+            stroke="#15803d"
+            strokeWidth="1.5"
+            opacity="0.4"
+          />
+          <line
+            x1="129"
+            y1="35"
+            x2="129"
+            y2="310"
+            stroke="#15803d"
+            strokeWidth="1.5"
+            opacity="0.4"
+          />
         </svg>
       </div>
 
@@ -168,116 +235,49 @@ export default function LoginPage() {
 
         {error && <div className="login-error">{error}</div>}
 
-        {!mfaRequired ? (
-          <form onSubmit={handleLogin}>
-            <div ref={fieldsRef}>
-              <div className="login-field">
-                <label htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  className="input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="scheduler@flightschool.com"
-                  required
-                  autoComplete="email"
-                  autoFocus
-                />
-              </div>
+        <div ref={fieldsRef}>
+          <button
+            type="button"
+            className="btn btn-primary login-submit"
+            disabled={loading}
+            onClick={() => {
+              setEmail('sarah@skywest.edu');
+              setPassword('demo');
+              setLoading(true);
+              setTimeout(() => {
+                const form = document.querySelector('form');
+                form?.requestSubmit();
+              }, 100);
+            }}
+          >
+            {loading ? <span className="spinner" /> : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+            )}
+            {loading ? 'Connecting...' : 'Operator Login'}
+          </button>
 
-              <div className="login-field">
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
+          <p style={{
+            fontSize: '0.75rem',
+            color: '#8896a6',
+            textAlign: 'center',
+            marginTop: 16,
+            lineHeight: 1.6,
+          }}>
+            We are working with Flight Schedule Pro to enable direct SSO authentication.
+            Operator login uses your FSP credentials.
+          </p>
+        </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary login-submit"
-                disabled={loading || !email || !password}
-              >
-                {loading ? <span className="spinner" /> : null}
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline login-submit"
-                style={{ marginTop: '8px' }}
-                disabled={loading}
-                onClick={() => {
-                  setEmail('sarah@skywest.edu');
-                  setPassword('demo');
-                  setTimeout(() => {
-                    const form = document.querySelector('form');
-                    form?.requestSubmit();
-                  }, 100);
-                }}
-              >
-                {loading ? <span className="spinner" /> : null}
-                Test Login
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={handleMfa}>
-            <div ref={fieldsRef}>
-              <p className="login-mfa-info">
-                A verification code has been sent to your registered device.
-                Enter the code below to continue.
-              </p>
-
-              <div className="login-field">
-                <label htmlFor="mfaCode">Verification Code</label>
-                <input
-                  id="mfaCode"
-                  className="input"
-                  type="text"
-                  value={mfaCode}
-                  onChange={(e) => setMfaCode(e.target.value)}
-                  placeholder="Enter 6-digit code"
-                  required
-                  autoFocus
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  inputMode="numeric"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary login-submit"
-                disabled={loading || mfaCode.length < 6}
-              >
-                {loading ? <span className="spinner" /> : null}
-                {loading ? 'Verifying...' : 'Verify'}
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline login-submit"
-                style={{ marginTop: '8px' }}
-                onClick={() => {
-                  setMfaRequired(false);
-                  setMfaCode('');
-                  setMfaToken('');
-                  setError('');
-                }}
-              >
-                Back to Login
-              </button>
-            </div>
-          </form>
-        )}
+        {/* Hidden form for programmatic login */}
+        <form onSubmit={handleLogin} style={{ display: 'none' }}>
+          <input type="email" value={email} readOnly />
+          <input type="password" value={password} readOnly />
+          <button type="submit" />
+        </form>
       </div>
     </div>
   );

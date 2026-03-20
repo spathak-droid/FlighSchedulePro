@@ -20,7 +20,11 @@ function formatTimeRange(start: string, end: string): string {
   try {
     const s = new Date(start);
     const e = new Date(end);
-    const date = s.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const date = s.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
     const startTime = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     const endTime = e.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return `${date}, ${startTime}\u2013${endTime}`;
@@ -70,7 +74,7 @@ export default function SuggestionTable({
         duration: 0.3,
         ease: 'power2.out',
         stagger: 0.03,
-      }
+      },
     );
     animatedRef.current = true;
   }, [suggestions, loading]);
@@ -94,14 +98,30 @@ export default function SuggestionTable({
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
               <tr key={i}>
-                <td><div className="skeleton" style={{ width: 16, height: 16, borderRadius: 4 }} /></td>
-                <td><div className="skeleton" style={{ width: 70, height: 22, borderRadius: 10 }} /></td>
-                <td><div className="skeleton" style={{ width: 120, height: 14, borderRadius: 4 }} /></td>
-                <td><div className="skeleton" style={{ width: 160, height: 14, borderRadius: 4 }} /></td>
-                <td><div className="skeleton" style={{ width: 90, height: 14, borderRadius: 4 }} /></td>
-                <td><div className="skeleton" style={{ width: 70, height: 14, borderRadius: 4 }} /></td>
-                <td><div className="skeleton" style={{ width: 60, height: 6, borderRadius: 3 }} /></td>
-                <td><div className="skeleton" style={{ width: 100, height: 28, borderRadius: 6 }} /></td>
+                <td>
+                  <div className="skeleton" style={{ width: 16, height: 16, borderRadius: 4 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 70, height: 22, borderRadius: 10 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 120, height: 14, borderRadius: 4 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 160, height: 14, borderRadius: 4 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 90, height: 14, borderRadius: 4 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 4 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 60, height: 6, borderRadius: 3 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 100, height: 28, borderRadius: 6 }} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -113,7 +133,14 @@ export default function SuggestionTable({
   if (suggestions.length === 0) {
     return (
       <div style={styles.emptyState}>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--color-text-muted)"
+          strokeWidth="1.5"
+        >
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <line x1="9" y1="9" x2="15" y2="15" />
           <line x1="15" y1="9" x2="9" y2="15" />
@@ -152,7 +179,8 @@ export default function SuggestionTable({
             const isPending = s.status === 'pending';
             const isAutoApproved = s.status === 'approved' && s.approvedBy === 'system-auto';
             const isActionLoading = actionLoadingId === s.id;
-            const scorePercent = s.rankingScore !== undefined ? Math.round(Number(s.rankingScore)) : null;
+            const scorePercent =
+              s.rankingScore !== undefined ? Math.round(Number(s.rankingScore)) : null;
 
             return (
               <Fragment key={s.id}>
@@ -167,7 +195,14 @@ export default function SuggestionTable({
                     )}
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <span className={`badge badge-${s.type}`}>{typeLabel(s.type)}</span>
                       {isAutoApproved && (
                         <span style={styles.autoApprovedBadge}>Auto-approved</span>
@@ -175,9 +210,7 @@ export default function SuggestionTable({
                     </div>
                   </td>
                   <td style={styles.studentCell}>{s.studentName || '\u2014'}</td>
-                  <td style={styles.timeCell}>
-                    {formatTimeRange(s.proposedStart, s.proposedEnd)}
-                  </td>
+                  <td style={styles.timeCell}>{formatTimeRange(s.proposedStart, s.proposedEnd)}</td>
                   <td>{s.instructorName || '\u2014'}</td>
                   <td>{s.aircraftRegistration || '\u2014'}</td>
                   <td>
@@ -211,7 +244,16 @@ export default function SuggestionTable({
                             {isActionLoading ? (
                               <span className="spinner" style={{ width: 14, height: 14 }} />
                             ) : (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
                             )}
                           </button>
                           <button
@@ -221,7 +263,17 @@ export default function SuggestionTable({
                             style={styles.actionBtn}
                             title="Decline"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                            >
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
                           </button>
                         </>
                       )}
@@ -238,7 +290,10 @@ export default function SuggestionTable({
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                          style={{
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.2s ease',
+                          }}
                         >
                           <path d="M6 9l6 6 6-6" />
                         </svg>

@@ -9,12 +9,12 @@ import { eq, and, sql, desc, gte, lt, lte } from 'drizzle-orm';
 // ─── Mock enrollment data (no FSP curriculum API in MVP) ────────────────────
 // Maps studentId -> { completedLessons, totalLessons }
 const MOCK_ENROLLMENT_DATA: Record<string, { completedLessons: number; totalLessons: number }> = {
-  'stu-001': { completedLessons: 16, totalLessons: 40 },  // 40% — early-stage PPL
-  'stu-002': { completedLessons: 9, totalLessons: 30 },   // 30% — early IR
-  'stu-003': { completedLessons: 38, totalLessons: 40 },  // 95% — checkride ready!
-  'stu-004': { completedLessons: 6, totalLessons: 30 },   // 20% — beginner
-  'stu-005': { completedLessons: 3, totalLessons: 40 },   // 7.5% — brand new
-  'stu-006': { completedLessons: 25, totalLessons: 40 },  // 62.5% — mid-stage
+  'stu-001': { completedLessons: 16, totalLessons: 40 }, // 40% — early-stage PPL
+  'stu-002': { completedLessons: 9, totalLessons: 30 }, // 30% — early IR
+  'stu-003': { completedLessons: 38, totalLessons: 40 }, // 95% — checkride ready!
+  'stu-004': { completedLessons: 6, totalLessons: 30 }, // 20% — beginner
+  'stu-005': { completedLessons: 3, totalLessons: 40 }, // 7.5% — brand new
+  'stu-006': { completedLessons: 25, totalLessons: 40 }, // 62.5% — mid-stage
   // Operator 1002
   'stu-101': { completedLessons: 10, totalLessons: 40 },
   'stu-102': { completedLessons: 8, totalLessons: 40 },
@@ -78,10 +78,7 @@ export class StudentInsightsService {
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     // Get all students for this operator
-    const allStudents = await db
-      .select()
-      .from(students)
-      .where(eq(students.operatorId, operatorId));
+    const allStudents = await db.select().from(students).where(eq(students.operatorId, operatorId));
 
     const result: InactiveStudent[] = [];
 
@@ -143,10 +140,7 @@ export class StudentInsightsService {
    * Uses mock enrollment data to compute progress.
    */
   async getCheckrideReadyStudents(operatorId: number): Promise<CheckrideReadyStudent[]> {
-    const allStudents = await db
-      .select()
-      .from(students)
-      .where(eq(students.operatorId, operatorId));
+    const allStudents = await db.select().from(students).where(eq(students.operatorId, operatorId));
 
     const result: CheckrideReadyStudent[] = [];
 
@@ -178,10 +172,7 @@ export class StudentInsightsService {
    */
   async getAtRiskStudents(operatorId: number): Promise<AtRiskStudent[]> {
     const now = new Date();
-    const allStudents = await db
-      .select()
-      .from(students)
-      .where(eq(students.operatorId, operatorId));
+    const allStudents = await db.select().from(students).where(eq(students.operatorId, operatorId));
 
     const result: AtRiskStudent[] = [];
 
@@ -209,7 +200,9 @@ export class StudentInsightsService {
       // Calculate gaps between consecutive flights (in days)
       const gaps: number[] = [];
       for (let i = 1; i < flights.length; i++) {
-        const gap = (flights[i]!.startTime.getTime() - flights[i - 1]!.endTime.getTime()) / (1000 * 60 * 60 * 24);
+        const gap =
+          (flights[i]!.startTime.getTime() - flights[i - 1]!.endTime.getTime()) /
+          (1000 * 60 * 60 * 24);
         gaps.push(gap);
       }
 
@@ -264,12 +257,7 @@ export class StudentInsightsService {
     const allInstructors = await db
       .select()
       .from(instructors)
-      .where(
-        and(
-          eq(instructors.operatorId, operatorId),
-          eq(instructors.isActive, true),
-        ),
-      );
+      .where(and(eq(instructors.operatorId, operatorId), eq(instructors.isActive, true)));
 
     const result: InstructorWorkload[] = [];
 
@@ -353,15 +341,10 @@ export class StudentInsightsService {
     const now = new Date();
 
     // Clear existing insights for this operator
-    await db
-      .delete(studentInsights)
-      .where(eq(studentInsights.operatorId, operatorId));
+    await db.delete(studentInsights).where(eq(studentInsights.operatorId, operatorId));
 
     // Get all students for this operator for the full cache
-    const allStudents = await db
-      .select()
-      .from(students)
-      .where(eq(students.operatorId, operatorId));
+    const allStudents = await db.select().from(students).where(eq(students.operatorId, operatorId));
 
     const inactiveIds = new Set(insights.inactive.map((s) => s.studentId));
     const checkrideIds = new Set(insights.checkrideReady.map((s) => s.studentId));
@@ -401,9 +384,9 @@ export class StudentInsightsService {
 
     this.logger.log(
       `Refreshed insights for operator ${operatorId}: ` +
-      `${insights.inactive.length} inactive, ` +
-      `${insights.checkrideReady.length} checkride-ready, ` +
-      `${insights.atRisk.length} at-risk`,
+        `${insights.inactive.length} inactive, ` +
+        `${insights.checkrideReady.length} checkride-ready, ` +
+        `${insights.atRisk.length} at-risk`,
     );
 
     return insights;

@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  Req,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Put, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { PoliciesService, UpdatePolicyDto } from './policies.service.js';
 
 interface AuthenticatedRequest {
@@ -38,14 +30,8 @@ export class PoliciesController {
    */
   @Put()
   @HttpCode(HttpStatus.OK)
-  async updatePolicy(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: UpdatePolicyDto,
-  ) {
-    const updated = await this.policiesService.updatePolicy(
-      req.user.operatorId,
-      body,
-    );
+  async updatePolicy(@Req() req: AuthenticatedRequest, @Body() body: UpdatePolicyDto) {
+    const updated = await this.policiesService.updatePolicy(req.user.operatorId, body);
     return { data: updated };
   }
 }

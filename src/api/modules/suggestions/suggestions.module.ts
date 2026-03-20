@@ -15,10 +15,7 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
     AiModule,
     FeatureFlagsModule,
     NotificationsModule,
-    BullModule.registerQueue(
-      { name: 'send-notification' },
-      { name: 'ai-enrich-suggestion' },
-    ),
+    BullModule.registerQueue({ name: 'send-notification' }, { name: 'ai-enrich-suggestion' }),
   ],
   controllers: [SuggestionsController],
   providers: [SuggestionsService, AutoApproveService, MockTriggerService],

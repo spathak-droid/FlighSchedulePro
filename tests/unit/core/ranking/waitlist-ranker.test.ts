@@ -3,10 +3,7 @@ import {
   rankWaitlistCandidates,
   DEFAULT_RANKING_WEIGHTS,
 } from '../../../../src/core/ranking/waitlist-ranker.js';
-import type {
-  RankingInput,
-  RankingWeights,
-} from '../../../../src/core/ranking/waitlist-ranker.js';
+import type { RankingInput, RankingWeights } from '../../../../src/core/ranking/waitlist-ranker.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -117,8 +114,18 @@ describe('rankWaitlistCandidates', () => {
 
   it('handles all candidates with identical values (min === max)', () => {
     const candidates: RankingInput[] = [
-      makeCandidate({ studentId: 'a', timeSinceLastFlight: 50, totalHours: 100, timeUntilNextFlight: 48 }),
-      makeCandidate({ studentId: 'b', timeSinceLastFlight: 50, totalHours: 100, timeUntilNextFlight: 48 }),
+      makeCandidate({
+        studentId: 'a',
+        timeSinceLastFlight: 50,
+        totalHours: 100,
+        timeUntilNextFlight: 48,
+      }),
+      makeCandidate({
+        studentId: 'b',
+        timeSinceLastFlight: 50,
+        totalHours: 100,
+        timeUntilNextFlight: 48,
+      }),
     ];
 
     const result = rankWaitlistCandidates(candidates, DEFAULT_RANKING_WEIGHTS);
@@ -210,9 +217,24 @@ describe('rankWaitlistCandidates', () => {
 
   it('returns all candidates even when scores are tied', () => {
     const candidates: RankingInput[] = [
-      makeCandidate({ studentId: 'a', timeSinceLastFlight: 50, totalHours: 100, timeUntilNextFlight: 24 }),
-      makeCandidate({ studentId: 'b', timeSinceLastFlight: 50, totalHours: 100, timeUntilNextFlight: 24 }),
-      makeCandidate({ studentId: 'c', timeSinceLastFlight: 50, totalHours: 100, timeUntilNextFlight: 24 }),
+      makeCandidate({
+        studentId: 'a',
+        timeSinceLastFlight: 50,
+        totalHours: 100,
+        timeUntilNextFlight: 24,
+      }),
+      makeCandidate({
+        studentId: 'b',
+        timeSinceLastFlight: 50,
+        totalHours: 100,
+        timeUntilNextFlight: 24,
+      }),
+      makeCandidate({
+        studentId: 'c',
+        timeSinceLastFlight: 50,
+        totalHours: 100,
+        timeUntilNextFlight: 24,
+      }),
     ];
 
     const result = rankWaitlistCandidates(candidates, DEFAULT_RANKING_WEIGHTS);

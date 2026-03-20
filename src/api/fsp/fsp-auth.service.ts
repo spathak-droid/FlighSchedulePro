@@ -28,10 +28,7 @@ export class FspAuthService {
     this.logger.log(`Authenticating user ${email}`);
 
     const body: FspLoginRequest = { email, password };
-    return this.fspClient.authPost<FspLoginResponse>(
-      '/common/v1.0/sessions/credentials',
-      body,
-    );
+    return this.fspClient.authPost<FspLoginResponse>('/common/v1.0/sessions/credentials', body);
   }
 
   /**
@@ -58,10 +55,7 @@ export class FspAuthService {
       mfaMethod: method,
       rememberMe,
     };
-    return this.fspClient.authPost<FspMfaResponse>(
-      '/common/v1.0/sessions/mfa',
-      body,
-    );
+    return this.fspClient.authPost<FspMfaResponse>('/common/v1.0/sessions/mfa', body);
   }
 
   /**
@@ -111,10 +105,7 @@ export class FspAuthService {
   async getOperatorDetail(token: string, operatorId: number): Promise<FspOperatorDetail> {
     this.logger.debug(`Fetching operator detail for ${operatorId}`);
 
-    return this.fspClient.authGet<FspOperatorDetail>(
-      `/api/V1/myoperators/${operatorId}`,
-      token,
-    );
+    return this.fspClient.authGet<FspOperatorDetail>(`/api/V1/myoperators/${operatorId}`, token);
   }
 
   /**

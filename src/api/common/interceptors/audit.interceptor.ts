@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { db } from '../../../db/index.js';
 import { auditEvents } from '../../../db/schema/index.js';
@@ -26,9 +20,7 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(async () => {
-        const user = request.user as
-          | { operatorId?: number; userId?: string }
-          | undefined;
+        const user = request.user as { operatorId?: number; userId?: string } | undefined;
         if (!user?.operatorId) return;
 
         const url = request.url as string;
@@ -49,17 +41,17 @@ export class AuditInterceptor implements NestInterceptor {
           });
         } catch (err) {
           // Don't fail the request if audit logging fails
-          this.logger.error(`Audit logging failed: ${err instanceof Error ? err.message : String(err)}`);
+          this.logger.error(
+            `Audit logging failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
         }
       }),
     );
   }
 
   private deriveEventType(method: string, url: string): string {
-    if (url.includes('/suggestions') && url.includes('/approve'))
-      return 'suggestion_approved';
-    if (url.includes('/suggestions') && url.includes('/decline'))
-      return 'suggestion_declined';
+    if (url.includes('/suggestions') && url.includes('/approve')) return 'suggestion_approved';
+    if (url.includes('/suggestions') && url.includes('/decline')) return 'suggestion_declined';
     if (url.includes('/suggestions')) return 'suggestion_created';
     if (url.includes('/policies')) return 'policy_changed';
     if (url.includes('/discovery')) return 'prospect_created';

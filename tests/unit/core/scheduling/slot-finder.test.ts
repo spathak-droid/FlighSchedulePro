@@ -61,9 +61,7 @@ function makeAvailability(
 ): FspAvailability {
   return {
     userGuidId,
-    availabilities: [
-      { dayOfWeek, startAtTimeUtc: startTime, endAtTimeUtc: endTime },
-    ],
+    availabilities: [{ dayOfWeek, startAtTimeUtc: startTime, endAtTimeUtc: endTime }],
     availabilityOverrides: [],
   };
 }
@@ -261,15 +259,12 @@ describe('findAvailableSlots', () => {
     // for the same instructor/aircraft
     for (const slot of result) {
       if (slot.instructorName === 'Jane Smith' || slot.aircraftRegistration === 'N12345') {
-        const slotOverlaps =
-          slot.start < tomorrowEnd && slot.end > tomorrow;
+        const slotOverlaps = slot.start < tomorrowEnd && slot.end > tomorrow;
         // If it's the exact same instructor and time window, it should be filtered
         // The test verifies the conflict checking mechanism works
         if (slotOverlaps) {
           // The slot should not be the 9:00 slot with the same instructor
-          expect(
-            slot.start.getHours() === 9 && slot.instructorName === 'Jane Smith',
-          ).toBe(false);
+          expect(slot.start.getHours() === 9 && slot.instructorName === 'Jane Smith').toBe(false);
         }
       }
     }

@@ -62,9 +62,7 @@ export class FspTrainingService {
     token: string,
     studentId: string,
   ): Promise<FspEnrollment[]> {
-    this.logger.debug(
-      `Fetching enrollments for student ${studentId} in operator ${operatorId}`,
-    );
+    this.logger.debug(`Fetching enrollments for student ${studentId} in operator ${operatorId}`);
 
     return this.fspClient.curriculumGet<FspEnrollment[]>(
       operatorId,
@@ -83,9 +81,7 @@ export class FspTrainingService {
     token: string,
     enrollmentId: string,
   ): Promise<FspEnrollmentProgress> {
-    this.logger.debug(
-      `Fetching enrollment progress for ${enrollmentId} in operator ${operatorId}`,
-    );
+    this.logger.debug(`Fetching enrollment progress for ${enrollmentId} in operator ${operatorId}`);
 
     return this.fspClient.curriculumGet<FspEnrollmentProgress>(
       operatorId,

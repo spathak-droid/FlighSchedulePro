@@ -39,7 +39,8 @@ export class DisruptionsController {
       data: disruptions,
       summary: {
         total: disruptions.length,
-        critical: disruptions.filter((d) => d.severity === 'critical' || d.severity === 'grounded').length,
+        critical: disruptions.filter((d) => d.severity === 'critical' || d.severity === 'grounded')
+          .length,
         warning: disruptions.filter((d) => d.severity === 'warning').length,
         byType: {
           weather: disruptions.filter((d) => d.type === 'weather').length,
@@ -61,7 +62,9 @@ export class DisruptionsController {
     // Use a mock token for FSP API calls in scan context
     const token = 'scan-context-token';
 
-    this.logger.log(`Manual disruption scan triggered by ${req.user.email} for operator ${operatorId}`);
+    this.logger.log(
+      `Manual disruption scan triggered by ${req.user.email} for operator ${operatorId}`,
+    );
 
     const results = await this.disruptionDetectorService.runAllChecks(operatorId, token);
 
@@ -85,18 +88,13 @@ export class DisruptionsController {
    */
   @Post(':id/resolve')
   @HttpCode(HttpStatus.OK)
-  async resolveDisruption(
-    @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  async resolveDisruption(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     const operatorId = req.user.operatorId;
 
     const resolved = await this.disruptionDetectorService.resolveDisruption(operatorId, id);
 
     if (!resolved) {
-      throw new NotFoundException(
-        `Active disruption ${id} not found for operator ${operatorId}`,
-      );
+      throw new NotFoundException(`Active disruption ${id} not found for operator ${operatorId}`);
     }
 
     this.logger.log(

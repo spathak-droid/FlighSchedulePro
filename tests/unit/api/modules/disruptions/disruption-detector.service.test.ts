@@ -13,7 +13,8 @@ const mockDbSelectWhere = vi.fn().mockImplementation(() => {
   const data = selectWhereResults.length > 0 ? selectWhereResults.shift()! : [];
   // Create a thenable that also supports .groupBy() and .orderBy()
   const thenable: any = {
-    then: (resolve: (v: unknown) => void, reject?: (e: unknown) => void) => Promise.resolve(data).then(resolve, reject),
+    then: (resolve: (v: unknown) => void, reject?: (e: unknown) => void) =>
+      Promise.resolve(data).then(resolve, reject),
     catch: (reject: (e: unknown) => void) => Promise.resolve(data).catch(reject),
     groupBy: () => {
       const groupData = selectWhereResults.length > 0 ? selectWhereResults.shift()! : [];
@@ -26,7 +27,9 @@ const mockDbSelectWhere = vi.fn().mockImplementation(() => {
   };
   return thenable;
 });
-const mockDbSelectFrom = vi.fn().mockReturnValue({ where: mockDbSelectWhere, orderBy: vi.fn().mockResolvedValue([]) });
+const mockDbSelectFrom = vi
+  .fn()
+  .mockReturnValue({ where: mockDbSelectWhere, orderBy: vi.fn().mockResolvedValue([]) });
 const mockDbSelect = vi.fn().mockReturnValue({ from: mockDbSelectFrom });
 
 const mockDbInsertReturning = vi.fn().mockResolvedValue([]);
@@ -371,7 +374,13 @@ describe('DisruptionDetectorService', () => {
     it('creates a warning disruption when aircraft has < 50h remaining', async () => {
       // Active aircraft
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       // Maintenance data: 460h hobbs, next inspection at 500h = 40h remaining
@@ -379,9 +388,7 @@ describe('DisruptionDetectorService', () => {
       vi.mocked(fspResourceService.getMaintenanceReminders).mockResolvedValue([]);
 
       // Upcoming reservations
-      selectWhereResults.push([
-        { id: 'res-1', studentId: 'student-1' },
-      ]);
+      selectWhereResults.push([{ id: 'res-1', studentId: 'student-1' }]);
 
       const result = await service.detectMaintenanceDisruptions(1);
 
@@ -395,7 +402,13 @@ describe('DisruptionDetectorService', () => {
 
     it('creates a critical disruption when aircraft has < 20h remaining', async () => {
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       // 490h hobbs, next inspection at 500h = 10h remaining
@@ -412,7 +425,13 @@ describe('DisruptionDetectorService', () => {
 
     it('does not create disruption when aircraft has >= 50h remaining', async () => {
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       // 350h hobbs, next inspection at 400h = 50h remaining
@@ -425,8 +444,20 @@ describe('DisruptionDetectorService', () => {
 
     it('skips aircraft when maintenance data fetch fails', async () => {
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
-        { id: 'ac-2', registration: 'N67890', makeModel: 'Piper PA-28', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
+        {
+          id: 'ac-2',
+          registration: 'N67890',
+          makeModel: 'Piper PA-28',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       // First aircraft fails
@@ -435,8 +466,7 @@ describe('DisruptionDetectorService', () => {
         // Second aircraft succeeds with low hours (no disruption needed)
         .mockResolvedValueOnce({ totalHobbs: 150 } as any);
 
-      vi.mocked(fspResourceService.getMaintenanceReminders)
-        .mockResolvedValueOnce([]);
+      vi.mocked(fspResourceService.getMaintenanceReminders).mockResolvedValueOnce([]);
 
       const result = await service.detectMaintenanceDisruptions(1);
       expect(result).toHaveLength(0);
@@ -444,7 +474,13 @@ describe('DisruptionDetectorService', () => {
 
     it('includes remaining hours in metadata', async () => {
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       vi.mocked(fspResourceService.getAircraftTimes).mockResolvedValue({ totalHobbs: 475 } as any);
@@ -461,7 +497,13 @@ describe('DisruptionDetectorService', () => {
 
     it('uses 100-hr reminder from maintenance reminders if available', async () => {
       selectWhereResults.push([
-        { id: 'ac-1', registration: 'N12345', makeModel: 'Cessna 172', isActive: true, operatorId: 1 },
+        {
+          id: 'ac-1',
+          registration: 'N12345',
+          makeModel: 'Cessna 172',
+          isActive: true,
+          operatorId: 1,
+        },
       ]);
 
       vi.mocked(fspResourceService.getAircraftTimes).mockResolvedValue({ totalHobbs: 470 } as any);
@@ -554,9 +596,7 @@ describe('DisruptionDetectorService', () => {
       // Weekly .where() call (consumed by thenable, not used since .groupBy() follows)
       selectWhereResults.push([]);
       // Weekly .groupBy() result: 35 flights out of 40 max = 87.5%
-      selectWhereResults.push([
-        { instructorId: 'inst-1', count: 35 },
-      ]);
+      selectWhereResults.push([{ instructorId: 'inst-1', count: 35 }]);
 
       const result = await service.detectInstructorDisruptions(1);
 
@@ -572,9 +612,7 @@ describe('DisruptionDetectorService', () => {
       // Weekly .where() call (consumed by thenable)
       selectWhereResults.push([]);
       // Weekly .groupBy() result: 25 flights out of 40 = 62.5%
-      selectWhereResults.push([
-        { instructorId: 'inst-1', count: 25 },
-      ]);
+      selectWhereResults.push([{ instructorId: 'inst-1', count: 25 }]);
 
       const result = await service.detectInstructorDisruptions(1);
 
@@ -595,9 +633,7 @@ describe('DisruptionDetectorService', () => {
       // Weekly .where() call (consumed by thenable)
       selectWhereResults.push([]);
       // Weekly .groupBy() result: 35/40 weekly for inst-2
-      selectWhereResults.push([
-        { instructorId: 'inst-2', count: 35 },
-      ]);
+      selectWhereResults.push([{ instructorId: 'inst-2', count: 35 }]);
 
       const result = await service.detectInstructorDisruptions(1);
 

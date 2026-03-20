@@ -36,13 +36,11 @@ export class EmailService {
       this.resend = new Resend(apiKey);
       this.logger.log(
         `Resend email service initialized` +
-        (this.overrideRecipient ? ` (all emails → ${this.overrideRecipient})` : ''),
+          (this.overrideRecipient ? ` (all emails → ${this.overrideRecipient})` : ''),
       );
     } else {
       this.resend = null;
-      this.logger.warn(
-        'RESEND_API_KEY not configured — emails will be logged but not sent',
-      );
+      this.logger.warn('RESEND_API_KEY not configured — emails will be logged but not sent');
     }
   }
 
@@ -54,9 +52,7 @@ export class EmailService {
     const from = params.from ?? this.defaultFrom;
 
     if (!this.resend) {
-      this.logger.warn(
-        `[NO API KEY] Would send email to ${params.to}: "${params.subject}"`,
-      );
+      this.logger.warn(`[NO API KEY] Would send email to ${params.to}: "${params.subject}"`);
       return {
         success: true,
         messageId: `mock-${Date.now()}`,
@@ -103,10 +99,7 @@ export class EmailService {
   /**
    * Render a template string by replacing {{variable}} placeholders with values.
    */
-  renderTemplate(
-    template: string,
-    variables: Record<string, string>,
-  ): string {
+  renderTemplate(template: string, variables: Record<string, string>): string {
     let rendered = template;
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{{${key}}}`;

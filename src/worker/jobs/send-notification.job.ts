@@ -124,20 +124,16 @@ export class SendNotificationJob extends WorkerHost {
           studentName = suggestion.studentId;
         }
       } else {
-        this.logger.warn(`Suggestion ${suggestionId} has no student or prospect — skipping notification`);
+        this.logger.warn(
+          `Suggestion ${suggestionId} has no student or prospect — skipping notification`,
+        );
         return;
       }
 
       // Step 3: Build template variables
       const proposedTime = formatDateTime(suggestion.proposedStart);
-      const instructorName = await this.resolveInstructorName(
-        operatorId,
-        suggestion.instructorId,
-      );
-      const aircraftName = await this.resolveAircraftName(
-        operatorId,
-        suggestion.aircraftId,
-      );
+      const instructorName = await this.resolveInstructorName(operatorId, suggestion.instructorId);
+      const aircraftName = await this.resolveAircraftName(operatorId, suggestion.aircraftId);
 
       const variables: Record<string, string> = {
         studentName,
@@ -164,8 +160,8 @@ export class SendNotificationJob extends WorkerHost {
 
       this.logger.log(
         `Notification dispatched for suggestion ${suggestionId}: ` +
-        `email=${result.emailSent}, sms=${result.smsSent}, ` +
-        `records=${result.records.length}`,
+          `email=${result.emailSent}, sms=${result.smsSent}, ` +
+          `records=${result.records.length}`,
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

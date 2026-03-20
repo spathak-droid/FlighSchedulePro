@@ -15,9 +15,7 @@ interface AuthenticatedRequest {
 export class WeatherController {
   private readonly logger = new Logger(WeatherController.name);
 
-  constructor(
-    private readonly weatherService: WeatherService,
-  ) {}
+  constructor(private readonly weatherService: WeatherService) {}
 
   /**
    * GET /api/v1/weather/:locationId
@@ -26,10 +24,7 @@ export class WeatherController {
    * Looks up coordinates from mock data, fetches weather, caches, returns.
    */
   @Get(':locationId')
-  async getWeather(
-    @Param('locationId') locationId: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  async getWeather(@Param('locationId') locationId: string, @Req() req: AuthenticatedRequest) {
     const operatorId = req.user.operatorId;
 
     // Look up location coordinates from mock data
@@ -41,14 +36,12 @@ export class WeatherController {
     }
 
     if (location.latitude == null || location.longitude == null) {
-      throw new NotFoundException(
-        `Location ${locationId} does not have coordinates configured`,
-      );
+      throw new NotFoundException(`Location ${locationId} does not have coordinates configured`);
     }
 
     this.logger.log(
       `Fetching weather for ${location.code} (${location.latitude}, ${location.longitude}) ` +
-      `operator ${operatorId}`,
+        `operator ${operatorId}`,
     );
 
     const weather = await this.weatherService.getWeatherForLocation(
@@ -75,12 +68,7 @@ export class WeatherController {
       locations
         .filter((l) => l.latitude != null && l.longitude != null)
         .map((l) =>
-          this.weatherService.getWeatherForLocation(
-            l.id,
-            l.name,
-            l.latitude!,
-            l.longitude!,
-          ),
+          this.weatherService.getWeatherForLocation(l.id, l.name, l.latitude!, l.longitude!),
         ),
     );
 

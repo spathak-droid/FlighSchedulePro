@@ -23,7 +23,11 @@ import {
 import { eq, and, gte, lte, lt, or, sql, inArray } from 'drizzle-orm';
 import type { FoundSlot } from '../../../core/scheduling/slot-finder.js';
 import { FspResourceService } from '../../fsp/fsp-resource.service.js';
-import type { FspAvailability, FspAvailabilityEntry, FspAvailabilityOverride } from '../../fsp/fsp.types.js';
+import type {
+  FspAvailability,
+  FspAvailabilityEntry,
+  FspAvailabilityOverride,
+} from '../../fsp/fsp.types.js';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -31,7 +35,7 @@ export interface FindTimeQuery {
   studentId: string;
   activityTypeId: string;
   dateRangeStart: string; // ISO date string YYYY-MM-DD
-  dateRangeEnd: string;   // ISO date string YYYY-MM-DD
+  dateRangeEnd: string; // ISO date string YYYY-MM-DD
   preferredInstructorId?: string;
   preferredAircraftId?: string;
   durationMinutes: number;
@@ -128,12 +132,16 @@ export class ScheduleSolverService {
    * 7. Scores slots by instructor continuity, aircraft preference, and time
    * 8. Records the solver run for audit trail
    */
-  async findTime(operatorId: number, query: FindTimeQuery, fspToken?: string): Promise<FoundSlot[]> {
+  async findTime(
+    operatorId: number,
+    query: FindTimeQuery,
+    fspToken?: string,
+  ): Promise<FoundSlot[]> {
     const startMs = Date.now();
     this.logger.log(
       `[findTime] operator=${operatorId} student=${query.studentId} ` +
-      `range=${query.dateRangeStart}..${query.dateRangeEnd} duration=${query.durationMinutes}min ` +
-      `fspToken=${fspToken !== undefined ? 'provided' : 'none'}`,
+        `range=${query.dateRangeStart}..${query.dateRangeEnd} duration=${query.durationMinutes}min ` +
+        `fspToken=${fspToken !== undefined ? 'provided' : 'none'}`,
     );
 
     const rangeStart = new Date(query.dateRangeStart + 'T00:00:00');
@@ -144,20 +152,19 @@ export class ScheduleSolverService {
     const allInstructors = await db
       .select()
       .from(instructors)
-      .where(and(
-        eq(instructors.operatorId, operatorId),
-        eq(instructors.isActive, true),
-      ));
+      .where(and(eq(instructors.operatorId, operatorId), eq(instructors.isActive, true)));
 
     // 2. Load all active, non-simulator aircraft for this operator
     const allAircraft = await db
       .select()
       .from(aircraft)
-      .where(and(
-        eq(aircraft.operatorId, operatorId),
-        eq(aircraft.isActive, true),
-        eq(aircraft.isSimulator, false),
-      ));
+      .where(
+        and(
+          eq(aircraft.operatorId, operatorId),
+          eq(aircraft.isActive, true),
+          eq(aircraft.isSimulator, false),
+        ),
+      );
 
     if (allInstructors.length === 0 || allAircraft.length === 0) {
       this.logger.warn(`[findTime] No active instructors or aircraft for operator ${operatorId}`);
@@ -186,21 +193,15 @@ export class ScheduleSolverService {
     if (fspToken !== undefined) {
       try {
         const instructorIds = sortedInstructors.map((i) => i.id);
-        const availabilities = await this.fspResourceService.getAvailability(
-          operatorId,
-          fspToken,
-          {
-            userGuidIds: instructorIds,
-            startAtUtc: query.dateRangeStart,
-            endAtUtc: query.dateRangeEnd,
-          },
-        );
+        const availabilities = await this.fspResourceService.getAvailability(operatorId, fspToken, {
+          userGuidIds: instructorIds,
+          startAtUtc: query.dateRangeStart,
+          endAtUtc: query.dateRangeEnd,
+        });
         for (const avail of availabilities) {
           availabilityMap.set(avail.userGuidId, avail);
         }
-        this.logger.log(
-          `[findTime] Loaded availability for ${availabilityMap.size} instructors`,
-        );
+        this.logger.log(`[findTime] Loaded availability for ${availabilityMap.size} instructors`);
       } catch (error) {
         this.logger.warn(
           `[findTime] Failed to fetch availability, falling back to default windows: ${error instanceof Error ? error.message : error}`,
@@ -217,7 +218,7 @@ export class ScheduleSolverService {
     const currentDate = new Date(rangeStart);
     this.logger.debug(
       `[findTime] rangeStart=${rangeStart.toLocaleDateString()} (${rangeStart.getDay()}) ` +
-      `rangeEnd=${rangeEnd.toLocaleDateString()} availMap.size=${availabilityMap.size}`,
+        `rangeEnd=${rangeEnd.toLocaleDateString()} availMap.size=${availabilityMap.size}`,
     );
     while (currentDate <= rangeEnd && foundSlots.length < DEFAULT_MAX_RESULTS * 3) {
       for (const instructor of sortedInstructors) {
@@ -231,8 +232,8 @@ export class ScheduleSolverService {
         if (dayCandidates.length > 0) {
           this.logger.debug(
             `[findTime] ${currentDate.toLocaleDateString()} dow=${currentDate.getDay()} ` +
-            `${instructor.firstName} ${instructor.lastName}: ${dayCandidates.length} candidates ` +
-            `(hasAvail=${!!instructorAvail})`,
+              `${instructor.firstName} ${instructor.lastName}: ${dayCandidates.length} candidates ` +
+              `(hasAvail=${!!instructorAvail})`,
           );
         }
 
@@ -249,21 +250,40 @@ export class ScheduleSolverService {
           if (!this.isDaylight(candidate.start, candidate.end)) continue;
 
           // Check instructor conflict with existing reservations
-          if (this.hasResourceConflict(
-            candidate.start, candidate.end, instructor.id, 'instructor', existingReservations,
-          )) continue;
+          if (
+            this.hasResourceConflict(
+              candidate.start,
+              candidate.end,
+              instructor.id,
+              'instructor',
+              existingReservations,
+            )
+          )
+            continue;
 
           // Check student conflict
-          if (this.hasStudentConflict(
-            candidate.start, candidate.end, query.studentId, existingReservations,
-          )) continue;
+          if (
+            this.hasStudentConflict(
+              candidate.start,
+              candidate.end,
+              query.studentId,
+              existingReservations,
+            )
+          )
+            continue;
 
           // Find first available aircraft (no conflict)
-          let bestCraft: typeof sortedAircraft[0] | null = null;
+          let bestCraft: (typeof sortedAircraft)[0] | null = null;
           for (const craft of sortedAircraft) {
-            if (!this.hasResourceConflict(
-              candidate.start, candidate.end, craft.id, 'aircraft', existingReservations,
-            )) {
+            if (
+              !this.hasResourceConflict(
+                candidate.start,
+                candidate.end,
+                craft.id,
+                'aircraft',
+                existingReservations,
+              )
+            ) {
               bestCraft = craft;
               break;
             }
@@ -339,19 +359,18 @@ export class ScheduleSolverService {
     const allInstructors = await db
       .select()
       .from(instructors)
-      .where(and(
-        eq(instructors.operatorId, operatorId),
-        eq(instructors.isActive, true),
-      ));
+      .where(and(eq(instructors.operatorId, operatorId), eq(instructors.isActive, true)));
 
     const allAircraft = await db
       .select()
       .from(aircraft)
-      .where(and(
-        eq(aircraft.operatorId, operatorId),
-        eq(aircraft.isActive, true),
-        eq(aircraft.isSimulator, false),
-      ));
+      .where(
+        and(
+          eq(aircraft.operatorId, operatorId),
+          eq(aircraft.isActive, true),
+          eq(aircraft.isSimulator, false),
+        ),
+      );
 
     // Calculate aircraft utilization
     const aircraftUtilization = allAircraft.map((craft) => {
@@ -426,10 +445,7 @@ export class ScheduleSolverService {
         const [suggestion] = await db
           .select()
           .from(suggestions)
-          .where(and(
-            eq(suggestions.id, suggestionId),
-            eq(suggestions.operatorId, operatorId),
-          ))
+          .where(and(eq(suggestions.id, suggestionId), eq(suggestions.operatorId, operatorId)))
           .limit(1);
 
         if (!suggestion) {
@@ -460,11 +476,14 @@ export class ScheduleSolverService {
 
         // Update suggestion status to 'approved' if it was pending
         if (suggestion.status === 'pending') {
-          await db.update(suggestions).set({
-            status: 'approved',
-            approvedAt: new Date(),
-            updatedAt: new Date(),
-          }).where(eq(suggestions.id, suggestionId));
+          await db
+            .update(suggestions)
+            .set({
+              status: 'approved',
+              approvedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(suggestions.id, suggestionId));
         }
 
         created++;
@@ -475,13 +494,7 @@ export class ScheduleSolverService {
     }
 
     const duration = Date.now() - startMs;
-    await this.recordSolverRun(
-      operatorId,
-      'bulk_schedule',
-      { suggestionIds },
-      created,
-      duration,
-    );
+    await this.recordSolverRun(operatorId, 'bulk_schedule', { suggestionIds }, created, duration);
 
     this.logger.log(
       `[batchCreateReservations] Created ${created}, failed ${failed.length} in ${duration}ms`,
@@ -509,14 +522,16 @@ export class ScheduleSolverService {
         studentId: reservationHistory.studentId,
       })
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.operatorId, operatorId),
-        // Overlapping range: reservation starts before range end AND ends after range start
-        lte(reservationHistory.startTime, rangeEnd),
-        gte(reservationHistory.endTime, rangeStart),
-        // Exclude cancelled reservations
-        sql`${reservationHistory.status} != 'cancelled'`,
-      ));
+      .where(
+        and(
+          eq(reservationHistory.operatorId, operatorId),
+          // Overlapping range: reservation starts before range end AND ends after range start
+          lte(reservationHistory.startTime, rangeEnd),
+          gte(reservationHistory.endTime, rangeStart),
+          // Exclude cancelled reservations
+          sql`${reservationHistory.status} != 'cancelled'`,
+        ),
+      );
 
     return rows.map((r) => ({
       startTime: r.startTime,
@@ -537,11 +552,13 @@ export class ScheduleSolverService {
     const [lastReservation] = await db
       .select({ instructorId: reservationHistory.instructorId })
       .from(reservationHistory)
-      .where(and(
-        eq(reservationHistory.operatorId, operatorId),
-        eq(reservationHistory.studentId, studentId),
-        eq(reservationHistory.status, 'completed'),
-      ))
+      .where(
+        and(
+          eq(reservationHistory.operatorId, operatorId),
+          eq(reservationHistory.studentId, studentId),
+          eq(reservationHistory.status, 'completed'),
+        ),
+      )
       .orderBy(sql`${reservationHistory.endTime} DESC`)
       .limit(1);
 
@@ -610,8 +627,8 @@ export class ScheduleSolverService {
       const dateStr = `${y}-${m2}-${d2}`;
 
       // Check for date overrides (unavailable = skip entire day)
-      const override = availability.availabilityOverrides?.find(
-        (o: FspAvailabilityOverride) => o.date?.startsWith(dateStr),
+      const override = availability.availabilityOverrides?.find((o: FspAvailabilityOverride) =>
+        o.date?.startsWith(dateStr),
       );
 
       if (override) {
@@ -623,7 +640,11 @@ export class ScheduleSolverService {
         const overrideStart = this.parseTimeToMinutes(override.startTime);
         const overrideEnd = this.parseTimeToMinutes(override.endTime);
 
-        for (let m = overrideStart; m + durationMinutes <= overrideEnd; m += SLOT_INTERVAL_MINUTES) {
+        for (
+          let m = overrideStart;
+          m + durationMinutes <= overrideEnd;
+          m += SLOT_INTERVAL_MINUTES
+        ) {
           const start = new Date(date);
           start.setHours(Math.floor(m / 60), m % 60, 0, 0);
           const end = new Date(start);
@@ -634,9 +655,10 @@ export class ScheduleSolverService {
       }
 
       // Use recurring availability for this day of week
-      const entries = availability.availabilities?.filter(
-        (a: FspAvailabilityEntry) => a.dayOfWeek === dayOfWeek,
-      ) ?? [];
+      const entries =
+        availability.availabilities?.filter(
+          (a: FspAvailabilityEntry) => a.dayOfWeek === dayOfWeek,
+        ) ?? [];
 
       if (entries.length === 0) {
         return []; // Instructor doesn't work this day
@@ -662,7 +684,11 @@ export class ScheduleSolverService {
     const dayStartMinutes = DAY_START_HOUR * 60;
     const dayEndMinutes = DAY_END_HOUR * 60;
 
-    for (let m = dayStartMinutes; m + durationMinutes <= dayEndMinutes; m += SLOT_INTERVAL_MINUTES) {
+    for (
+      let m = dayStartMinutes;
+      m + durationMinutes <= dayEndMinutes;
+      m += SLOT_INTERVAL_MINUTES
+    ) {
       const start = new Date(date);
       start.setHours(Math.floor(m / 60), m % 60, 0, 0);
 
@@ -783,9 +809,7 @@ export class ScheduleSolverService {
   /**
    * Sum total hours of a set of reservations.
    */
-  private sumReservationHours(
-    reservations: ReservationConflict[],
-  ): number {
+  private sumReservationHours(reservations: ReservationConflict[]): number {
     let totalMs = 0;
     for (const res of reservations) {
       totalMs += res.endTime.getTime() - res.startTime.getTime();
@@ -797,10 +821,7 @@ export class ScheduleSolverService {
    * Calculate total gap minutes across all reservations in a day.
    * A "gap" is time between consecutive reservations on the same aircraft.
    */
-  private calculateGapMinutes(
-    reservations: ReservationConflict[],
-    dayStart: Date,
-  ): number {
+  private calculateGapMinutes(reservations: ReservationConflict[], dayStart: Date): number {
     if (reservations.length === 0) return 0;
 
     // Group by aircraft
@@ -877,12 +898,13 @@ export class ScheduleSolverService {
     }
 
     // Check overall utilization
-    const avgAircraftUtil = aircraftUtil.length > 0
-      ? aircraftUtil.reduce((sum, a) => sum + a.pct, 0) / aircraftUtil.length
-      : 0;
+    const avgAircraftUtil =
+      aircraftUtil.length > 0
+        ? aircraftUtil.reduce((sum, a) => sum + a.pct, 0) / aircraftUtil.length
+        : 0;
     if (avgAircraftUtil > 0 && avgAircraftUtil < 40) {
       suggestions.push(
-        `Average aircraft utilization is only ${Math.round(avgAircraftUtil)}% — there is capacity for ${Math.round((100 - avgAircraftUtil) / 100 * allAircraft.length * OPERATIONAL_HOURS_PER_DAY / 2)} additional 2-hour flights.`,
+        `Average aircraft utilization is only ${Math.round(avgAircraftUtil)}% — there is capacity for ${Math.round((((100 - avgAircraftUtil) / 100) * allAircraft.length * OPERATIONAL_HOURS_PER_DAY) / 2)} additional 2-hour flights.`,
       );
     }
 
