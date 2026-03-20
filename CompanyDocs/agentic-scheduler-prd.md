@@ -15,10 +15,12 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 ### 1.2 Goals & Objectives
 
 **Problems solved:**
+
 - Schedule efficiency is a primary driver of student progress and business profitability.
 - Scheduling is time-consuming, particularly for larger operations, often requiring multiple dedicated staff.
 
 **Primary outcomes (by priority):**
+
 1. Increase weekly flight hours through faster slot refill and better resource matching.
 2. Reduce manual effort — measured as accepted schedule adjustments requiring no staff edits beyond approval.
 
@@ -27,6 +29,7 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 ## 2. Background & Context
 
 **Scale:** The system must be designed for the full FSP customer base:
+
 - ~1,300 operators
 - ~5,000 locations
 - ~30,000 instructors
@@ -39,13 +42,15 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 
 ### 3.1 Target Users
 
-| Role | Responsibility |
-|------|---------------|
+
+| Role                  | Responsibility                                            |
+| --------------------- | --------------------------------------------------------- |
 | Schedulers / Dispatch | Review and approve suggestions in-app (primary approvers) |
-| Instructors | Manage availability; receive confirmations and changes |
-| Students | Receive offers and confirmations |
-| Prospects | Request and receive discovery flight options |
-| Managers / Owners | Monitor performance; configure policies |
+| Instructors           | Manage availability; receive confirmations and changes    |
+| Students              | Receive offers and confirmations                          |
+| Prospects             | Request and receive discovery flight options              |
+| Managers / Owners     | Monitor performance; configure policies                   |
+
 
 ### 3.2 MVP Use Cases
 
@@ -54,6 +59,7 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 **Trigger:** A schedule opening emerges (cancellation, schedule shift, or detected via scheduled process).
 
 **Behavior:**
+
 - Rank eligible candidates using a configurable priority weight system (see Section 4.2).
 - Candidates must satisfy: availability, required activity type, aircraft/instructor constraints, and daylight limits.
 - Propose booking(s) to scheduler — proposals may include a group of students to reduce approval volume.
@@ -65,6 +71,7 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 **Trigger:** A reservation is canceled by student or operator.
 
 **Behavior:**
+
 - Generate top N compatible alternatives for the affected student (same activity and location; optional preference for same instructor/aircraft; operator-defined search window).
 
 **Flow:** Agent generates alternatives &rarr; scheduler approves &rarr; student receives offer/confirmation.
@@ -74,6 +81,7 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 **Trigger:** A prospect requests a discovery flight.
 
 **Behavior:**
+
 - Generate available options respecting daylight-only constraints, eligible instructor/aircraft pairings, and operator-defined search window.
 - Payment is handled externally. If FSP lacks required fields for discovery flights, this product stores the needed attributes.
 
@@ -84,6 +92,7 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 **Trigger:** A training lesson is completed or a scheduled process identifies students with pending lessons.
 
 **Behavior:**
+
 - Determine the student's next required training event from their enrollment.
 - Generate scheduling options considering the student's availability, instructor continuity preferences, and aircraft requirements.
 
@@ -92,11 +101,13 @@ Phase 1 (MVP) operates in a **suggest-and-approve** model where all changes requ
 ### 3.3 Future Scope (not MVP, provided for architectural context)
 
 **Phase 2:**
+
 - **Disruption adjustments:** Weather advisories, aircraft maintenance status changes, or instructor unavailability trigger suggested time/instructor/aircraft swaps.
 - **Inactive student outreach:** Detect students with no upcoming flights; propose slots aligned to their availability.
 - **Autonomous low-risk mode:** Automatically apply changes when the target state is strictly lower risk than the current state (e.g., "student flying" is lower risk than "nobody flying"; avoiding a no-show when aircraft will be unavailable).
 
 **Phase 3:**
+
 - **Fleet utilization optimization:** Proactively adjust schedules to optimize aircraft and instructor utilization and create consistent student progress opportunities.
 - **Checkride/exam prioritization:** Identify milestone-ready students and coordinate with appropriate DPEs for schools without self-examining authority.
 
@@ -182,12 +193,14 @@ Both patterns are documented in the API Appendix.
 
 ### 5.5 Performance Targets
 
-| Metric | Target |
-|--------|--------|
+
+| Metric                    | Target                    |
+| ------------------------- | ------------------------- |
 | Schedule change detection | Within minutes of trigger |
-| Recommendation generation | < 30 seconds |
-| UI responsiveness | Modern web standards |
-| Approved action execution | Finalized within minutes |
+| Recommendation generation | < 30 seconds              |
+| UI responsiveness         | Modern web standards      |
+| Approved action execution | Finalized within minutes  |
+
 
 ### 5.6 Security & Compliance
 
