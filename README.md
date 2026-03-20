@@ -4,7 +4,7 @@
 
 Built to integrate with [Flight Schedule Pro (FSP)](https://www.flightschedulepro.com/), the industry-standard flight school management system.
 
-Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
 
 ---
 
@@ -14,31 +14,31 @@ Dashboard
 
 Review AI-generated scheduling suggestions with full context — student progress, instructor availability, aircraft assignment, and AI risk assessment. Approve or decline individually or in bulk.
 
-Approval Queue
+![Approval Queue](docs/screenshots/queue.png)
 
 ### Schedule View
 
 See all reservations across students, instructors, and aircraft. Track completed, cancelled, and upcoming flights in one place.
 
-Schedule
+![Schedule](docs/screenshots/schedule.png)
 
 ### Ask Mode (AI Chat)
 
 Natural language interface to query your school's data. Ask about student progress, aircraft availability, scheduling gaps, at-risk students, and more. Powered by Claude Haiku with full database context.
 
-Ask Mode
+![Ask Mode](docs/screenshots/ask-empty.png)
 
 ### Discovery Flights
 
 Manage discovery flight intake — schedulers enter prospect details and the system finds optimal slots based on instructor and aircraft availability.
 
-Discovery
+![Discovery](docs/screenshots/discovery.png)
 
 ### Scheduling Policies
 
 Configure per-operator scheduling rules: waitlist priority weights, search windows, suggestion TTL, polling intervals, and notification preferences.
 
-Policies
+![Policies](docs/screenshots/policies.png)
 
 ### Additional Features
 
@@ -306,7 +306,7 @@ All FSP calls go through a rate-limited client (~100 req/min per operator). Set 
 
 Or use the **Test Login** button on the login page.
 
-Login
+![Login](docs/screenshots/login.png)
 
 ---
 
