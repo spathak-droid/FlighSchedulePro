@@ -12,6 +12,8 @@ factory
 *.spec.css
 *.spec.js
 *.spec.ts
+!e2e/*.spec.ts
+!tests/**/*.test.ts
 
 # Environment
 .env
