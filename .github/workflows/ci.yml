@@ -120,7 +120,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: false # Disabled until E2E test specs are added
     services:
       postgres:
         image: postgres:16
