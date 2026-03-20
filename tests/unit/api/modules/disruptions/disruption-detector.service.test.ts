@@ -22,7 +22,9 @@ const mockDbSelectWhere = vi.fn().mockImplementation(() => {
     },
     orderBy: () => {
       // orderBy uses the data already consumed by .where()
-      return Promise.resolve(data);
+      const orderResult: any = Promise.resolve(data);
+      orderResult.limit = () => Promise.resolve(data);
+      return orderResult;
     },
   };
   return thenable;
