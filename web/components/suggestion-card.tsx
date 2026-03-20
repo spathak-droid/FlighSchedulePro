@@ -162,10 +162,11 @@ export default function SuggestionCard({ suggestion, onApprove, onDecline, loadi
 const styles: Record<string, React.CSSProperties> = {
   card: {
     background: 'var(--color-surface)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid var(--color-border)',
     borderLeft: '3px solid #3b82f6',
     borderRadius: '12px',
     padding: '20px',
+    boxShadow: 'var(--shadow)',
   },
   header: {
     display: 'flex',
@@ -198,7 +199,7 @@ const styles: Record<string, React.CSSProperties> = {
   scoreTrack: {
     width: '48px',
     height: '5px',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'var(--color-border)',
     borderRadius: '3px',
     overflow: 'hidden',
   },
@@ -239,11 +240,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
   },
   detailValue: {
     fontSize: '0.825rem',
-    color: '#c8cdd8',
+    color: 'var(--color-text-secondary)',
   },
   rationaleWrapper: {
     marginBottom: '16px',
@@ -252,6 +253,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: '8px',
     paddingTop: '12px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
+    borderTop: '1px solid var(--color-border)',
   },
 };

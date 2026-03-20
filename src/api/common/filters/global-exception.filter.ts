@@ -7,10 +7,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { getCorrelationId } from '../middleware/correlation-id.middleware.js';
 
 interface ErrorResponseBody {
   error: string;
   message: string;
+  correlationId?: string;
   details?: Record<string, unknown>;
 }
 
@@ -69,6 +71,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       body = {
         error: errorCode,
         message,
+        correlationId: getCorrelationId(),
         ...(details ? { details } : {}),
       };
     } else {
@@ -94,6 +97,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           process.env.NODE_ENV === 'production'
             ? 'An unexpected error occurred'
             : errorMessage,
+        correlationId: getCorrelationId(),
       };
     }
 

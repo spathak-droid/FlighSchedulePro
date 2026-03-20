@@ -1,9 +1,11 @@
 /**
  * Request logging & metrics interceptor.
  *
- * - Assigns a correlation ID (from x-correlation-id header or auto-generated)
+ * - Uses correlation ID from the CorrelationIdMiddleware (AsyncLocalStorage)
  * - Logs structured request/response info (method, path, status, duration)
  * - Records request duration in the metrics collector
+ * - Tracks request count by endpoint, response time percentiles, error rate by status code
+ * - Updates AsyncLocalStorage with operatorId once available from auth
  */
 
 import {
@@ -14,8 +16,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
-import { randomUUID } from 'crypto';
 import { metrics } from '../../../common/logger.js';
+import {
+  getCorrelationId,
+  requestContext,
+} from '../middleware/correlation-id.middleware.js';
 
 @Injectable()
 export class RequestLoggingInterceptor implements NestInterceptor {
@@ -26,16 +31,17 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const method = request.method ?? request.raw?.method ?? 'UNKNOWN';
     const url = request.url ?? request.raw?.url ?? '/';
 
-    // Correlation ID — use incoming header or generate
-    const correlationId =
-      request.headers?.['x-correlation-id'] ??
-      request.headers?.['x-request-id'] ??
-      randomUUID().slice(0, 8);
+    // Get correlation ID from middleware (AsyncLocalStorage) or request
+    const correlationId = request.correlationId ?? getCorrelationId();
 
-    // Attach to request for downstream use
-    request.correlationId = correlationId;
+    // Update AsyncLocalStorage with operatorId if available from auth
+    const store = requestContext.getStore();
+    if (store && request.user?.operatorId) {
+      store.operatorId = request.user.operatorId;
+    }
 
     const start = Date.now();
+    const normalizedPath = this.normalizePath(url);
 
     return next.handle().pipe(
       tap({
@@ -54,9 +60,18 @@ export class RequestLoggingInterceptor implements NestInterceptor {
             operatorId: request.user?.operatorId,
           });
 
-          // Metrics
+          // Metrics — request counts
           metrics.increment('http_requests_total', { method, status: String(statusCode) });
-          metrics.observe('http_request_duration_ms', duration, { method, path: this.normalizePath(url) });
+
+          // Metrics — per-endpoint request count
+          metrics.increment('http_endpoint_requests_total', { method, path: normalizedPath });
+
+          // Metrics — response time histogram
+          metrics.observe('http_request_duration_ms', duration, { method, path: normalizedPath });
+
+          // Metrics — status code family
+          const statusFamily = `${Math.floor(statusCode / 100)}xx`;
+          metrics.increment('http_status_family_total', { family: statusFamily });
         },
         error: (err) => {
           const duration = Date.now() - start;
@@ -72,9 +87,21 @@ export class RequestLoggingInterceptor implements NestInterceptor {
             operatorId: request.user?.operatorId,
           });
 
+          // Metrics — request counts
           metrics.increment('http_requests_total', { method, status: String(statusCode) });
+
+          // Metrics — error rate by status code
           metrics.increment('http_errors_total', { method, status: String(statusCode) });
-          metrics.observe('http_request_duration_ms', duration, { method, path: this.normalizePath(url) });
+
+          // Metrics — per-endpoint error count
+          metrics.increment('http_endpoint_errors_total', { method, path: normalizedPath, status: String(statusCode) });
+
+          // Metrics — response time histogram (errors too)
+          metrics.observe('http_request_duration_ms', duration, { method, path: normalizedPath });
+
+          // Metrics — status code family
+          const statusFamily = `${Math.floor(statusCode / 100)}xx`;
+          metrics.increment('http_status_family_total', { family: statusFamily });
         },
       }),
     );

@@ -7,17 +7,17 @@ import type { WeatherData, FlightCategory } from '@/lib/types';
 // ─── Flight Category Colors ────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<FlightCategory, string> = {
-  VFR: '#22c55e',   // green
-  MVFR: '#3b82f6',  // blue
-  IFR: '#ef4444',   // red
-  LIFR: '#d946ef',  // magenta
+  VFR: '#16a34a',   // green
+  MVFR: '#0369a1',  // blue (aviation standard)
+  IFR: '#dc2626',   // red
+  LIFR: '#9333ea',  // purple
 };
 
 const CATEGORY_BG: Record<FlightCategory, string> = {
-  VFR: 'rgba(34,197,94,0.12)',
-  MVFR: 'rgba(59,130,246,0.12)',
-  IFR: 'rgba(239,68,68,0.12)',
-  LIFR: 'rgba(217,70,239,0.12)',
+  VFR: 'rgba(22,163,74,0.12)',
+  MVFR: 'rgba(3,105,161,0.12)',
+  IFR: 'rgba(220,38,38,0.12)',
+  LIFR: 'rgba(147,51,234,0.12)',
 };
 
 // ─── Weather Code Labels ───────────────────────────────────────────────────
@@ -217,7 +217,7 @@ const styles: Record<string, React.CSSProperties> = {
   card: {
     background: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
-    borderTop: '3px solid #3b82f6',
+    borderTop: '3px solid #16a34a',
     borderRadius: '12px',
     padding: '20px',
   },
@@ -279,18 +279,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
   },
   detailValue: {
     fontSize: '0.825rem',
-    color: '#c8cdd8',
+    color: 'var(--color-text-secondary)',
     fontVariantNumeric: 'tabular-nums',
   },
   forecastStrip: {
     display: 'flex',
     gap: '4px',
     paddingTop: '12px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
+    borderTop: '1px solid var(--color-border)',
     overflowX: 'auto',
   },
   forecastHour: {
@@ -303,7 +303,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   forecastTime: {
     fontSize: '0.65rem',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     fontWeight: 500,
   },
   forecastDot: {
@@ -318,9 +318,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontVariantNumeric: 'tabular-nums',
   },
   errorBox: {
-    background: 'rgba(239,68,68,0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239,68,68,0.25)',
+    background: 'rgba(239,68,68,0.08)',
+    color: '#dc2626',
+    border: '1px solid rgba(239,68,68,0.2)',
     borderRadius: '10px',
     padding: '12px 16px',
     fontSize: '0.875rem',

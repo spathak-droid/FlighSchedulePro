@@ -30,22 +30,22 @@ function relativeTime(timestamp: string): string {
 
 function eventMeta(eventType: string): { label: string; dotColor: string; badgeBg: string; badgeColor: string } {
   const map: Record<string, { label: string; dotColor: string; badgeBg: string; badgeColor: string }> = {
-    suggestion_approved: { label: 'Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.15)', badgeColor: '#4ade80' },
-    suggestion_declined: { label: 'Declined', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.15)', badgeColor: '#f87171' },
-    suggestion_expired: { label: 'Expired', dotColor: '#6b7280', badgeBg: 'rgba(255,255,255,0.06)', badgeColor: '#9ca3af' },
-    suggestion_created: { label: 'Created', dotColor: '#3b82f6', badgeBg: 'rgba(59,130,246,0.15)', badgeColor: '#60a5fa' },
-    suggestion_auto_approved: { label: 'Auto-Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.15)', badgeColor: '#4ade80' },
-    bulk_approve: { label: 'Bulk Approve', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.15)', badgeColor: '#4ade80' },
-    bulk_decline: { label: 'Bulk Decline', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.15)', badgeColor: '#f87171' },
-    policy_updated: { label: 'Policy', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.15)', badgeColor: '#fbbf24' },
-    flight_cancelled: { label: 'Cancellation', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.15)', badgeColor: '#f87171' },
-    flight_completed: { label: 'Flight Done', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.15)', badgeColor: '#4ade80' },
-    student_no_show: { label: 'No-Show', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.15)', badgeColor: '#fbbf24' },
-    disruption_detected: { label: 'Disruption', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.15)', badgeColor: '#f87171' },
-    maintenance_alert: { label: 'Maintenance', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.15)', badgeColor: '#fbbf24' },
-    instructor_unavailable: { label: 'Instructor Out', dotColor: '#8b5cf6', badgeBg: 'rgba(139,92,246,0.15)', badgeColor: '#a78bfa' },
+    suggestion_approved: { label: 'Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
+    suggestion_declined: { label: 'Declined', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
+    suggestion_expired: { label: 'Expired', dotColor: '#6b7280', badgeBg: 'rgba(100,116,139,0.1)', badgeColor: '#64748b' },
+    suggestion_created: { label: 'Created', dotColor: '#3b82f6', badgeBg: 'rgba(59,130,246,0.1)', badgeColor: '#2563eb' },
+    suggestion_auto_approved: { label: 'Auto-Approved', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
+    bulk_approve: { label: 'Bulk Approve', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
+    bulk_decline: { label: 'Bulk Decline', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
+    policy_updated: { label: 'Policy', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
+    flight_cancelled: { label: 'Cancellation', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
+    flight_completed: { label: 'Flight Done', dotColor: '#22c55e', badgeBg: 'rgba(34,197,94,0.1)', badgeColor: '#16a34a' },
+    student_no_show: { label: 'No-Show', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
+    disruption_detected: { label: 'Disruption', dotColor: '#ef4444', badgeBg: 'rgba(239,68,68,0.1)', badgeColor: '#dc2626' },
+    maintenance_alert: { label: 'Maintenance', dotColor: '#f59e0b', badgeBg: 'rgba(245,158,11,0.1)', badgeColor: '#d97706' },
+    instructor_unavailable: { label: 'Instructor Out', dotColor: '#8b5cf6', badgeBg: 'rgba(139,92,246,0.1)', badgeColor: '#7c3aed' },
   };
-  return map[eventType] || { label: eventType.replace(/_/g, ' '), dotColor: '#6b7280', badgeBg: 'rgba(255,255,255,0.06)', badgeColor: '#9ca3af' };
+  return map[eventType] || { label: eventType.replace(/_/g, ' '), dotColor: '#6b7280', badgeBg: 'rgba(100,116,139,0.1)', badgeColor: '#64748b' };
 }
 
 interface ActivityFeedProps {
@@ -143,7 +143,7 @@ export default function ActivityFeed({ compact = false, refreshInterval = 30000 
           <h3 style={titleStyle}>Recent Activity</h3>
         </div>
         <div style={styles.emptyState}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5a6178" strokeWidth="1.5">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5">
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
@@ -212,7 +212,7 @@ export default function ActivityFeed({ compact = false, refreshInterval = 30000 
 const styles: Record<string, React.CSSProperties> = {
   container: {
     background: 'var(--color-surface)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid var(--color-border)',
     borderRadius: '12px',
     overflow: 'hidden',
   },
@@ -224,11 +224,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   header: {
     padding: '16px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid var(--color-border)',
   },
   headerCompact: {
     padding: '10px 8px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid var(--color-border)',
   },
   title: {
     fontSize: '0.9rem',
@@ -276,7 +276,7 @@ const styles: Record<string, React.CSSProperties> = {
   line: {
     flex: 1,
     width: '1px',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'var(--color-border)',
     marginTop: '6px',
   },
   content: {
@@ -303,7 +303,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   timestamp: {
     fontSize: '0.7rem',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     whiteSpace: 'nowrap' as const,
   },
   summary: {
@@ -316,13 +316,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   actor: {
     fontSize: '0.7rem',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     marginTop: '2px',
     wordBreak: 'break-word' as const,
   },
   loadMore: {
     padding: '12px 20px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
+    borderTop: '1px solid var(--color-border)',
   },
   loadingState: {
     display: 'flex',
@@ -340,7 +340,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   emptyText: {
     fontSize: '0.8rem',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     margin: 0,
   },
 };

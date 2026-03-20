@@ -286,9 +286,9 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   errorBox: {
-    background: 'rgba(239,68,68,0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239,68,68,0.25)',
+    background: 'var(--color-danger-glow)',
+    color: '#dc2626',
+    border: '1px solid rgba(239,68,68,0.2)',
     borderRadius: '10px',
     padding: '12px 16px',
     fontSize: '0.875rem',

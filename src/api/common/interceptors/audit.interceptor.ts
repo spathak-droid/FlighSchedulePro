@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { db } from '../../../db/index.js';
@@ -10,6 +11,8 @@ import { auditEvents } from '../../../db/schema/index.js';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(AuditInterceptor.name);
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const method = request.method as string;
@@ -46,7 +49,7 @@ export class AuditInterceptor implements NestInterceptor {
           });
         } catch (err) {
           // Don't fail the request if audit logging fails
-          console.error('Audit logging failed:', err);
+          this.logger.error(`Audit logging failed: ${err instanceof Error ? err.message : String(err)}`);
         }
       }),
     );

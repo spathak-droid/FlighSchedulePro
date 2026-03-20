@@ -146,8 +146,8 @@ export default function DisruptionBanner() {
                       d.severity === 'grounded'
                         ? '#ef4444'
                         : d.severity === 'critical'
-                          ? '#f87171'
-                          : '#f59e0b',
+                          ? '#dc2626'
+                          : '#d97706',
                   }}
                 />
                 <span style={bannerStyles.detailType}>
@@ -234,8 +234,8 @@ const bannerStyles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap' as const,
   },
   criticalBadge: {
-    background: 'rgba(239, 68, 68, 0.25)',
-    color: '#f87171',
+    background: 'rgba(239, 68, 68, 0.15)',
+    color: '#dc2626',
     fontSize: '0.7rem',
     fontWeight: 700,
     padding: '2px 8px',
@@ -259,8 +259,8 @@ const bannerStyles: Record<string, React.CSSProperties> = {
     gap: '10px',
   },
   scanButton: {
-    background: 'rgba(255, 255, 255, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
+    background: 'rgba(255, 255, 255, 0.6)',
+    border: '1px solid var(--color-border)',
     borderRadius: '6px',
     color: 'var(--color-text-secondary)',
     fontSize: '0.75rem',
@@ -271,18 +271,18 @@ const bannerStyles: Record<string, React.CSSProperties> = {
   },
   errorText: {
     fontSize: '0.75rem',
-    color: '#f87171',
+    color: '#dc2626',
     padding: '0 16px 8px',
   },
   detailList: {
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    borderTop: '1px solid var(--color-border)',
     padding: '8px 16px 12px',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '10px',
   },
   detailItem: {
-    background: 'rgba(0, 0, 0, 0.15)',
+    background: 'rgba(255, 255, 255, 0.5)',
     borderRadius: '8px',
     padding: '10px 14px',
   },
@@ -319,7 +319,7 @@ const bannerStyles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.04em',
     padding: '2px 6px',
     borderRadius: '4px',
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'var(--color-surface-elevated)',
   },
   detailDescription: {
     fontSize: '0.775rem',
@@ -338,15 +338,15 @@ const bannerStyles: Record<string, React.CSSProperties> = {
     fontSize: '0.675rem',
     fontWeight: 500,
     color: 'var(--color-text-muted)',
-    background: 'rgba(255, 255, 255, 0.05)',
+    background: 'var(--color-surface-elevated)',
     padding: '2px 8px',
     borderRadius: '4px',
   },
   resolveButton: {
     fontSize: '0.7rem',
     fontWeight: 600,
-    color: '#4ade80',
-    background: 'rgba(34, 197, 94, 0.1)',
+    color: '#16a34a',
+    background: 'var(--color-success-glow)',
     border: '1px solid rgba(34, 197, 94, 0.2)',
     borderRadius: '4px',
     padding: '2px 8px',

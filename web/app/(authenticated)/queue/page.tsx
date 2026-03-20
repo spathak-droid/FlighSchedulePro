@@ -613,12 +613,12 @@ const styles: Record<string, React.CSSProperties> = {
   simStatusText: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: '#4ade80',
+    color: '#16a34a',
     fontVariantNumeric: 'tabular-nums',
   },
   simLastEvent: {
     fontWeight: 400,
-    color: 'rgba(74,222,128,0.7)',
+    color: '#15803d',
   },
   simButtonStart: {
     display: 'flex',
@@ -648,18 +648,18 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.5,
   },
   errorBox: {
-    background: 'rgba(239,68,68,0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239,68,68,0.25)',
+    background: 'var(--color-danger-glow)',
+    color: '#dc2626',
+    border: '1px solid rgba(239,68,68,0.2)',
     borderRadius: '10px',
     padding: '12px 16px',
     fontSize: '0.875rem',
     marginBottom: '12px',
   },
   successBox: {
-    background: 'rgba(34,197,94,0.15)',
-    color: '#4ade80',
-    border: '1px solid rgba(34,197,94,0.25)',
+    background: 'var(--color-success-glow)',
+    color: '#16a34a',
+    border: '1px solid rgba(34,197,94,0.2)',
     borderRadius: '10px',
     padding: '12px 16px',
     fontSize: '0.875rem',
@@ -693,7 +693,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   bulkCount: {
-    color: '#60a5fa',
+    color: 'var(--color-accent)',
     fontWeight: 700,
     fontSize: '1rem',
   },
@@ -727,10 +727,10 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '8px',
     fontSize: '0.8rem',
-    color: '#fbbf24',
+    color: '#d97706',
     marginBottom: '20px',
     padding: '10px 14px',
-    background: 'rgba(245,158,11,0.1)',
+    background: 'var(--color-warning-glow)',
     border: '1px solid rgba(245,158,11,0.2)',
     borderRadius: '8px',
   },
@@ -762,14 +762,14 @@ const styles: Record<string, React.CSSProperties> = {
   failedList: {
     marginTop: '16px',
     padding: '14px',
-    background: 'rgba(239,68,68,0.08)',
+    background: 'var(--color-danger-glow)',
     border: '1px solid rgba(239,68,68,0.15)',
     borderRadius: '10px',
   },
   failedTitle: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: '#f87171',
+    color: '#dc2626',
     marginBottom: '8px',
   },
   failedItem: {
@@ -785,6 +785,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.75rem',
   },
   failedError: {
-    color: '#f87171',
+    color: '#dc2626',
   },
 };

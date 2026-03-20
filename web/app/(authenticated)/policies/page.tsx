@@ -267,7 +267,7 @@ export default function PoliciesPage() {
                 value={policies.waitlistWeights.timeSinceLastFlight}
                 onChange={(e) => updateWeight('timeSinceLastFlight', parseFloat(e.target.value))}
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.timeSinceLastFlight * 100}%, #1c2540 ${policies.waitlistWeights.timeSinceLastFlight * 100}%, #1c2540 100%)`,
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.timeSinceLastFlight * 100}%, #e2e8f0 ${policies.waitlistWeights.timeSinceLastFlight * 100}%, #e2e8f0 100%)`,
                 }}
               />
             </div>
@@ -289,7 +289,7 @@ export default function PoliciesPage() {
                 value={policies.waitlistWeights.timeUntilNextFlight}
                 onChange={(e) => updateWeight('timeUntilNextFlight', parseFloat(e.target.value))}
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.timeUntilNextFlight * 100}%, #1c2540 ${policies.waitlistWeights.timeUntilNextFlight * 100}%, #1c2540 100%)`,
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.timeUntilNextFlight * 100}%, #e2e8f0 ${policies.waitlistWeights.timeUntilNextFlight * 100}%, #e2e8f0 100%)`,
                 }}
               />
             </div>
@@ -311,7 +311,7 @@ export default function PoliciesPage() {
                 value={policies.waitlistWeights.totalHours}
                 onChange={(e) => updateWeight('totalHours', parseFloat(e.target.value))}
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.totalHours * 100}%, #1c2540 ${policies.waitlistWeights.totalHours * 100}%, #1c2540 100%)`,
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${policies.waitlistWeights.totalHours * 100}%, #e2e8f0 ${policies.waitlistWeights.totalHours * 100}%, #e2e8f0 100%)`,
                 }}
               />
             </div>
@@ -706,9 +706,9 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.6,
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239, 68, 68, 0.25)',
+    background: 'var(--color-danger-glow)',
+    color: '#dc2626',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
     borderRadius: '8px',
     padding: '12px 16px',
     fontSize: '0.875rem',
@@ -782,7 +782,7 @@ const styles: Record<string, React.CSSProperties> = {
   weightLabel: {
     fontSize: '0.85rem',
     fontWeight: 500,
-    color: '#c9cdd8',
+    color: 'var(--color-text-secondary)',
     textTransform: 'none' as const,
     letterSpacing: 'normal',
     marginBottom: 0,
@@ -799,7 +799,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px',
     marginTop: '20px',
     paddingTop: '16px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    borderTop: '1px solid var(--color-border)',
   },
   weightSumLabel: {
     fontSize: '0.8rem',
@@ -810,7 +810,7 @@ const styles: Record<string, React.CSSProperties> = {
   weightSumBarBg: {
     flex: 1,
     height: '6px',
-    background: '#1c2540',
+    background: '#e2e8f0',
     borderRadius: '3px',
     overflow: 'hidden',
   },
@@ -850,7 +850,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px',
     marginTop: '20px',
     paddingTop: '16px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    borderTop: '1px solid var(--color-border)',
   },
   diagramStep: {
     flex: 1,
@@ -895,7 +895,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   toggleDivider: {
     height: '1px',
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'var(--color-border)',
   },
   saveBtn: {
     width: '100%',

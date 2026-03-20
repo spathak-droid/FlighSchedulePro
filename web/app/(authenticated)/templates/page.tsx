@@ -500,9 +500,9 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.6,
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239, 68, 68, 0.25)',
+    background: 'var(--color-danger-glow)',
+    color: '#dc2626',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
     borderRadius: '8px',
     padding: '12px 16px',
     fontSize: '0.875rem',
@@ -558,7 +558,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.7rem',
     fontWeight: 600,
     color: 'var(--color-text-secondary)',
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'var(--color-surface-elevated)',
     padding: '2px 8px',
     borderRadius: '10px',
   },
@@ -572,7 +572,7 @@ const styles: Record<string, React.CSSProperties> = {
   // Template card
   templateCard: {
     background: 'var(--color-surface-elevated)',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    border: '1px solid var(--color-border)',
     borderRadius: '10px',
     padding: '20px',
   },
@@ -646,17 +646,17 @@ const styles: Record<string, React.CSSProperties> = {
   },
   previewBox: {
     background: 'var(--color-bg)',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    border: '1px solid var(--color-border)',
     borderRadius: '8px',
     padding: '14px 16px',
     fontSize: '0.85rem',
-    color: '#c9cdd8',
+    color: 'var(--color-text-secondary)',
     lineHeight: 1.6,
   },
   previewSubject: {
     marginBottom: '10px',
     paddingBottom: '10px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+    borderBottom: '1px solid var(--color-border)',
     color: 'var(--color-text)',
   },
   previewBody: {
@@ -672,7 +672,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   actionError: {
     fontSize: '0.8rem',
-    color: '#f87171',
+    color: '#dc2626',
   },
   actionSaved: {
     fontSize: '0.8rem',

@@ -304,7 +304,7 @@ export default function DiscoveryPage() {
                 maxLength={14}
               />
               {phone && !phoneValid && (
-                <span style={{ fontSize: '0.7rem', color: '#f87171', marginTop: '4px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#dc2626', marginTop: '4px' }}>
                   Phone must be 10 digits
                 </span>
               )}
@@ -341,7 +341,7 @@ export default function DiscoveryPage() {
                       onClick={() => removeDateSlot(idx)}
                       style={{
                         padding: '6px 10px',
-                        color: '#f87171',
+                        color: '#dc2626',
                         flexShrink: 0,
                       }}
                     >
@@ -471,9 +471,9 @@ export default function DiscoveryPage() {
             </h2>
             {result.isAlternative && result.preferredDate && (
               <div style={{
-                background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                background: 'var(--color-warning-glow)', border: '1px solid rgba(245,158,11,0.3)',
                 borderRadius: '8px', padding: '10px 16px', marginBottom: '12px',
-                color: '#fbbf24', fontSize: '0.85rem',
+                color: '#d97706', fontSize: '0.85rem',
               }}>
                 No flights available on {new Date(result.preferredDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} — showing nearest alternatives
               </div>
@@ -596,9 +596,9 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.6,
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.15)',
-    color: '#f87171',
-    border: '1px solid rgba(239, 68, 68, 0.25)',
+    background: 'var(--color-danger-glow)',
+    color: '#dc2626',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
     borderRadius: '8px',
     padding: '12px 16px',
     fontSize: '0.875rem',
@@ -619,8 +619,8 @@ const styles: Record<string, React.CSSProperties> = {
     width: '40px',
     height: '40px',
     borderRadius: '10px',
-    background: 'rgba(59, 130, 246, 0.15)',
-    color: '#60a5fa',
+    background: 'var(--color-accent-glow)',
+    color: 'var(--color-accent)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -726,7 +726,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.7rem',
     fontWeight: 700,
     color: 'var(--color-text-secondary)',
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'var(--color-surface-elevated)',
     padding: '3px 8px',
     borderRadius: '6px',
     letterSpacing: '0.03em',
@@ -751,7 +751,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column' as const,
     gap: '6px',
     paddingTop: '8px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    borderTop: '1px solid var(--color-border)',
   },
   detailRow: {
     display: 'flex',
@@ -765,7 +765,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   detailValue: {
     fontSize: '0.85rem',
-    color: '#c9cdd8',
+    color: 'var(--color-text-secondary)',
   },
   confirmBtn: {
     width: '100%',
@@ -786,7 +786,7 @@ const styles: Record<string, React.CSSProperties> = {
   confirmationTitle: {
     fontSize: '1.5rem',
     fontWeight: 700,
-    color: '#4ade80',
+    color: '#16a34a',
     marginBottom: '8px',
     letterSpacing: '-0.02em',
   },
@@ -798,8 +798,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   confirmationDetails: {
     textAlign: 'left' as const,
-    background: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    background: 'var(--color-surface-elevated)',
+    border: '1px solid var(--color-border)',
     borderRadius: '10px',
     padding: '20px',
     marginBottom: '20px',
@@ -809,7 +809,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '8px 0',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+    borderBottom: '1px solid var(--color-border)',
   },
   confirmationDetailLabel: {
     fontSize: '0.8rem',
@@ -825,12 +825,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    background: 'rgba(59, 130, 246, 0.1)',
+    background: 'var(--color-accent-glow)',
     border: '1px solid rgba(59, 130, 246, 0.2)',
     borderRadius: '8px',
     padding: '12px 16px',
     fontSize: '0.82rem',
-    color: '#93c5fd',
+    color: '#2563eb',
     marginBottom: '24px',
     textAlign: 'left' as const,
   },

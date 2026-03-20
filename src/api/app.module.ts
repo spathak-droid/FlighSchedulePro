@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
@@ -24,6 +24,8 @@ import { TenantGuard } from './common/guards/tenant.guard.js';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor.js';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { StructuredLoggerService } from './common/services/logger.service.js';
 import { MockSuggestionsSeeder } from './fsp/mock/mock-suggestions-seeder.js';
 
 @Module({
@@ -94,6 +96,15 @@ import { MockSuggestionsSeeder } from './fsp/mock/mock-suggestions-seeder.js';
     // Mock suggestions seeder — only active when FSP_MOCK_MODE=true
     // Implements OnModuleInit and no-ops when mock mode is off
     MockSuggestionsSeeder,
+    // Structured logger service — available for injection across the app
+    StructuredLoggerService,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Apply CorrelationIdMiddleware to all routes.
+    // This runs before guards and interceptors, so correlationId is available
+    // in AsyncLocalStorage for the entire request lifecycle.
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

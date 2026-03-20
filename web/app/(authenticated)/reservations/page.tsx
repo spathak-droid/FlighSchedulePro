@@ -41,10 +41,10 @@ function formatDateTime(iso: string): string {
 
 function statusColor(status: string): { bg: string; color: string } {
   switch (status) {
-    case 'completed': return { bg: 'rgba(34,197,94,0.15)', color: '#4ade80' };
-    case 'cancelled': return { bg: 'rgba(239,68,68,0.15)', color: '#f87171' };
-    case 'no_show': return { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' };
-    default: return { bg: 'rgba(59,130,246,0.15)', color: '#60a5fa' };
+    case 'completed': return { bg: 'rgba(34,197,94,0.1)', color: '#16a34a' };
+    case 'cancelled': return { bg: 'rgba(239,68,68,0.1)', color: '#dc2626' };
+    case 'no_show': return { bg: 'rgba(245,158,11,0.1)', color: '#d97706' };
+    default: return { bg: 'rgba(59,130,246,0.1)', color: '#2563eb' };
   }
 }
 
@@ -135,7 +135,7 @@ export default function ReservationsPage() {
         </div>
       ) : reservations.length === 0 ? (
         <div className="card" style={styles.empty}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5a6178" strokeWidth="1.5">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
@@ -167,11 +167,11 @@ export default function ReservationsPage() {
                   const isExpanded = expandedId === r.id;
                   const src = r.source ?? 'manual';
                   const srcColors: Record<string, { bg: string; color: string }> = {
-                    waitlist: { bg: 'rgba(59,130,246,0.15)', color: '#60a5fa' },
-                    reschedule: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' },
-                    discovery: { bg: 'rgba(168,85,247,0.15)', color: '#c084fc' },
-                    next_lesson: { bg: 'rgba(34,197,94,0.15)', color: '#4ade80' },
-                    manual: { bg: 'rgba(100,116,139,0.15)', color: '#94a3b8' },
+                    waitlist: { bg: 'rgba(59,130,246,0.1)', color: '#2563eb' },
+                    reschedule: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
+                    discovery: { bg: 'rgba(168,85,247,0.1)', color: '#7c3aed' },
+                    next_lesson: { bg: 'rgba(34,197,94,0.1)', color: '#16a34a' },
+                    manual: { bg: 'rgba(100,116,139,0.1)', color: '#64748b' },
                   };
                   const sc2 = srcColors[src] ?? srcColors.manual!;
 
@@ -184,7 +184,7 @@ export default function ReservationsPage() {
                   return (
                     <Fragment key={r.id}>
                       <tr
-                        style={{ ...styles.tr, cursor: 'pointer', background: isExpanded ? 'rgba(59,130,246,0.06)' : undefined }}
+                        style={{ ...styles.tr, cursor: 'pointer', background: isExpanded ? 'var(--color-accent-glow)' : undefined }}
                         onClick={() => setExpandedId(isExpanded ? null : r.id)}
                       >
                         <td style={styles.td}>
@@ -220,7 +220,7 @@ export default function ReservationsPage() {
                             {r.status === 'completed' ? (
                               <button
                                 className="btn btn-ghost btn-sm"
-                                style={{ color: '#f87171', fontSize: '0.75rem' }}
+                                style={{ color: '#dc2626', fontSize: '0.75rem' }}
                                 onClick={(e) => { e.stopPropagation(); handleCancel(r.id); }}
                                 disabled={cancellingId === r.id}
                               >
@@ -314,14 +314,14 @@ const styles: Record<string, React.CSSProperties> = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' as const, gap: '12px' },
   title: { fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' },
   subtitle: { fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '4px' },
-  errorBox: { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', padding: '12px 16px', fontSize: '0.875rem', marginBottom: '16px' },
+  errorBox: { background: 'var(--color-danger-glow)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '0.875rem', marginBottom: '16px' },
   loading: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '80px 20px', gap: '16px' },
   empty: { textAlign: 'center' as const, padding: '60px 20px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center' },
-  th: { textAlign: 'left' as const, padding: '12px 16px', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--color-text-muted)', borderBottom: '1px solid rgba(255,255,255,0.08)' },
-  tr: { borderBottom: '1px solid rgba(255,255,255,0.04)' },
+  th: { textAlign: 'left' as const, padding: '12px 16px', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--color-text-muted)', borderBottom: '1px solid var(--color-border)' },
+  tr: { borderBottom: '1px solid var(--color-border)' },
   td: { padding: '14px 16px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
   pagination: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '20px', padding: '16px' },
-  expandPanel: { padding: '16px 24px 20px', background: 'rgba(59,130,246,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
+  expandPanel: { padding: '16px 24px 20px', background: 'var(--color-surface-elevated)', borderBottom: '1px solid var(--color-border)' },
   expandGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' },
   expandSection: { display: 'flex', flexDirection: 'column' as const, gap: '2px' },
   expandLabel: { fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--color-text-muted)' },

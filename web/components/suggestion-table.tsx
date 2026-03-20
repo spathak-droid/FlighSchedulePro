@@ -113,7 +113,7 @@ export default function SuggestionTable({
   if (suggestions.length === 0) {
     return (
       <div style={styles.emptyState}>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5a6178" strokeWidth="1.5">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <line x1="9" y1="9" x2="15" y2="15" />
           <line x1="15" y1="9" x2="9" y2="15" />
@@ -194,7 +194,7 @@ export default function SuggestionTable({
                         <span style={styles.scoreText}>{scorePercent}%</span>
                       </div>
                     ) : (
-                      <span style={{ color: '#5a6178' }}>{'\u2014'}</span>
+                      <span style={{ color: 'var(--color-text-muted)' }}>{'\u2014'}</span>
                     )}
                   </td>
                   <td>
@@ -265,9 +265,10 @@ export default function SuggestionTable({
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
     background: 'var(--color-surface)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid var(--color-border)',
     borderRadius: '12px',
     overflow: 'auto',
+    boxShadow: 'var(--shadow)',
   },
   emptyState: {
     display: 'flex',
@@ -277,7 +278,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '64px 20px',
     gap: '12px',
     background: 'var(--color-surface)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid var(--color-border)',
     borderRadius: '12px',
   },
   emptyTitle: {
@@ -288,7 +289,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   emptyText: {
     fontSize: '0.875rem',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     margin: 0,
   },
   studentCell: {
@@ -308,7 +309,7 @@ const styles: Record<string, React.CSSProperties> = {
   scoreTrack: {
     width: '48px',
     height: '5px',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'var(--color-border)',
     borderRadius: '3px',
     overflow: 'hidden',
     flexShrink: 0,
@@ -336,9 +337,9 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: '32px',
   },
   expandedRow: {
-    background: '#0f1320',
+    background: 'var(--color-surface-elevated)',
     padding: '16px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid var(--color-border)',
   },
   autoApprovedBadge: {
     display: 'inline-flex',

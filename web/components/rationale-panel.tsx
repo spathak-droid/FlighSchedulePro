@@ -95,8 +95,8 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
                 {rationale.riskLevel && (
                   <span style={{
                     ...styles.riskBadge,
-                    background: rationale.riskLevel === 'low' ? 'rgba(34,197,94,0.15)' : rationale.riskLevel === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
-                    color: rationale.riskLevel === 'low' ? '#4ade80' : rationale.riskLevel === 'medium' ? '#fbbf24' : '#f87171',
+                    background: rationale.riskLevel === 'low' ? 'rgba(34,197,94,0.1)' : rationale.riskLevel === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                    color: rationale.riskLevel === 'low' ? '#16a34a' : rationale.riskLevel === 'medium' ? '#d97706' : '#dc2626',
                   }}>
                     {rationale.riskLevel} risk
                   </span>
@@ -167,8 +167,8 @@ export default function RationalePanel({ rationale, defaultOpen = false }: Ratio
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: '#0f1320',
-    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'var(--color-surface-elevated)',
+    border: '1px solid var(--color-border)',
     borderRadius: '10px',
     overflow: 'hidden',
   },
@@ -237,13 +237,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   summaryText: {
     fontSize: '0.825rem',
-    color: '#c8cdd8',
+    color: 'var(--color-text-secondary)',
     lineHeight: 1.6,
     margin: 0,
   },
   riskReasonText: {
     fontSize: '0.75rem',
-    color: '#7a8299',
+    color: 'var(--color-text-muted)',
     lineHeight: 1.5,
     margin: 0,
     marginTop: '6px',
@@ -257,7 +257,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    color: '#5a6178',
+    color: 'var(--color-text-muted)',
     marginBottom: '6px',
   },
   list: {

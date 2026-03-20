@@ -140,9 +140,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '16px',
     padding: '16px 20px',
     background: 'var(--color-surface)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid var(--color-border)',
     borderRadius: '12px',
     flexWrap: 'wrap' as const,
+    boxShadow: 'var(--shadow)',
   },
   filterGroup: {
     display: 'flex',
