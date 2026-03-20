@@ -4,12 +4,12 @@ set -e
 echo "==> Starting FlighSchedulePro (production)"
 
 # Start the NestJS API (port 3001)
-node dist/api/main.js &
+node dist/src/api/main.js &
 API_PID=$!
 echo "  API started (PID $API_PID, port ${PORT:-3001})"
 
 # Start the BullMQ worker (no HTTP server)
-node dist/worker/main.js &
+node dist/src/worker/main.js &
 WORKER_PID=$!
 echo "  Worker started (PID $WORKER_PID)"
 

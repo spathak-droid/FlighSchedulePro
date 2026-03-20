@@ -22,7 +22,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml ./
 COPY web ./web
 ENV NEXT_TELEMETRY_DISABLED=1
-# API URL is set at runtime via env var; build with placeholder
 ENV NEXT_PUBLIC_API_URL=__NEXT_PUBLIC_API_URL__
 RUN pnpm build:web
 
@@ -31,14 +30,18 @@ FROM node:20-alpine AS production
 RUN apk add --no-cache tini
 WORKDIR /app
 
-# Copy built API + its node_modules
+# Copy built API (NestJS compiles to dist/src/)
 COPY --from=build-api /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
+# Root package.json with "type":"module" for NestJS ESM
 COPY package.json ./
 
-# Copy Next.js standalone output (includes its own node_modules)
+# Copy Next.js standalone output
 COPY --from=build-web /app/web/.next/standalone ./web-standalone
 COPY --from=build-web /app/web/.next/static ./web-standalone/web/.next/static
+# Force CommonJS in the standalone directory — Next.js server.js uses require()
+# This overrides the root "type":"module" for anything under web-standalone/
+RUN echo '{"type":"commonjs"}' > ./web-standalone/package.json
 
 # Copy entrypoint
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
