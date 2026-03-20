@@ -56,3 +56,6 @@ pgdata/
 
 # Drizzle
 drizzle/meta/
+.claude
+.specify
+CompanyDocs

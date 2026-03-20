@@ -208,6 +208,24 @@ export default function LoginPage() {
                 {loading ? <span className="spinner" /> : null}
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
+
+              <button
+                type="button"
+                className="btn btn-outline login-submit"
+                style={{ marginTop: '8px' }}
+                disabled={loading}
+                onClick={() => {
+                  setEmail('sarah@skywest.edu');
+                  setPassword('demo');
+                  setTimeout(() => {
+                    const form = document.querySelector('form');
+                    form?.requestSubmit();
+                  }, 100);
+                }}
+              >
+                {loading ? <span className="spinner" /> : null}
+                Test Login
+              </button>
             </div>
           </form>
         ) : (
