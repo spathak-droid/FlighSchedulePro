@@ -7,7 +7,7 @@ import {
   activityTypes,
   reservationHistory,
 } from '../../../db/schema/index.js';
-import { eq, and, desc, asc, gt, sql, ilike } from 'drizzle-orm';
+import { eq, and, desc, asc, gt, ilike } from 'drizzle-orm';
 
 export interface StudentFlightStats {
   /** Hours since student's last completed flight. null if no history. */

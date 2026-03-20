@@ -1,25 +1,6 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { AuditService } from './audit.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
-
-interface ActivityFeedItem {
-  id: string;
-  eventType: string;
-  summary: string;
-  entityType: string | null;
-  entityId: string | null;
-  actorId: string | null;
-  data: Record<string, unknown>;
-  createdAt: Date;
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('activity')
 export class ActivityController {

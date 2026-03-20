@@ -28,9 +28,15 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     // ── 1. Clean stale repeatable jobs ─────────────────────────────────
     for (const q of [this.pollQueue, this.expireQueue]) {
-      const existing = await q.getRepeatableJobs();
-      for (const job of existing) {
-        await q.removeRepeatableByKey(job.key);
+      try {
+        const existing = await q.getRepeatableJobs();
+        for (const job of existing) {
+          await q.removeRepeatableByKey(job.key);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to clean stale repeatable jobs for queue ${q.name}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
 
@@ -151,7 +157,34 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await Promise.all(this.workers.map((w) => w.close()));
+    this.logger.log('Shutting down workers — draining active jobs...');
+
+    // Close workers gracefully: `close(true)` forces immediate stop, `close()` waits
+    // for the current job to finish. We use a timeout to avoid hanging indefinitely.
+    const DRAIN_TIMEOUT_MS = 15_000;
+
+    await Promise.all(
+      this.workers.map(async (w) => {
+        try {
+          await Promise.race([
+            w.close(),
+            new Promise<void>((resolve) =>
+              setTimeout(() => {
+                this.logger.warn(
+                  `Worker ${w.name} drain timed out after ${DRAIN_TIMEOUT_MS}ms — forcing close`,
+                );
+                resolve();
+              }, DRAIN_TIMEOUT_MS),
+            ),
+          ]);
+        } catch (err) {
+          this.logger.error(
+            `Error closing worker ${w.name}: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }),
+    );
+
     this.logger.log('All workers closed');
   }
 }

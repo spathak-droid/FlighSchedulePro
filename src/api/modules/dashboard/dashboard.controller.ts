@@ -1,14 +1,6 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { DashboardService } from './dashboard.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('dashboard')
 export class DashboardController {

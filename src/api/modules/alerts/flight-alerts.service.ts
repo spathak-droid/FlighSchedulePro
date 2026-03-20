@@ -45,7 +45,8 @@ export class FlightAlertsService {
       .select()
       .from(flightAlerts)
       .where(and(eq(flightAlerts.operatorId, operatorId), eq(flightAlerts.isResolved, false)))
-      .orderBy(desc(flightAlerts.createdAt));
+      .orderBy(desc(flightAlerts.createdAt))
+      .limit(200);
   }
 
   /**

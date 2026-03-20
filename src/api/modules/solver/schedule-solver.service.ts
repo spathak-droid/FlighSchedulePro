@@ -20,7 +20,7 @@ import {
   suggestions,
   solverRuns,
 } from '../../../db/schema/index.js';
-import { eq, and, gte, lte, lt, or, sql, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import type { FoundSlot } from '../../../core/scheduling/slot-finder.js';
 import { FspResourceService } from '../../fsp/fsp-resource.service.js';
 import type {

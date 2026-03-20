@@ -118,13 +118,20 @@ export class PollScheduleJob extends WorkerHost {
           const msg = error instanceof Error ? error.message : String(error);
           this.logger.error(`Failed to poll operator ${op.id} (${op.name}): ${msg}`);
 
-          // Record the sync failure in audit log
-          await db.insert(auditEvents).values({
-            operatorId: op.id,
-            eventType: 'sync.failed',
-            entityType: 'sync',
-            data: { error: msg, phase: 'poll-schedule' },
-          });
+          // Record the sync failure in audit log — wrapped in try/catch to prevent
+          // audit logging failures from masking the original error
+          try {
+            await db.insert(auditEvents).values({
+              operatorId: op.id,
+              eventType: 'sync.failed',
+              entityType: 'sync',
+              data: { error: msg, phase: 'poll-schedule' },
+            });
+          } catch (auditErr) {
+            this.logger.error(
+              `Failed to record audit event for operator ${op.id}: ${auditErr instanceof Error ? auditErr.message : String(auditErr)}`,
+            );
+          }
         }
 
         // ── T091: Pending-lesson detection ─────────────────────────────
@@ -522,17 +529,23 @@ export class PollScheduleJob extends WorkerHost {
     if (enqueued > 0) {
       this.logger.log(`T091: Enqueued ${enqueued} next-lesson jobs for operator ${operatorId}`);
 
-      await db.insert(auditEvents).values({
-        operatorId,
-        eventType: 'next_lesson.detected',
-        entityType: 'enrollment',
-        data: {
-          phase: 'pending-lesson-detector',
-          studentsChecked: students.length,
-          studentsWithReservations: studentsWithReservations.size,
-          nextLessonJobsEnqueued: enqueued,
-        },
-      });
+      try {
+        await db.insert(auditEvents).values({
+          operatorId,
+          eventType: 'next_lesson.detected',
+          entityType: 'enrollment',
+          data: {
+            phase: 'pending-lesson-detector',
+            studentsChecked: students.length,
+            studentsWithReservations: studentsWithReservations.size,
+            nextLessonJobsEnqueued: enqueued,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to record pending-lesson audit event: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     } else {
       this.logger.debug(`T091: No pending-lesson candidates found for operator ${operatorId}`);
     }
@@ -620,18 +633,24 @@ export class PollScheduleJob extends WorkerHost {
     // Enqueue next-lesson suggestions for each inactive student
     let enqueued = 0;
     for (const student of candidates) {
-      await this.suggestionsQueue.add(
-        `outreach-${operatorId}-${student.id}-${Date.now()}`,
-        {
-          type: 'next_lesson',
-          operatorId,
-          studentId: student.id,
-          enrollmentId: '',
-          detectedAt: now.toISOString(),
-        },
-        { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
-      );
-      enqueued++;
+      try {
+        await this.suggestionsQueue.add(
+          `outreach-${operatorId}-${student.id}-${Date.now()}`,
+          {
+            type: 'next_lesson',
+            operatorId,
+            studentId: student.id,
+            enrollmentId: '',
+            detectedAt: now.toISOString(),
+          },
+          { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
+        );
+        enqueued++;
+      } catch (err) {
+        this.logger.error(
+          `Failed to enqueue outreach for student ${student.id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
 
     this.logger.log(
@@ -639,16 +658,22 @@ export class PollScheduleJob extends WorkerHost {
         `(${inactiveStudents.length} inactive, ${alreadyTargeted.size} already targeted, ${hasUpcoming.size} have upcoming)`,
     );
 
-    await db.insert(auditEvents).values({
-      operatorId,
-      eventType: 'inactive_student_outreach',
-      entityType: 'student',
-      data: {
-        inactiveCount: inactiveStudents.length,
-        candidatesEnqueued: enqueued,
-        skippedAlreadyTargeted: alreadyTargeted.size,
-        skippedHasUpcoming: hasUpcoming.size,
-      },
-    });
+    try {
+      await db.insert(auditEvents).values({
+        operatorId,
+        eventType: 'inactive_student_outreach',
+        entityType: 'student',
+        data: {
+          inactiveCount: inactiveStudents.length,
+          candidatesEnqueued: enqueued,
+          skippedAlreadyTargeted: alreadyTargeted.size,
+          skippedHasUpcoming: hasUpcoming.size,
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        `Failed to record inactive student outreach audit event: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 }

@@ -1,19 +1,24 @@
-import { Controller, Get, Put, Param, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Param,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
 import { FeatureFlagService } from './feature-flag.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface UpdateFlagBody {
   enabled: boolean;
   config?: Record<string, unknown>;
 }
+
+/** Only allow alphanumeric, hyphens, underscores in flag names. */
+const FLAG_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
 
 @Controller('feature-flags')
 export class FeatureFlagsController {
@@ -40,6 +45,18 @@ export class FeatureFlagsController {
     @Param('flagName') flagName: string,
     @Body() body: UpdateFlagBody,
   ) {
+    if (!FLAG_NAME_PATTERN.test(flagName)) {
+      throw new BadRequestException(
+        'flagName must be 1-100 characters, alphanumeric with hyphens/underscores only',
+      );
+    }
+    if (typeof body.enabled !== 'boolean') {
+      throw new BadRequestException('enabled must be a boolean');
+    }
+    if (body.config !== undefined && (typeof body.config !== 'object' || body.config === null)) {
+      throw new BadRequestException('config must be an object if provided');
+    }
+
     const flag = await this.featureFlagService.setFlag(
       req.user.operatorId,
       flagName,

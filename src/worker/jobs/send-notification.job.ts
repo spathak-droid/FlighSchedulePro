@@ -20,7 +20,6 @@ import { eq } from 'drizzle-orm';
 import { NotificationService } from '../../api/modules/notifications/notification.service.js';
 import { FspTrainingService } from '../../api/fsp/fsp-training.service.js';
 import { FspResourceService } from '../../api/fsp/fsp-resource.service.js';
-import { toFspLocalTime } from '../../core/utils/time.js';
 import type { NotificationRecipientType } from '../../core/types/domain.js';
 
 // ─── Job Data ───────────────────────────────────────────────────────────────
@@ -160,8 +159,8 @@ export class SendNotificationJob extends WorkerHost {
 
       this.logger.log(
         `Notification dispatched for suggestion ${suggestionId}: ` +
-          `email=${result.emailSent}, sms=${result.smsSent}, ` +
-          `records=${result.records.length}`,
+          `email=${result?.emailSent ?? false}, sms=${result?.smsSent ?? false}, ` +
+          `records=${result?.records?.length ?? 0}`,
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

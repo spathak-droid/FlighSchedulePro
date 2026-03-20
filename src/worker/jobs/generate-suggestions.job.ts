@@ -228,18 +228,25 @@ export class GenerateSuggestionsJob extends WorkerHost {
       const results = await Promise.all(concurrentTasks);
       totalSuggestionsCreated = results.reduce((sum, n) => sum + n, 0);
 
-      // Audit log
-      await db.insert(auditEvents).values({
-        operatorId,
-        eventType: 'suggestion.created',
-        entityType: 'suggestion',
-        data: {
-          openingsProcessed: openings.length,
-          suggestionsCreated: totalSuggestionsCreated,
-          groupId,
-          detectedAt,
-        },
-      });
+      // Audit log — non-fatal: suggestions are already created in the DB,
+      // so a failed audit insert should not cause a job retry
+      try {
+        await db.insert(auditEvents).values({
+          operatorId,
+          eventType: 'suggestion.created',
+          entityType: 'suggestion',
+          data: {
+            openingsProcessed: openings.length,
+            suggestionsCreated: totalSuggestionsCreated,
+            groupId,
+            detectedAt,
+          },
+        });
+      } catch (auditErr) {
+        this.logger.error(
+          `Failed to record suggestion audit event: ${auditErr instanceof Error ? auditErr.message : String(auditErr)}`,
+        );
+      }
 
       this.logger.log(
         `Generate-suggestions completed for operator ${operatorId}: ` +

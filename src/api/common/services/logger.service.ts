@@ -38,7 +38,8 @@ export class StructuredLoggerService {
    */
   static forContext(context: string): StructuredLoggerService {
     const instance = new StructuredLoggerService();
-    (instance as any).logger = new Logger(context);
+    // Use object property override to set the private logger with a custom context
+    Object.defineProperty(instance, 'logger', { value: new Logger(context) });
     return instance;
   }
 

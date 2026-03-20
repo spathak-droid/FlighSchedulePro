@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -26,15 +27,7 @@ import { instructors } from '../../../db/schema/instructors.js';
 import { aircraft } from '../../../db/schema/aircraft.js';
 import { activityTypes } from '../../../db/schema/activity-types.js';
 import { eq, and } from 'drizzle-orm';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface DeclineBody {
   reason?: string;
@@ -213,6 +206,13 @@ export class SuggestionsController {
   @Post('bulk-approve')
   @HttpCode(HttpStatus.OK)
   async bulkApprove(@Req() req: AuthenticatedRequest, @Body() body: BulkApproveBody) {
+    if (!Array.isArray(body.suggestionIds) || body.suggestionIds.length === 0) {
+      throw new BadRequestException('suggestionIds must be a non-empty array');
+    }
+    if (body.suggestionIds.length > 50) {
+      throw new BadRequestException('Cannot bulk-approve more than 50 suggestions at once');
+    }
+
     // TODO: FSP token storage per operator — see approve() TODO above
     const fspToken = '';
 
@@ -233,6 +233,13 @@ export class SuggestionsController {
   @Post('bulk-decline')
   @HttpCode(HttpStatus.OK)
   async bulkDecline(@Req() req: AuthenticatedRequest, @Body() body: BulkDeclineBody) {
+    if (!Array.isArray(body.suggestionIds) || body.suggestionIds.length === 0) {
+      throw new BadRequestException('suggestionIds must be a non-empty array');
+    }
+    if (body.suggestionIds.length > 50) {
+      throw new BadRequestException('Cannot bulk-decline more than 50 suggestions at once');
+    }
+
     const result = await this.suggestionsService.bulkDecline(
       req.user.operatorId,
       body.suggestionIds,

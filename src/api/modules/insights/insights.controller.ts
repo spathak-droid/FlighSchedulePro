@@ -1,14 +1,6 @@
 import { Controller, Get, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { StudentInsightsService } from './student-insights.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('insights')
 export class InsightsController {

@@ -36,6 +36,9 @@ export interface HealthResponse {
   version: string;
 }
 
+/** Timeout (ms) for individual health checks. Prevents a hung dependency from blocking the response. */
+const HEALTH_CHECK_TIMEOUT_MS = 5_000;
+
 @Injectable()
 export class HealthService {
   private readonly logger = new Logger(HealthService.name);
@@ -59,9 +62,9 @@ export class HealthService {
 
   async check(): Promise<HealthResponse> {
     const [database, redis, workers] = await Promise.all([
-      this.checkDatabase(),
-      this.checkRedis(),
-      this.checkWorkers(),
+      this.withTimeout(this.checkDatabase(), 'database'),
+      this.withTimeout(this.checkRedis(), 'redis'),
+      this.withTimeout(this.checkWorkers(), 'workers'),
     ]);
 
     const checks = { database, redis, workers };
@@ -86,6 +89,30 @@ export class HealthService {
       uptime: process.uptime(),
       version: process.env.npm_package_version ?? '0.1.0',
     };
+  }
+
+  /**
+   * Wraps a health check promise with a timeout. If the check does not
+   * resolve within HEALTH_CHECK_TIMEOUT_MS, it returns 'unhealthy' with a timeout error.
+   */
+  private async withTimeout(
+    check: Promise<HealthCheckResult>,
+    name: string,
+  ): Promise<HealthCheckResult> {
+    const start = Date.now();
+    return Promise.race([
+      check,
+      new Promise<HealthCheckResult>((resolve) =>
+        setTimeout(() => {
+          this.logger.warn(`Health check '${name}' timed out after ${HEALTH_CHECK_TIMEOUT_MS}ms`);
+          resolve({
+            status: 'unhealthy',
+            latencyMs: Date.now() - start,
+            error: `Health check timed out after ${HEALTH_CHECK_TIMEOUT_MS}ms`,
+          });
+        }, HEALTH_CHECK_TIMEOUT_MS),
+      ),
+    ]);
   }
 
   private async checkDatabase(): Promise<HealthCheckResult> {

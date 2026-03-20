@@ -1,14 +1,6 @@
 import { Controller, Post, Get, HttpCode, HttpStatus, Req, Body } from '@nestjs/common';
 import { SimulationService } from './simulation.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface StartBody {
   /** Event interval in seconds (default 20). */

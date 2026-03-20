@@ -6,7 +6,7 @@ import { aircraft } from '../../../db/schema/index.js';
 import { WeatherService } from '../weather/weather.service.js';
 import { FspResourceService } from '../../fsp/fsp-resource.service.js';
 import { getLocationsForOperator } from '../../fsp/mock/mock-data.js';
-import { eq, and, gt, ne, sql, inArray } from 'drizzle-orm';
+import { eq, and, gt, ne, sql } from 'drizzle-orm';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,6 +36,19 @@ export interface DisruptionScanResult {
   maintenance: DisruptionEvent[];
   instructor: DisruptionEvent[];
 }
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+/** Hours remaining before 100-hr inspection triggers a warning disruption. */
+const MAINTENANCE_WARNING_HOURS = 50;
+/** Hours remaining before 100-hr inspection triggers a critical disruption. */
+const MAINTENANCE_CRITICAL_HOURS = 20;
+/** Maximum recommended flights per instructor per day. */
+const MAX_INSTRUCTOR_DAILY_FLIGHTS = 6;
+/** Estimated maximum weekly flight slots per instructor. */
+const MAX_WEEKLY_SLOTS_PER_INSTRUCTOR = 40;
+/** Weekly utilization percentage threshold to flag instructor overload. */
+const INSTRUCTOR_UTILIZATION_THRESHOLD = 0.75;
 
 // ─── Maintenance Limits ─────────────────────────────────────────────────────
 
@@ -208,11 +221,12 @@ export class DisruptionDetectorService {
 
       const remainingHours = maintenanceData.nextInspectionDue - maintenanceData.hobbsHours;
 
-      if (remainingHours >= 50) {
+      if (remainingHours >= MAINTENANCE_WARNING_HOURS) {
         continue; // No disruption needed
       }
 
-      const severity: DisruptionSeverity = remainingHours < 20 ? 'critical' : 'warning';
+      const severity: DisruptionSeverity =
+        remainingHours < MAINTENANCE_CRITICAL_HOURS ? 'critical' : 'warning';
 
       // Find upcoming reservations using this aircraft
       const upcomingReservations = await db
@@ -314,7 +328,7 @@ export class DisruptionDetectorService {
     }
 
     for (const [instructorId, flights] of instructorFlights) {
-      if (flights.length <= 6) continue;
+      if (flights.length <= MAX_INSTRUCTOR_DAILY_FLIGHTS) continue;
 
       const reservationIds = flights.map((f) => f.id);
       const studentIds = [...new Set(flights.map((f) => f.studentId))];
@@ -330,7 +344,7 @@ export class DisruptionDetectorService {
         title: `Instructor ${instructorId} overloaded (${flights.length} flights today)`,
         description:
           `Instructor ${instructorId} has ${flights.length} flights scheduled today, ` +
-          `exceeding the recommended maximum of 6. This may impact flight quality and safety. ` +
+          `exceeding the recommended maximum of ${MAX_INSTRUCTOR_DAILY_FLIGHTS}. This may impact flight quality and safety. ` +
           `Consider redistributing some flights to other instructors.`,
         affectedReservationIds: reservationIds,
         affectedStudentIds: studentIds,
@@ -342,7 +356,7 @@ export class DisruptionDetectorService {
         metadata: {
           instructorId,
           flightCount: flights.length,
-          maxRecommended: 6,
+          maxRecommended: MAX_INSTRUCTOR_DAILY_FLIGHTS,
         },
         createdAt: now,
       });
@@ -372,13 +386,12 @@ export class DisruptionDetectorService {
       )
       .groupBy(reservationHistory.instructorId);
 
-    // Assume ~8 slots/day * 5 days = 40 slots/week as max capacity
-    const maxWeeklySlots = 40;
+    const maxWeeklySlots = MAX_WEEKLY_SLOTS_PER_INSTRUCTOR;
     const overloadedInstructors: string[] = [];
     for (const row of weekReservations) {
       if (!row.instructorId) continue;
       const utilization = row.count / maxWeeklySlots;
-      if (utilization > 0.75) {
+      if (utilization > INSTRUCTOR_UTILIZATION_THRESHOLD) {
         overloadedInstructors.push(row.instructorId);
         disruptions.push({
           id: '',
@@ -551,7 +564,8 @@ export class DisruptionDetectorService {
       .select()
       .from(disruptionEvents)
       .where(and(eq(disruptionEvents.operatorId, operatorId), eq(disruptionEvents.isActive, true)))
-      .orderBy(disruptionEvents.detectedAt);
+      .orderBy(disruptionEvents.detectedAt)
+      .limit(200);
 
     return rows.map((row) => ({
       id: row.id,

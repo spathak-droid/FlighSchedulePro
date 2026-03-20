@@ -1,14 +1,6 @@
-import { Controller, Get, Post, Param, Req } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req, ParseUUIDPipe } from '@nestjs/common';
 import { FlightAlertsService } from './flight-alerts.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('flight-alerts')
 export class FlightAlertsController {
@@ -29,7 +21,7 @@ export class FlightAlertsController {
    * Resolves a specific flight alert.
    */
   @Post(':id/resolve')
-  async resolveAlert(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  async resolveAlert(@Param('id', ParseUUIDPipe) id: string, @Req() req: AuthenticatedRequest) {
     const alert = await this.alertsService.resolveAlert(id, req.user.userId);
     return { data: alert };
   }

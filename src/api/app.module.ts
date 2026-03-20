@@ -22,6 +22,7 @@ import { SimulationModule } from './modules/simulation/simulation.module.js';
 import { AskModule } from './modules/ask/ask.module.js';
 import { AuthGuard } from './common/guards/auth.guard.js';
 import { TenantGuard } from './common/guards/tenant.guard.js';
+import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor.js';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
@@ -74,6 +75,11 @@ import { MockSuggestionsSeeder } from './fsp/mock/mock-suggestions-seeder.js';
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
+    },
+    // Global RateLimitGuard — applies rate limiting to all routes (runs before auth)
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
     },
     // Global AuthGuard — applied to all routes; use @Public() to skip
     {

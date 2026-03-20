@@ -49,8 +49,8 @@ export class HealthController {
   /**
    * Application metrics — request counts, latencies, error rates, memory usage.
    * Structured for consumption by monitoring/alerting systems.
+   * Requires authentication to prevent information disclosure.
    */
-  @Public()
   @Get('metrics')
   getMetrics() {
     const memUsage = process.memoryUsage();

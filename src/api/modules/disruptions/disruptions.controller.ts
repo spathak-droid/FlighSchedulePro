@@ -8,17 +8,10 @@ import {
   HttpStatus,
   NotFoundException,
   Logger,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { DisruptionDetectorService } from './disruption-detector.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('disruptions')
 export class DisruptionsController {
@@ -88,7 +81,10 @@ export class DisruptionsController {
    */
   @Post(':id/resolve')
   @HttpCode(HttpStatus.OK)
-  async resolveDisruption(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  async resolveDisruption(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     const operatorId = req.user.operatorId;
 
     const resolved = await this.disruptionDetectorService.resolveDisruption(operatorId, id);

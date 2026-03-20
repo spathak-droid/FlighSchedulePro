@@ -16,8 +16,15 @@ import { FeatureFlagsModule } from '../feature-flags/feature-flags.module.js';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): JwtModuleOptions => {
         const expiresIn = configService.get<string>('JWT_EXPIRES_IN', '8h');
+        const secret = configService.getOrThrow<string>('JWT_SECRET');
+        if (secret.length < 32) {
+          throw new Error(
+            'JWT_SECRET must be at least 32 characters long for adequate security. ' +
+              `Current length: ${secret.length}`,
+          );
+        }
         return {
-          secret: configService.getOrThrow<string>('JWT_SECRET'),
+          secret,
           signOptions: {
             expiresIn: expiresIn as unknown as number,
             issuer: 'flighschedulepro',

@@ -1,14 +1,15 @@
-import { Controller, Get, Put, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
 import { PoliciesService, UpdatePolicyDto } from './policies.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('policies')
 export class PoliciesController {
@@ -31,6 +32,24 @@ export class PoliciesController {
   @Put()
   @HttpCode(HttpStatus.OK)
   async updatePolicy(@Req() req: AuthenticatedRequest, @Body() body: UpdatePolicyDto) {
+    // Validate numeric fields are actually numbers (JSON body parsing can pass strings)
+    const numericFields: Array<keyof UpdatePolicyDto> = [
+      'rescheduleAlternativesCount',
+      'searchWindowInitialDays',
+      'searchWindowIncrementDays',
+      'searchWindowMaxDays',
+      'suggestionTtlHours',
+      'pollingIntervalMinutes',
+    ];
+    for (const field of numericFields) {
+      if (
+        body[field] !== undefined &&
+        (typeof body[field] !== 'number' || !Number.isFinite(body[field] as number))
+      ) {
+        throw new BadRequestException(`${field} must be a finite number`);
+      }
+    }
+
     const updated = await this.policiesService.updatePolicy(req.user.operatorId, body);
     return { data: updated };
   }

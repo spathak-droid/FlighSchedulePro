@@ -80,8 +80,8 @@ export class AiEnrichSuggestionJob extends WorkerHost {
             .limit(1)
         : [null];
 
-      // Build AI input
-      const existingRationale = suggestion.rationale as Record<string, unknown>;
+      // Build AI input — guard against null rationale
+      const existingRationale = (suggestion.rationale ?? {}) as Record<string, unknown>;
       const input: AiRationaleInput = {
         suggestionType: suggestion.type as AiRationaleInput['suggestionType'],
         studentName: student ? `${student.firstName} ${student.lastName}` : undefined,

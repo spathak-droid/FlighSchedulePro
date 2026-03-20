@@ -1,15 +1,7 @@
 import { Controller, Get, Param, Req, NotFoundException, Logger } from '@nestjs/common';
 import { WeatherService } from './weather.service.js';
 import { getLocationsForOperator } from '../../fsp/mock/mock-data.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 @Controller('weather')
 export class WeatherController {

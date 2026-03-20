@@ -15,17 +15,10 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface UpdateTemplateBody {
   subject?: string;
@@ -58,6 +51,13 @@ export class TemplatesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateTemplateBody,
   ) {
+    if (body.subject !== undefined && body.subject.length > 500) {
+      throw new BadRequestException('subject must not exceed 500 characters');
+    }
+    if (body.bodyTemplate !== undefined && body.bodyTemplate.length > 10000) {
+      throw new BadRequestException('bodyTemplate must not exceed 10000 characters');
+    }
+
     const updated = await this.notificationService.updateTemplate(req.user.operatorId, id, {
       subject: body.subject,
       bodyTemplate: body.bodyTemplate,

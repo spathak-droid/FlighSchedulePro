@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { db } from '../../../db/index.js';
 import { suggestions } from '../../../db/schema/suggestions.js';
 import { reservationHistory } from '../../../db/schema/reservation-history.js';
@@ -29,6 +29,8 @@ export interface DashboardStats {
 
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
+
   /**
    * Get dashboard statistics for an operator.
    *
@@ -47,7 +49,8 @@ export class DashboardService {
     const thirtyDaysAgo = new Date(startOfToday);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Run all count queries in parallel
+    // Run all count queries in parallel with individual error isolation.
+    // If one query fails (e.g., table schema issue), we still return partial data.
     const [
       pendingResult,
       approvedTodayResult,
@@ -62,7 +65,13 @@ export class DashboardService {
       db
         .select({ total: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(and(eq(suggestions.operatorId, operatorId), eq(suggestions.status, 'pending'))),
+        .where(and(eq(suggestions.operatorId, operatorId), eq(suggestions.status, 'pending')))
+        .catch((err) => {
+          this.logger.error(
+            `Failed to fetch pending count: ${err instanceof Error ? err.message : err}`,
+          );
+          return [{ total: 0 }];
+        }),
 
       // Approved today count
       db
@@ -74,7 +83,13 @@ export class DashboardService {
             eq(suggestions.status, 'approved'),
             gte(suggestions.approvedAt, startOfToday),
           ),
-        ),
+        )
+        .catch((err) => {
+          this.logger.error(
+            `Failed to fetch approved count: ${err instanceof Error ? err.message : err}`,
+          );
+          return [{ total: 0 }];
+        }),
 
       // Declined today count
       db
@@ -86,7 +101,13 @@ export class DashboardService {
             eq(suggestions.status, 'declined'),
             gte(suggestions.declinedAt, startOfToday),
           ),
-        ),
+        )
+        .catch((err) => {
+          this.logger.error(
+            `Failed to fetch declined count: ${err instanceof Error ? err.message : err}`,
+          );
+          return [{ total: 0 }];
+        }),
 
       // Expired today count
       db
@@ -98,7 +119,13 @@ export class DashboardService {
             eq(suggestions.status, 'expired'),
             gte(suggestions.updatedAt, startOfToday),
           ),
-        ),
+        )
+        .catch((err) => {
+          this.logger.error(
+            `Failed to fetch expired count: ${err instanceof Error ? err.message : err}`,
+          );
+          return [{ total: 0 }];
+        }),
 
       // Acceptance rate: approved / (approved + declined) in last 30 days
       db
@@ -107,16 +134,42 @@ export class DashboardService {
           declined: sql<number>`count(*) filter (where ${suggestions.status} = 'declined' and ${suggestions.declinedAt} >= ${thirtyDaysAgo})::int`,
         })
         .from(suggestions)
-        .where(eq(suggestions.operatorId, operatorId)),
+        .where(eq(suggestions.operatorId, operatorId))
+        .catch((err) => {
+          this.logger.error(
+            `Failed to fetch acceptance rate: ${err instanceof Error ? err.message : err}`,
+          );
+          return [{ approved: 0, declined: 0 }];
+        }),
 
       // Weekly flight hours
-      this.getWeeklyFlightHours(operatorId),
+      this.getWeeklyFlightHours(operatorId).catch((err) => {
+        this.logger.error(
+          `Failed to fetch weekly flight hours: ${err instanceof Error ? err.message : err}`,
+        );
+        return [] as WeeklyFlightHour[];
+      }),
 
       // Time to fill
-      this.getTimeToFill(operatorId),
+      this.getTimeToFill(operatorId).catch((err) => {
+        this.logger.error(
+          `Failed to fetch time-to-fill: ${err instanceof Error ? err.message : err}`,
+        );
+        return null;
+      }),
 
       // Queue health
-      this.getQueueHealth(operatorId),
+      this.getQueueHealth(operatorId).catch((err) => {
+        this.logger.error(
+          `Failed to fetch queue health: ${err instanceof Error ? err.message : err}`,
+        );
+        return {
+          pendingCount: 0,
+          oldestPendingAge: 0,
+          avgApprovalTime: 0,
+          expirationRate: 0,
+        } as QueueHealth;
+      }),
     ]);
 
     const pending = pendingResult[0]?.total ?? 0;

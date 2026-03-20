@@ -1,13 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from '../ai/ai.service.js';
 import { db } from '../../../db/index.js';
-import {
-  students,
-  instructors,
-  aircraft,
-  suggestions,
-  studentInsights,
-} from '../../../db/schema/index.js';
+import { suggestions, studentInsights } from '../../../db/schema/index.js';
 import { eq, desc } from 'drizzle-orm';
 import {
   MOCK_STUDENTS_BY_OPERATOR,
@@ -31,6 +25,17 @@ export interface AskResponse {
   model: string;
 }
 
+/** Maximum number of previous conversation messages to include for context. */
+const MAX_CONVERSATION_HISTORY = 10;
+/** Maximum number of recent suggestions to include in context. */
+const MAX_RECENT_SUGGESTIONS = 20;
+/** Maximum number of student insights to include in context. */
+const MAX_STUDENT_INSIGHTS = 20;
+/** Maximum tokens for AI response. */
+const AI_MAX_TOKENS = 1500;
+/** Temperature for AI response (lower = more deterministic). */
+const AI_TEMPERATURE = 0.4;
+
 @Injectable()
 export class AskService {
   private readonly logger = new Logger(AskService.name);
@@ -47,7 +52,7 @@ export class AskService {
 
     // Add conversation history for multi-turn
     if (request.conversationHistory?.length) {
-      for (const msg of request.conversationHistory.slice(-10)) {
+      for (const msg of request.conversationHistory.slice(-MAX_CONVERSATION_HISTORY)) {
         messages.push({ role: msg.role, content: msg.content });
       }
     }
@@ -170,7 +175,7 @@ export class AskService {
         .from(suggestions)
         .where(eq(suggestions.operatorId, operatorId))
         .orderBy(desc(suggestions.createdAt))
-        .limit(20);
+        .limit(MAX_RECENT_SUGGESTIONS);
 
       if (pendingSuggestions.length > 0) {
         sections.push('\n## Recent Suggestions');
@@ -191,7 +196,7 @@ export class AskService {
         .select()
         .from(studentInsights)
         .where(eq(studentInsights.operatorId, operatorId))
-        .limit(20);
+        .limit(MAX_STUDENT_INSIGHTS);
 
       if (insights.length > 0) {
         sections.push('\n## Student Insights');
@@ -257,8 +262,8 @@ ${context}`;
         const res = await client.chat.completions.create({
           model: orModel,
           messages,
-          max_tokens: 1500,
-          temperature: 0.4,
+          max_tokens: AI_MAX_TOKENS,
+          temperature: AI_TEMPERATURE,
         });
         const content = res.choices[0]?.message?.content;
         if (content) return { content, model: `openrouter/${orModel}` };
@@ -275,8 +280,8 @@ ${context}`;
         const res = await client.chat.completions.create({
           model: oaiModel,
           messages,
-          max_tokens: 1500,
-          temperature: 0.4,
+          max_tokens: AI_MAX_TOKENS,
+          temperature: AI_TEMPERATURE,
         });
         const content = res.choices[0]?.message?.content;
         if (content) return { content, model: `openai/${oaiModel}` };

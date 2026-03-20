@@ -20,6 +20,18 @@ export interface RequestContext {
   operatorId?: number;
 }
 
+/** Minimal request shape that works for both Fastify and Express adapters. */
+interface MiddlewareRequest {
+  headers?: Record<string, string | string[] | undefined>;
+  correlationId?: string;
+}
+
+/** Minimal response shape that works for both Fastify and Express adapters. */
+interface MiddlewareResponse {
+  header?: (name: string, value: string) => void;
+  setHeader?: (name: string, value: string) => void;
+}
+
 /** Global AsyncLocalStorage instance for request-scoped context. */
 export const requestContext = new AsyncLocalStorage<RequestContext>();
 
@@ -40,9 +52,9 @@ export function getOperatorId(): number | undefined {
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
-  use(req: any, res: any, next: () => void): void {
-    const correlationId =
-      req.headers?.['x-request-id'] ?? req.headers?.['x-correlation-id'] ?? randomUUID();
+  use(req: MiddlewareRequest, res: MiddlewareResponse, next: () => void): void {
+    const rawId = req.headers?.['x-request-id'] ?? req.headers?.['x-correlation-id'];
+    const correlationId: string = typeof rawId === 'string' ? rawId : randomUUID();
 
     // Attach to request for interceptors/guards
     req.correlationId = correlationId;

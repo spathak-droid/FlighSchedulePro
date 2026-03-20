@@ -3,12 +3,22 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { db } from '../../../db/index.js';
 import { suggestions, reservationHistory, prospects } from '../../../db/schema/index.js';
-import { eq, and, desc, asc, gte, lte, inArray, sql, SQL } from 'drizzle-orm';
+import { eq, and, desc, asc, gte, lte, sql, SQL } from 'drizzle-orm';
 import { FspScheduleService } from '../../fsp/fsp-schedule.service.js';
 import { AuditService } from '../activity/audit.service.js';
 import { NotificationService } from '../notifications/notification.service.js';
 import type { FspCreateReservationRequest } from '../../fsp/fsp.types.js';
 import type { SendNotificationJobData } from '../../../worker/jobs/send-notification.job.js';
+import { toFspLocalTime } from '../../../core/utils/time.js';
+
+/** Default page size for suggestion listings. */
+const DEFAULT_PAGE_SIZE = 20;
+/** Maximum page size for suggestion listings. */
+const MAX_PAGE_SIZE = 100;
+/** Maximum retry attempts for notification dispatch jobs. */
+const NOTIFICATION_MAX_ATTEMPTS = 3;
+/** Base delay (ms) for exponential backoff on notification retries. */
+const NOTIFICATION_BACKOFF_DELAY_MS = 5000;
 
 export interface ListSuggestionsParams {
   operatorId: number;
@@ -55,7 +65,7 @@ export class SuggestionsService {
    */
   async list(params: ListSuggestionsParams) {
     const page = params.page ?? 1;
-    const pageSize = Math.min(params.pageSize ?? 20, 100);
+    const pageSize = Math.min(params.pageSize ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = (page - 1) * pageSize;
 
     const conditions: SQL[] = [eq(suggestions.operatorId, params.operatorId)];
@@ -178,8 +188,8 @@ export class SuggestionsService {
       pilotId: suggestion.studentId ?? '',
       aircraftId: suggestion.aircraftId ?? '',
       instructorId: suggestion.instructorId ?? undefined,
-      start: this.toFspLocalTime(suggestion.proposedStart),
-      end: this.toFspLocalTime(suggestion.proposedEnd),
+      start: toFspLocalTime(suggestion.proposedStart),
+      end: toFspLocalTime(suggestion.proposedEnd),
       ...(suggestion.activityTypeId && { reservationTypeId: suggestion.activityTypeId }),
       ...(suggestion.courseId &&
         suggestion.lessonId &&
@@ -370,8 +380,8 @@ export class SuggestionsService {
         };
 
         await this.notificationQueue.add(`notify-${id}-${Date.now()}`, notificationData, {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
+          attempts: NOTIFICATION_MAX_ATTEMPTS,
+          backoff: { type: 'exponential', delay: NOTIFICATION_BACKOFF_DELAY_MS },
         });
 
         this.logger.log(`Notification job enqueued for suggestion ${id}`);
@@ -568,21 +578,13 @@ export class SuggestionsService {
     const rows = await db
       .select({ id: suggestions.id, rationale: suggestions.rationale })
       .from(suggestions)
-      .where(eq(suggestions.operatorId, operatorId));
+      .where(eq(suggestions.operatorId, operatorId))
+      .limit(200);
 
     // Filter to suggestions where rationale doesn't have aiEnriched=true
     return rows.filter((r) => {
       const rat = r.rationale as Record<string, unknown> | null;
       return !rat?.aiEnriched;
     });
-  }
-
-  /**
-   * Convert a JS Date to FSP local time string (no timezone suffix).
-   * FSP expects: "2024-03-15T10:00:00" — never "2024-03-15T10:00:00Z"
-   */
-  private toFspLocalTime(date: Date): string {
-    // Strip the 'Z' and any timezone offset
-    return date.toISOString().replace('Z', '').split('+')[0]!;
   }
 }

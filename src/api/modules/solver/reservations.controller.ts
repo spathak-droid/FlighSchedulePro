@@ -37,17 +37,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ScheduleSolverService } from './schedule-solver.service.js';
 import type { FindTimeQuery } from './schedule-solver.service.js';
-
-// ─── Request Types ───────────────────────────────────────────────────────────
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface FindTimeBody {
   studentId: string;

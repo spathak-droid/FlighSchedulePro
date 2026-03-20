@@ -65,6 +65,13 @@ export interface AllInsights {
   instructorWorkload: InstructorWorkload[];
 }
 
+/** Number of days without a flight before a student is considered inactive. */
+const INACTIVE_THRESHOLD_DAYS = 14;
+/** Minimum enrollment completion percentage to be considered checkride-ready. */
+const CHECKRIDE_READY_THRESHOLD_PCT = 90;
+/** Minimum number of flights needed to detect increasing gap patterns. */
+const MIN_FLIGHTS_FOR_GAP_DETECTION = 3;
+
 @Injectable()
 export class StudentInsightsService {
   private readonly logger = new Logger(StudentInsightsService.name);
@@ -74,8 +81,8 @@ export class StudentInsightsService {
    */
   async getInactiveStudents(operatorId: number): Promise<InactiveStudent[]> {
     const now = new Date();
-    const fourteenDaysAgo = new Date(now);
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const inactiveThreshold = new Date(now);
+    inactiveThreshold.setDate(inactiveThreshold.getDate() - INACTIVE_THRESHOLD_DAYS);
 
     // Get all students for this operator
     const allStudents = await db.select().from(students).where(eq(students.operatorId, operatorId));
@@ -101,7 +108,7 @@ export class StudentInsightsService {
         .limit(1);
 
       // No completed flights at all, or last flight was 14+ days ago
-      if (!lastFlight || lastFlight.endTime <= fourteenDaysAgo) {
+      if (!lastFlight || lastFlight.endTime <= inactiveThreshold) {
         // Check for upcoming reservations (any status except cancelled)
         const [upcoming] = await db
           .select({ count: sql<number>`count(*)::int` })
@@ -150,7 +157,7 @@ export class StudentInsightsService {
 
       const progress = (enrollment.completedLessons / enrollment.totalLessons) * 100;
 
-      if (progress >= 90) {
+      if (progress >= CHECKRIDE_READY_THRESHOLD_PCT) {
         result.push({
           studentId: student.id,
           studentName: `${student.firstName} ${student.lastName}`,
@@ -194,8 +201,8 @@ export class StudentInsightsService {
         )
         .orderBy(reservationHistory.endTime);
 
-      // Need at least 3 flights to detect increasing gaps
-      if (flights.length < 3) continue;
+      // Need at least N flights to detect increasing gaps
+      if (flights.length < MIN_FLIGHTS_FOR_GAP_DETECTION) continue;
 
       // Calculate gaps between consecutive flights (in days)
       const gaps: number[] = [];
@@ -352,7 +359,6 @@ export class StudentInsightsService {
 
     const rows = allStudents.map((student) => {
       const inactiveEntry = insights.inactive.find((s) => s.studentId === student.id);
-      const checkrideEntry = insights.checkrideReady.find((s) => s.studentId === student.id);
       const atRiskEntry = atRiskMap.get(student.id);
       const enrollment = MOCK_ENROLLMENT_DATA[student.id];
       const progress = enrollment

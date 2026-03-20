@@ -236,39 +236,51 @@ export class ExpireSuggestionsJob extends WorkerHost {
 
     if (expiredIds.length === 0) return 0;
 
-    // Batch expire
+    // Batch expire — continue on individual failures so one bad row doesn't block the rest
+    let actualExpired = 0;
     for (const id of expiredIds) {
-      await db
-        .update(suggestions)
-        .set({
-          status: 'expired',
-          expiredReason: 'slot_filled',
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(suggestions.id, id),
-            eq(suggestions.status, 'pending'), // safety: only expire if still pending
-          ),
+      try {
+        await db
+          .update(suggestions)
+          .set({
+            status: 'expired',
+            expiredReason: 'slot_filled',
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(suggestions.id, id),
+              eq(suggestions.status, 'pending'), // safety: only expire if still pending
+            ),
+          );
+        actualExpired++;
+      } catch (err) {
+        this.logger.error(
+          `Failed to expire suggestion ${id}: ${err instanceof Error ? err.message : String(err)}`,
         );
+      }
     }
 
-    // Audit log
-    await db.insert(auditEvents).values({
-      operatorId,
-      eventType: 'suggestion.expired',
-      entityType: 'suggestion',
-      data: {
-        reason: 'slot_filled',
-        count: expiredIds.length,
-        suggestionIds: expiredIds,
-      },
-    });
+    // Audit log — non-fatal
+    try {
+      await db.insert(auditEvents).values({
+        operatorId,
+        eventType: 'suggestion.expired',
+        entityType: 'suggestion',
+        data: {
+          reason: 'slot_filled',
+          count: actualExpired,
+          suggestionIds: expiredIds,
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        `Failed to record slot-filled expiration audit event: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
 
-    this.logger.log(
-      `Expired ${expiredIds.length} slot-filled suggestions for operator ${operatorId}`,
-    );
+    this.logger.log(`Expired ${actualExpired} slot-filled suggestions for operator ${operatorId}`);
 
-    return expiredIds.length;
+    return actualExpired;
   }
 }

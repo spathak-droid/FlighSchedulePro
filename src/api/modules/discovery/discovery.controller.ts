@@ -17,15 +17,7 @@ import {
 } from '@nestjs/common';
 import { DiscoveryService } from './discovery.service.js';
 import type { CreateDiscoveryRequestDto } from './discovery.service.js';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: string;
-    email: string;
-    operatorId: number;
-    permissions: string[];
-  };
-}
+import type { AuthenticatedRequest } from '../../common/interfaces/index.js';
 
 interface CreateDiscoveryBody {
   firstName: string;
