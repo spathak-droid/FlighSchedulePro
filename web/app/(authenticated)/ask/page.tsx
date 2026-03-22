@@ -74,7 +74,6 @@ export default function AskPage() {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: res.data.answer,
-        model: res.data.model,
         timestamp: new Date(),
       };
 
