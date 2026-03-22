@@ -298,30 +298,30 @@ export default function LoginPage() {
               marginTop: 16,
               padding: '12px 20px',
               borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(8px)',
-              color: '#fff',
+              border: '1px solid #e5e7eb',
+              background: '#f9fafb',
+              color: '#374151',
               cursor: 'pointer',
-              fontSize: '0.9rem',
+              fontSize: '0.85rem',
               fontWeight: 600,
-              letterSpacing: '0.01em',
               transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+              e.currentTarget.style.background = '#15803d';
+              e.currentTarget.style.color = '#fff';
+              e.currentTarget.style.borderColor = '#15803d';
               e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+              e.currentTarget.style.background = '#f9fafb';
+              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.borderColor = '#e5e7eb';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
