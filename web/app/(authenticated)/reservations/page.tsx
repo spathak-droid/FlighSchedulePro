@@ -182,7 +182,7 @@ export default function ReservationsPage() {
         </div>
       ) : (
         <>
-          <div ref={tableRef} className="card" style={{ overflow: 'hidden' }}>
+          <div ref={tableRef} className="card" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
