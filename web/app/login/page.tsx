@@ -283,6 +283,57 @@ export default function LoginPage() {
             We are working with Flight Schedule Pro to enable direct SSO authentication. Operator
             login uses your FSP credentials.
           </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              window.open('https://www.loom.com/share/6efd6afc880a40a7b8b01b3cf6b335db', '_blank')
+            }
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              width: '100%',
+              marginTop: 16,
+              padding: '12px 20px',
+              borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              letterSpacing: '0.01em',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+            </svg>
+            Watch Demo Video
+          </button>
         </div>
 
         {/* Hidden form for programmatic login */}
