@@ -144,6 +144,15 @@ export const MOCK_LOCATIONS: FspLocation[] = [
     latitude: 37.5118,
     longitude: -122.2495,
   },
+  {
+    id: 'loc-003',
+    name: 'KHWD - Hayward Executive Airport',
+    code: 'KHWD',
+    timeZone: 'America/Los_Angeles',
+    isActive: true,
+    latitude: 37.659,
+    longitude: -122.1217,
+  },
 ];
 
 // ─── Aircraft ─────────────────────────────────────────────────────────────────
