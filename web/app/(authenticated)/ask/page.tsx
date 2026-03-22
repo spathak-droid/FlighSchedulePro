@@ -316,7 +316,9 @@ export default function AskPage() {
                           </span>
                         </span>
                         {!email.success && email.error && (
-                          <span style={{ color: '#ef4444', fontSize: '0.8rem', marginLeft: 'auto' }}>
+                          <span
+                            style={{ color: '#ef4444', fontSize: '0.8rem', marginLeft: 'auto' }}
+                          >
                             Failed
                           </span>
                         )}

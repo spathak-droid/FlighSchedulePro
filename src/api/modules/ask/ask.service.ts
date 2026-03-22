@@ -134,7 +134,9 @@ export class AskService {
           emailActions.push(parsed);
         }
       } catch (err) {
-        this.logger.warn(`Failed to parse EMAIL_ACTION block: ${err instanceof Error ? err.message : err}`);
+        this.logger.warn(
+          `Failed to parse EMAIL_ACTION block: ${err instanceof Error ? err.message : err}`,
+        );
       }
     }
 
@@ -233,7 +235,9 @@ export class AskService {
               sentAt: emailResult.success ? new Date() : null,
             });
           } catch (dbErr) {
-            this.logger.warn(`Failed to record notification: ${dbErr instanceof Error ? dbErr.message : dbErr}`);
+            this.logger.warn(
+              `Failed to record notification: ${dbErr instanceof Error ? dbErr.message : dbErr}`,
+            );
           }
 
           results.push({
