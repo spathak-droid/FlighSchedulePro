@@ -332,7 +332,7 @@ export default function LoginPage() {
               <circle cx="12" cy="12" r="10" />
               <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
             </svg>
-            Watch Demo Video
+            Project Demo
           </button>
         </div>
 
