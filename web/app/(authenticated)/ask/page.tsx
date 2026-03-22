@@ -240,18 +240,6 @@ export default function AskPage() {
                     msg.content
                   )}
                 </div>
-                {msg.model && (
-                  <span
-                    style={{
-                      fontSize: '0.7rem',
-                      color: 'var(--color-text-muted)',
-                      marginTop: 4,
-                      paddingLeft: 4,
-                    }}
-                  >
-                    {msg.model}
-                  </span>
-                )}
               </div>
             ))}
 
