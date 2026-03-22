@@ -676,7 +676,7 @@ export default function PoliciesPage() {
                   </div>
                   <select
                     className="input"
-                    style={{ width: '180px', fontSize: '0.85rem' }}
+                    style={{ width: '100%', maxWidth: '180px', fontSize: '0.85rem' }}
                     value={autoApproveThreshold}
                     onChange={(e) =>
                       handleToggleFlag('auto_approve', true, { riskThreshold: e.target.value })

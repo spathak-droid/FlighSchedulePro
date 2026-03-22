@@ -727,7 +727,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fieldRow: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '16px',
     marginBottom: '18px',
   },

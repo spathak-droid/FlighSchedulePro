@@ -285,7 +285,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   detailsGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
     gap: '10px',
     marginBottom: '16px',
   },

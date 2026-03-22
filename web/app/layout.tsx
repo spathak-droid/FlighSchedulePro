@@ -8,6 +8,15 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
+
 export const metadata: Metadata = {
   title: 'FlightSchedule Pro - Agentic Scheduler',
   description: 'Staff-facing scheduling automation console',

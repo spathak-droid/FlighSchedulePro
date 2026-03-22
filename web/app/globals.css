@@ -70,7 +70,11 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   line-height: 1.5;
@@ -84,16 +88,31 @@ a {
 }
 
 /* ===== Typography ===== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
-h1 { font-size: 1.75rem; font-weight: 800; }
-h2 { font-size: 1.375rem; font-weight: 700; }
-h3 { font-size: 1.125rem; }
-h4 { font-size: 1rem; }
+h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+h3 {
+  font-size: 1.125rem;
+}
+h4 {
+  font-size: 1rem;
+}
 
 /* ===== Cards ===== */
 .card {
@@ -101,7 +120,9 @@ h4 { font-size: 1rem; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card:hover {
@@ -328,7 +349,9 @@ tr:hover td {
   font-family: inherit;
   color: var(--color-text);
   background: var(--color-surface);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .input::placeholder {
@@ -503,7 +526,9 @@ input[type='checkbox'] {
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(21, 128, 61, 0.3);
 }
 
@@ -613,7 +638,9 @@ input[type='checkbox'] {
   cursor: pointer;
   padding: 4px;
   border-radius: var(--radius-sm);
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
   margin-left: auto;
   line-height: 0;
 }
@@ -680,7 +707,9 @@ input[type='checkbox'] {
   font-family: inherit;
   background: var(--color-surface-elevated);
   color: var(--color-text);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .app-topbar-search input::placeholder {
@@ -720,7 +749,9 @@ input[type='checkbox'] {
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   position: relative;
 }
 
@@ -739,7 +770,9 @@ input[type='checkbox'] {
   font-family: inherit;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 
 .app-topbar-help:hover {
@@ -806,6 +839,43 @@ input[type='checkbox'] {
 
   .login-wrapper {
     padding: 12px;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  .app-topbar-title {
+    font-size: 1rem;
+  }
+}
+
+/* ===== Mobile-specific component overrides ===== */
+
+/* Dashboard stat cards: 2-col on tablet, 1-col on phone */
+@media (max-width: 768px) {
+  .stat-card {
+    padding: 16px !important;
+  }
+}
+
+/* Topbar actions: tighten on mobile */
+@media (max-width: 480px) {
+  .app-topbar {
+    height: 56px;
+    gap: 8px;
+  }
+
+  .app-content {
+    padding: 12px 8px;
+  }
+
+  .sidebar {
+    width: 280px;
   }
 }
 
@@ -881,7 +951,9 @@ input[type='checkbox'] {
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .stat-card:hover {
@@ -1091,7 +1163,9 @@ input[type='checkbox'] {
   border: 1px solid var(--color-border-active);
   border-radius: 13px;
   cursor: pointer;
-  transition: background 0.25s, border-color 0.25s;
+  transition:
+    background 0.25s,
+    border-color 0.25s;
   flex-shrink: 0;
 }
 
@@ -1135,7 +1209,9 @@ input[type='checkbox'] {
   background: var(--color-accent);
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(21, 128, 61, 0.3);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
 .dark-range::-webkit-slider-thumb:hover {
@@ -1163,7 +1239,9 @@ input[type='checkbox'] {
   font-size: 0.75rem;
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
   user-select: none;
 }
 
@@ -1292,7 +1370,8 @@ input[type='checkbox'] {
 
 /* ===== Skeleton Pulse ===== */
 @keyframes skeleton-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
   }
   50% {
@@ -1501,12 +1580,18 @@ input[type='checkbox'] {
   border-radius: 4px;
   background:
     repeating-linear-gradient(
-      0deg, transparent 0px, transparent 16px,
-      rgba(255, 255, 255, 0.04) 16px, rgba(255, 255, 255, 0.04) 17px
+      0deg,
+      transparent 0px,
+      transparent 16px,
+      rgba(255, 255, 255, 0.04) 16px,
+      rgba(255, 255, 255, 0.04) 17px
     ),
     repeating-linear-gradient(
-      90deg, transparent 0px, transparent 20px,
-      rgba(255, 255, 255, 0.04) 20px, rgba(255, 255, 255, 0.04) 21px
+      90deg,
+      transparent 0px,
+      transparent 20px,
+      rgba(255, 255, 255, 0.04) 20px,
+      rgba(255, 255, 255, 0.04) 21px
     );
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -1566,7 +1651,13 @@ input[type='checkbox'] {
   inset: 0;
   background:
     radial-gradient(ellipse at 50% 55%, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.4) 75%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.3) 100%);
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.2) 0%,
+      transparent 25%,
+      transparent 75%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
 }
 
 .login-aerial-headline {
@@ -1584,8 +1675,14 @@ input[type='checkbox'] {
 }
 
 @keyframes login-aerial-fadeDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-airplane {
@@ -1593,7 +1690,9 @@ input[type='checkbox'] {
   z-index: 10;
   width: clamp(100px, 14vw, 180px);
   margin-bottom: 12px;
-  animation: login-aerial-float 4s ease-in-out infinite, login-aerial-fadeUp 1s ease-out;
+  animation:
+    login-aerial-float 4s ease-in-out infinite,
+    login-aerial-fadeUp 1s ease-out;
   filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.25));
 }
 
@@ -1603,13 +1702,24 @@ input[type='checkbox'] {
 }
 
 @keyframes login-aerial-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes login-aerial-fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-aerial .login-card {
@@ -1618,7 +1728,9 @@ input[type='checkbox'] {
   background: #ffffff;
   border: none;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
   padding: 40px 36px;
 }
 
@@ -1649,7 +1761,9 @@ input[type='checkbox'] {
   color: #1a1a2e;
   padding: 12px 16px;
   font-size: 0.9rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .login-aerial .input::placeholder {

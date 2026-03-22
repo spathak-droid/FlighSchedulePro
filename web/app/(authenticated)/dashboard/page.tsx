@@ -583,11 +583,11 @@ export default function DashboardPage() {
             {/* Right column: Rate + Shortcuts */}
             <div
               style={{
-                flex: '0.8 1 300px',
+                flex: '0.8 1 280px',
                 display: 'flex',
                 flexDirection: 'column' as const,
                 gap: 20,
-                minWidth: 280,
+                minWidth: 0,
               }}
             >
               <AcceptanceRateGauge
@@ -635,7 +635,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: 16,
     marginBottom: 24,
   },

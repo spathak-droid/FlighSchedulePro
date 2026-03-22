@@ -148,10 +148,12 @@ const styles: Record<string, React.CSSProperties> = {
   filterGroup: {
     display: 'flex',
     flexDirection: 'column' as const,
-    minWidth: '140px',
+    minWidth: '120px',
+    flex: '1 1 140px',
   },
   filterInput: {
-    width: '160px',
+    width: '100%',
+    maxWidth: '200px',
   },
   buttonGroup: {
     display: 'flex',
