@@ -854,9 +854,55 @@ input[type='checkbox'] {
   }
 }
 
-/* ===== Mobile-specific component overrides ===== */
+/* ===== Dashboard responsive ===== */
 
-/* Dashboard stat cards: 2-col on tablet, 1-col on phone */
+.dashboard-stats-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.dashboard-middle-row {
+  flex-wrap: nowrap;
+}
+
+.dashboard-chart-col {
+  flex: 1.5 1 0;
+  min-width: 0;
+}
+
+.dashboard-side-col {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-middle-row {
+    flex-direction: column;
+  }
+
+  .dashboard-chart-col {
+    flex: none;
+    width: 100%;
+  }
+
+  .dashboard-side-col {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard stat cards: tighten on phone */
 @media (max-width: 768px) {
   .stat-card {
     padding: 16px !important;
@@ -1434,6 +1480,7 @@ input[type='checkbox'] {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    min-width: 600px;
   }
 }
 

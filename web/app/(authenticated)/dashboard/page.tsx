@@ -516,7 +516,7 @@ export default function DashboardPage() {
       ) : stats ? (
         <>
           {/* Stats cards */}
-          <div ref={statsGridRef} style={styles.statsGrid}>
+          <div ref={statsGridRef} className="dashboard-stats-grid" style={styles.statsGrid}>
             {[
               {
                 key: 'pending',
@@ -573,23 +573,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Middle row: Chart + Rate + Shortcuts */}
-          <div style={styles.middleRow}>
+          <div className="dashboard-middle-row" style={styles.middleRow}>
             {/* Weekly Flight Hours */}
-            <div style={{ flex: '1.5 1 0', minWidth: 0 }}>
+            <div className="dashboard-chart-col">
               {stats.weeklyFlightHours && stats.weeklyFlightHours.length > 0 && (
                 <WeeklyFlightHoursChart data={stats.weeklyFlightHours} />
               )}
             </div>
             {/* Right column: Rate + Shortcuts */}
-            <div
-              style={{
-                flex: '0.8 1 280px',
-                display: 'flex',
-                flexDirection: 'column' as const,
-                gap: 20,
-                minWidth: 0,
-              }}
-            >
+            <div className="dashboard-side-col">
               <AcceptanceRateGauge
                 rate={stats.acceptanceRate ?? 0}
                 delta={stats.weeklyFlightHoursDelta ? `+${stats.weeklyFlightHoursDelta}` : '+2.4%'}
@@ -635,7 +627,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: 16,
     marginBottom: 24,
   },
@@ -649,7 +640,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: 20,
     marginBottom: 24,
-    flexWrap: 'wrap' as const,
   },
   // ── Chart styles ────────────────────────────────────────────
   chartCard: {
