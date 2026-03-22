@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from 'react';
+import DOMPurify from 'dompurify';
 import { api } from '@/lib/api';
 
 interface Message {
@@ -230,7 +231,11 @@ export default function AskPage() {
                   }}
                 >
                   {msg.role === 'assistant' ? (
-                    <div dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }} />
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(formatMarkdown(msg.content)),
+                      }}
+                    />
                   ) : (
                     msg.content
                   )}

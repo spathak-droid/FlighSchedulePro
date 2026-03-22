@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module.js';
 import { getFastifyLoggerOptions } from '../common/logger.js';
 import { closeDbPool } from '../db/index.js';
@@ -17,6 +18,20 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter({ logger: getFastifyLoggerOptions() as unknown as boolean }),
   );
+
+  // Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, etc.)
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", process.env.FRONTEND_URL ?? 'http://localhost:3000'],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  });
 
   // Enable NestJS shutdown hooks (OnModuleDestroy, etc.)
   app.enableShutdownHooks();
