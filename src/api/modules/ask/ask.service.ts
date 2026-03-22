@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from '../ai/ai.service.js';
+import { EmailService } from '../notifications/email.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import { db } from '../../../db/index.js';
-import { suggestions, studentInsights } from '../../../db/schema/index.js';
+import { suggestions, studentInsights, notificationRecords } from '../../../db/schema/index.js';
 import { eq, desc } from 'drizzle-orm';
 import {
   MOCK_STUDENTS_BY_OPERATOR,
@@ -14,15 +16,33 @@ import {
   generateScheduleEvents,
   generateSchedulableEvents,
 } from '../../fsp/mock/mock-data.js';
+import type { NotificationContent } from '../../../core/types/domain.js';
 
 export interface AskRequest {
   question: string;
   conversationHistory?: { role: 'user' | 'assistant'; content: string }[];
 }
 
+export interface EmailSendResult {
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  success: boolean;
+  error?: string;
+}
+
 export interface AskResponse {
   answer: string;
   model: string;
+  emailsSent?: EmailSendResult[];
+}
+
+/** Parsed email action from AI response. */
+interface EmailAction {
+  recipients: { studentId: string; name: string; email: string }[];
+  subject: string;
+  body: string;
+  intent: string;
 }
 
 /** Maximum number of previous conversation messages to include for context. */
@@ -32,15 +52,22 @@ const MAX_RECENT_SUGGESTIONS = 20;
 /** Maximum number of student insights to include in context. */
 const MAX_STUDENT_INSIGHTS = 20;
 /** Maximum tokens for AI response. */
-const AI_MAX_TOKENS = 1500;
+const AI_MAX_TOKENS = 2000;
 /** Temperature for AI response (lower = more deterministic). */
 const AI_TEMPERATURE = 0.4;
+
+/** Regex to extract EMAIL_ACTION blocks from AI response. */
+const EMAIL_ACTION_REGEX = /\[EMAIL_ACTION\]([\s\S]*?)\[\/EMAIL_ACTION\]/g;
 
 @Injectable()
 export class AskService {
   private readonly logger = new Logger(AskService.name);
 
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async ask(operatorId: number, request: AskRequest): Promise<AskResponse> {
     const context = await this.gatherContext(operatorId);
@@ -61,10 +88,199 @@ export class AskService {
 
     const result = await this.callAi(messages);
 
+    if (!result) {
+      return {
+        answer: 'Sorry, I was unable to process your question. Please try again.',
+        model: 'unavailable',
+      };
+    }
+
+    // Parse email actions from AI response
+    const { textContent, emailActions } = this.parseEmailActions(result.content);
+
+    let emailsSent: EmailSendResult[] | undefined;
+
+    if (emailActions.length > 0) {
+      emailsSent = await this.executeEmailActions(operatorId, emailActions);
+    }
+
     return {
-      answer: result?.content ?? 'Sorry, I was unable to process your question. Please try again.',
-      model: result?.model ?? 'unavailable',
+      answer: textContent,
+      model: result.model,
+      emailsSent,
     };
+  }
+
+  /**
+   * Parse AI response for [EMAIL_ACTION]...[/EMAIL_ACTION] blocks.
+   * Returns the text content (with action blocks removed) and parsed actions.
+   */
+  private parseEmailActions(content: string): {
+    textContent: string;
+    emailActions: EmailAction[];
+  } {
+    const emailActions: EmailAction[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = EMAIL_ACTION_REGEX.exec(content)) !== null) {
+      try {
+        const jsonStr = match[1]!
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*/g, '')
+          .trim();
+        const parsed = JSON.parse(jsonStr) as EmailAction;
+
+        if (parsed.recipients?.length && parsed.subject && parsed.body) {
+          emailActions.push(parsed);
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to parse EMAIL_ACTION block: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    // Remove action blocks from the visible text
+    const textContent = content.replace(EMAIL_ACTION_REGEX, '').trim();
+
+    return { textContent, emailActions };
+  }
+
+  /**
+   * Execute parsed email actions: look for templates, generate HTML, send via Resend, record.
+   */
+  private async executeEmailActions(
+    operatorId: number,
+    actions: EmailAction[],
+  ): Promise<EmailSendResult[]> {
+    const results: EmailSendResult[] = [];
+
+    for (const action of actions) {
+      // Try to find a matching template for the intent
+      const template = await this.notificationService.getTemplate(
+        operatorId,
+        action.intent || 'outreach',
+        'email',
+      );
+
+      for (const recipient of action.recipients) {
+        try {
+          let subject = action.subject;
+          let htmlBody: string;
+
+          if (template) {
+            // Use existing template, render with variables
+            const variables: Record<string, string> = {
+              studentName: recipient.name,
+              email: recipient.email,
+            };
+            const rendered = this.notificationService.renderTemplate(
+              template.subject ?? action.subject,
+              template.bodyTemplate,
+              variables,
+            );
+            subject = rendered.subject;
+            htmlBody = this.wrapInEmailLayout(
+              rendered.body
+                .split('\n')
+                .map((line: string) =>
+                  line.trim()
+                    ? `<p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0;">${line}</p>`
+                    : '',
+                )
+                .join('\n'),
+            );
+          } else {
+            // Use AI-generated content, personalize per recipient
+            const personalizedBody = action.body
+              .replace(/\{\{studentName\}\}/g, recipient.name)
+              .replace(/\{\{name\}\}/g, recipient.name);
+            subject = action.subject
+              .replace(/\{\{studentName\}\}/g, recipient.name)
+              .replace(/\{\{name\}\}/g, recipient.name);
+
+            htmlBody = this.wrapInEmailLayout(
+              personalizedBody
+                .split('\n')
+                .map((line: string) =>
+                  line.trim()
+                    ? `<p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0;">${line}</p>`
+                    : '',
+                )
+                .join('\n'),
+            );
+          }
+
+          const emailResult = await this.emailService.sendEmail({
+            to: recipient.email,
+            subject,
+            html: htmlBody,
+          });
+
+          // Record in notification_records
+          try {
+            await db.insert(notificationRecords).values({
+              operatorId,
+              recipientType: 'student',
+              recipientId: recipient.studentId,
+              channel: 'email',
+              templateId: template?.id ?? null,
+              content: {
+                subject,
+                body: htmlBody,
+                templateId: template?.id,
+              } satisfies NotificationContent,
+              deliveryStatus: emailResult.success ? 'sent' : 'failed',
+              deliveryError: emailResult.error ?? null,
+              sentAt: emailResult.success ? new Date() : null,
+            });
+          } catch (dbErr) {
+            this.logger.warn(`Failed to record notification: ${dbErr instanceof Error ? dbErr.message : dbErr}`);
+          }
+
+          results.push({
+            recipientName: recipient.name,
+            recipientEmail: recipient.email,
+            subject,
+            success: emailResult.success,
+            error: emailResult.error,
+          });
+
+          this.logger.log(
+            `Email ${emailResult.success ? 'sent' : 'failed'} to ${recipient.name} <${recipient.email}>: "${subject}"`,
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error(`Failed to send email to ${recipient.email}: ${msg}`);
+          results.push({
+            recipientName: recipient.name,
+            recipientEmail: recipient.email,
+            subject: action.subject,
+            success: false,
+            error: msg,
+          });
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Wrap HTML content in the branded FlightSchedule Pro email layout.
+   */
+  private wrapInEmailLayout(content: string): string {
+    return `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div style="background: #1e40af; padding: 24px 32px;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600;">FlightSchedule Pro</h1>
+        </div>
+        <div style="padding: 32px;">
+          ${content}
+        </div>
+        <div style="padding: 16px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+          This is an automated notification from FlightSchedule Pro. Please contact your flight school if you have any questions.
+        </div>
+      </div>
+    `;
   }
 
   private async gatherContext(operatorId: number): Promise<string> {
@@ -235,6 +451,37 @@ When answering questions:
 - Keep answers concise but thorough
 - Use markdown formatting for readability
 - If you don't have enough information to answer precisely, say so
+
+## Email Tool
+
+You can send emails to students on behalf of the flight school. When the user asks you to send an email (e.g. "email inactive students", "send a check-in email to Sarah", "reach out to students who haven't flown recently"), you MUST:
+
+1. First describe what you'll send in your text response (who, what subject, what the email will say)
+2. Then include an [EMAIL_ACTION] block with the email details
+
+The format for sending emails is:
+
+[EMAIL_ACTION]
+{
+  "intent": "outreach",
+  "recipients": [
+    {"studentId": "stu-001", "name": "Alex Johnson", "email": "alex.j@email.com"}
+  ],
+  "subject": "The email subject line",
+  "body": "The email body text.\\nUse newlines for paragraphs.\\nKeep it warm, professional, and encouraging.\\nSign off as the flight school team."
+}
+[/EMAIL_ACTION]
+
+**Important rules for the email tool:**
+- Use the student data provided below to find correct IDs, names, and emails
+- The "intent" field should describe the email category (e.g. "outreach", "check_in", "progress_update", "congratulations", "reminder", "re_engagement")
+- Write warm, professional, encouraging emails appropriate for a flight school
+- Personalize emails using the student's name and their actual data (flight hours, progress, days since last flight, etc.)
+- You can include multiple recipients in one action to send the same email template to all of them
+- If students need different content, use separate [EMAIL_ACTION] blocks
+- Use {{studentName}} in the body/subject as a placeholder — it will be replaced with each recipient's name
+- Always confirm in your text response what emails you're sending before the action block
+- The system will wrap your body text in a branded HTML email template automatically
 
 Here is the current school data:
 

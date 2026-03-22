@@ -4,11 +4,20 @@ import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from 'react';
 import DOMPurify from 'dompurify';
 import { api } from '@/lib/api';
 
+interface EmailSendResult {
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  success: boolean;
+  error?: string;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   model?: string;
+  emailsSent?: EmailSendResult[];
   timestamp: Date;
 }
 
@@ -16,6 +25,7 @@ interface AskApiResponse {
   data: {
     answer: string;
     model: string;
+    emailsSent?: EmailSendResult[];
   };
 }
 
@@ -25,7 +35,7 @@ const SUGGESTED_QUESTIONS = [
   'Who are our instructors and what are their certifications?',
   'Which students are at risk of dropping out?',
   'What does the schedule look like for the next few days?',
-  'Are there any scheduling gaps we could fill?',
+  'Send a check-in email to inactive students',
 ];
 
 export default function AskPage() {
@@ -74,6 +84,7 @@ export default function AskPage() {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: res.data.answer,
+        emailsSent: res.data.emailsSent,
         timestamp: new Date(),
       };
 
@@ -239,6 +250,80 @@ export default function AskPage() {
                     msg.content
                   )}
                 </div>
+
+                {/* Email send results */}
+                {msg.emailsSent && msg.emailsSent.length > 0 && (
+                  <div
+                    style={{
+                      maxWidth: '85%',
+                      marginTop: 8,
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        marginBottom: 8,
+                        fontWeight: 600,
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                      Emails Sent
+                    </div>
+                    {msg.emailsSent.map((email, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '6px 0',
+                          borderTop: idx > 0 ? '1px solid var(--color-border)' : 'none',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: email.success ? '#22c55e' : '#ef4444',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span style={{ color: 'var(--color-text)' }}>
+                          <strong>{email.recipientName}</strong>
+                          <span style={{ color: 'var(--color-text-muted)', marginLeft: 4 }}>
+                            ({email.recipientEmail})
+                          </span>
+                        </span>
+                        {!email.success && email.error && (
+                          <span style={{ color: '#ef4444', fontSize: '0.8rem', marginLeft: 'auto' }}>
+                            Failed
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 

@@ -9,6 +9,8 @@ export class AskController {
   /**
    * POST /api/v1/ask
    * Ask the AI a question with full school context.
+   * Supports email sending — if the AI detects an email intent, it will
+   * generate and send emails, returning results in the response.
    */
   @Post()
   async ask(
