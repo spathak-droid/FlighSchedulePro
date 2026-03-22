@@ -563,41 +563,45 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
           <div style={{ flex: 1 }} />
 
           {/* Demo Video */}
-          {process.env.NEXT_PUBLIC_DEMO_VIDEO_URL && (
-            <button
-              className="app-topbar-action"
-              aria-label="Watch Demo"
-              onClick={() => window.open(process.env.NEXT_PUBLIC_DEMO_VIDEO_URL, '_blank')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 8,
-                border: '1px solid var(--color-border)',
-                background: 'var(--color-surface)',
-                color: 'var(--color-accent)',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                marginRight: 8,
-                transition: 'background 0.15s, border-color 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--color-accent)';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--color-surface)';
-                e.currentTarget.style.color = 'var(--color-accent)';
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-              Demo Video
-            </button>
-          )}
+          <button
+            className="app-topbar-action"
+            aria-label="Watch Demo"
+            onClick={() =>
+              window.open(
+                process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ||
+                  'https://www.loom.com/share/6efd6afc880a40a7b8b01b3cf6b335db',
+                '_blank',
+              )
+            }
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-accent)',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              marginRight: 8,
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-accent)';
+              e.currentTarget.style.color = '#fff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--color-surface)';
+              e.currentTarget.style.color = 'var(--color-accent)';
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Demo Video
+          </button>
 
           {/* Notifications — wired to flight alerts API */}
           <AlertBell />
