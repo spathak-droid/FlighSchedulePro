@@ -4,6 +4,8 @@
 
 Built to integrate with [Flight Schedule Pro (FSP)](https://www.flightschedulepro.com/), the industry-standard flight school management system.
 
+**Live App:** [https://fsp-web-production.up.railway.app](https://fsp-web-production.up.railway.app)
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ---
