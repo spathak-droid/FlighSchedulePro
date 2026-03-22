@@ -92,12 +92,12 @@ describe('PoliciesService', () => {
     });
 
     it('validates rescheduleAlternativesCount range (3-10)', async () => {
-      await expect(
-        service.updatePolicy(1001, { rescheduleAlternativesCount: 2 }),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updatePolicy(1001, { rescheduleAlternativesCount: 11 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updatePolicy(1001, { rescheduleAlternativesCount: 2 })).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updatePolicy(1001, { rescheduleAlternativesCount: 11 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('validates searchWindowInitialDays range (1-28)', async () => {
@@ -110,12 +110,12 @@ describe('PoliciesService', () => {
     });
 
     it('validates searchWindowIncrementDays range (1-14)', async () => {
-      await expect(
-        service.updatePolicy(1001, { searchWindowIncrementDays: 0 }),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updatePolicy(1001, { searchWindowIncrementDays: 15 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updatePolicy(1001, { searchWindowIncrementDays: 0 })).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updatePolicy(1001, { searchWindowIncrementDays: 15 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('validates searchWindowMaxDays range (7-56)', async () => {
@@ -184,7 +184,9 @@ describe('PoliciesService', () => {
       mockUpdateSetWhere.mockResolvedValue([existingPolicy]);
 
       // Only updating one field — others not validated
-      await expect(service.updatePolicy(1001, { pollingIntervalMinutes: 3 })).resolves.toBeDefined();
+      await expect(
+        service.updatePolicy(1001, { pollingIntervalMinutes: 3 }),
+      ).resolves.toBeDefined();
     });
 
     it('skips validation for undefined fields', async () => {

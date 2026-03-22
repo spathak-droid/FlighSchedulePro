@@ -38,9 +38,7 @@ vi.mock('../../../../../src/db/index.js', () => {
   });
 
   const mockInsert = vi.fn().mockReturnValue({
-    values: vi.fn().mockImplementation(() =>
-      Promise.resolve(insertResults.value.shift() ?? []),
-    ),
+    values: vi.fn().mockImplementation(() => Promise.resolve(insertResults.value.shift() ?? [])),
   });
 
   return { db: { select: mockSelect, update: mockUpdate, insert: mockInsert } };
@@ -206,7 +204,11 @@ describe('SuggestionsService', () => {
 
     it('reverts to pending on FSP validation failure', async () => {
       const sug = makeSuggestion();
-      const reverted = { ...sug, status: 'pending', fspValidationErrors: [{ message: 'conflict' }] };
+      const reverted = {
+        ...sug,
+        status: 'pending',
+        fspValidationErrors: [{ message: 'conflict' }],
+      };
 
       selectResults.value = [[sug]];
       updateResults.value = [
@@ -357,8 +359,12 @@ describe('SuggestionsService', () => {
         [sug2], // getById sug-2
       ];
       updateResults.value = [
-        [sug1], [approved1], [], // sug-1: lock, approve, expire
-        [sug2], [approved2], [], // sug-2: lock, approve, expire
+        [sug1],
+        [approved1],
+        [], // sug-1: lock, approve, expire
+        [sug2],
+        [approved2],
+        [], // sug-2: lock, approve, expire
       ];
       mockFsp.validateReservation.mockResolvedValue({ errors: [] });
       mockFsp.createReservation
@@ -381,7 +387,9 @@ describe('SuggestionsService', () => {
         [sug2], // getById sug-2
       ];
       updateResults.value = [
-        [sug2], [approved2], [], // sug-2 flow
+        [sug2],
+        [approved2],
+        [], // sug-2 flow
       ];
       mockFsp.validateReservation.mockResolvedValue({ errors: [] });
       mockFsp.createReservation.mockResolvedValue({ id: 'res-2' });
@@ -403,12 +411,14 @@ describe('SuggestionsService', () => {
       const sug2 = makeSuggestion({ id: 'sug-2' });
 
       selectResults.value = [[sug1], [sug2]];
-      updateResults.value = [
-        [{ ...sug1, status: 'declined' }],
-        [{ ...sug2, status: 'declined' }],
-      ];
+      updateResults.value = [[{ ...sug1, status: 'declined' }], [{ ...sug2, status: 'declined' }]];
 
-      const result = await service.bulkDecline(1001, ['sug-1', 'sug-2'], 'user-1', 'No longer needed');
+      const result = await service.bulkDecline(
+        1001,
+        ['sug-1', 'sug-2'],
+        'user-1',
+        'No longer needed',
+      );
 
       expect(result.summary.declined).toBe(2);
       expect(result.summary.failed).toBe(0);

@@ -38,11 +38,7 @@ describe('AuthService', () => {
     mockJwt = createMockJwtService();
     mockOnboarding = createMockOnboardingService();
 
-    authService = new AuthService(
-      mockJwt as any,
-      mockFspAuth as any,
-      mockOnboarding as any,
-    );
+    authService = new AuthService(mockJwt as any, mockFspAuth as any, mockOnboarding as any);
   });
 
   // ── login ───────────────────────────────────────────────────────────────
@@ -173,9 +169,7 @@ describe('AuthService', () => {
     it('throws UnauthorizedException for expired token', async () => {
       mockJwt.verifyAsync.mockRejectedValue(new Error('jwt expired'));
 
-      await expect(authService.validateToken('expired-jwt')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(authService.validateToken('expired-jwt')).rejects.toThrow(UnauthorizedException);
     });
   });
 

@@ -44,10 +44,16 @@ vi.mock('../../../../../src/db/schema/prospects.js', () => ({
 }));
 vi.mock('../../../../../src/db/schema/suggestions.js', () => ({
   suggestions: {
-    id: 'id', operatorId: 'operator_id', status: 'status', type: 'type',
-    proposedStart: 'proposed_start', proposedEnd: 'proposed_end',
-    instructorId: 'instructor_id', aircraftId: 'aircraft_id',
-    rankingScore: 'ranking_score', groupId: 'group_id',
+    id: 'id',
+    operatorId: 'operator_id',
+    status: 'status',
+    type: 'type',
+    proposedStart: 'proposed_start',
+    proposedEnd: 'proposed_end',
+    instructorId: 'instructor_id',
+    aircraftId: 'aircraft_id',
+    rankingScore: 'ranking_score',
+    groupId: 'group_id',
   },
 }));
 vi.mock('../../../../../src/db/schema/reservation-history.js', () => ({ reservationHistory: {} }));
@@ -82,12 +88,10 @@ import { DiscoveryService } from '../../../../../src/api/modules/discovery/disco
 
 function createMockFspResourceService() {
   return {
-    getLocations: vi.fn().mockResolvedValue([
-      { id: 'loc-1', name: 'KABC', isActive: true },
-    ]),
-    getActivityTypes: vi.fn().mockResolvedValue([
-      { id: 'at-disc', name: 'Discovery Flight', isActive: true },
-    ]),
+    getLocations: vi.fn().mockResolvedValue([{ id: 'loc-1', name: 'KABC', isActive: true }]),
+    getActivityTypes: vi
+      .fn()
+      .mockResolvedValue([{ id: 'at-disc', name: 'Discovery Flight', isActive: true }]),
     getCivilTwilight: vi.fn().mockResolvedValue({
       startDate: '2026-03-25T06:30',
       endDate: '2026-03-25T18:45',
@@ -293,7 +297,16 @@ describe('DiscoveryService', () => {
       };
       insertResults.value = [
         [prospect],
-        [{ id: 'sug-1', proposedStart: new Date(), proposedEnd: new Date(), instructorId: 'i', aircraftId: 'a', rankingScore: '50' }],
+        [
+          {
+            id: 'sug-1',
+            proposedStart: new Date(),
+            proposedEnd: new Date(),
+            instructorId: 'i',
+            aircraftId: 'a',
+            rankingScore: '50',
+          },
+        ],
       ];
       selectResults.value = [
         [{ suggestionTtlHours: 24, rescheduleAlternativesCount: 5, searchWindowMaxDays: 28 }],
@@ -354,9 +367,7 @@ describe('DiscoveryService', () => {
     it('throws NotFoundException when suggestion not found', async () => {
       selectResults.value = [[]];
 
-      await expect(service.bookSlot(1001, 'missing', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.bookSlot(1001, 'missing', 'user-1')).rejects.toThrow(NotFoundException);
     });
 
     it('throws BadRequestException when suggestion not pending', async () => {
@@ -382,7 +393,9 @@ describe('DiscoveryService', () => {
       selectResults.value = [
         [sug],
         [{ id: 'prospect-1', firstName: 'John', lastName: 'Doe', email: null }],
-        [], [], [], // instructor, aircraft, activity type (not found)
+        [],
+        [],
+        [], // instructor, aircraft, activity type (not found)
       ];
       insertResults.value = [[]];
       updateResults.value = [[], [], []];
@@ -399,7 +412,9 @@ describe('DiscoveryService', () => {
       selectResults.value = [
         [sug],
         [], // prospect not found
-        [], [], [], // instructor, aircraft, activity type
+        [],
+        [],
+        [], // instructor, aircraft, activity type
       ];
       insertResults.value = [[]];
       updateResults.value = [[], []]; // approve, expire

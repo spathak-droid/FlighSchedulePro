@@ -37,15 +37,34 @@ vi.mock('../../../../../src/db/index.js', () => ({
 }));
 
 vi.mock('../../../../../src/db/schema/students.js', () => ({
-  students: { operatorId: 'operator_id', id: 'id', firstName: 'first_name', lastName: 'last_name', totalFlightHours: 'total_flight_hours' },
+  students: {
+    operatorId: 'operator_id',
+    id: 'id',
+    firstName: 'first_name',
+    lastName: 'last_name',
+    totalFlightHours: 'total_flight_hours',
+  },
 }));
 
 vi.mock('../../../../../src/db/schema/instructors.js', () => ({
-  instructors: { operatorId: 'operator_id', id: 'id', firstName: 'first_name', lastName: 'last_name', isActive: 'is_active' },
+  instructors: {
+    operatorId: 'operator_id',
+    id: 'id',
+    firstName: 'first_name',
+    lastName: 'last_name',
+    isActive: 'is_active',
+  },
 }));
 
 vi.mock('../../../../../src/db/schema/reservation-history.js', () => ({
-  reservationHistory: { operatorId: 'operator_id', studentId: 'student_id', instructorId: 'instructor_id', status: 'status', startTime: 'start_time', endTime: 'end_time' },
+  reservationHistory: {
+    operatorId: 'operator_id',
+    studentId: 'student_id',
+    instructorId: 'instructor_id',
+    status: 'status',
+    startTime: 'start_time',
+    endTime: 'end_time',
+  },
 }));
 
 vi.mock('../../../../../src/db/schema/student-insights.js', () => ({
@@ -78,8 +97,20 @@ describe('StudentInsightsService', () => {
     it('returns students with >= 90% enrollment completion', async () => {
       selectResults.value = [
         [
-          { id: 'stu-003', firstName: 'Charlie', lastName: 'Brown', operatorId: 1001, totalFlightHours: '180' },
-          { id: 'stu-001', firstName: 'Alice', lastName: 'Smith', operatorId: 1001, totalFlightHours: '50' },
+          {
+            id: 'stu-003',
+            firstName: 'Charlie',
+            lastName: 'Brown',
+            operatorId: 1001,
+            totalFlightHours: '180',
+          },
+          {
+            id: 'stu-001',
+            firstName: 'Alice',
+            lastName: 'Smith',
+            operatorId: 1001,
+            totalFlightHours: '50',
+          },
         ],
       ];
 
@@ -97,7 +128,13 @@ describe('StudentInsightsService', () => {
     it('returns empty when no students meet threshold', async () => {
       selectResults.value = [
         [
-          { id: 'stu-005', firstName: 'Eve', lastName: 'Davis', operatorId: 1001, totalFlightHours: '10' },
+          {
+            id: 'stu-005',
+            firstName: 'Eve',
+            lastName: 'Davis',
+            operatorId: 1001,
+            totalFlightHours: '10',
+          },
         ],
       ];
 
@@ -109,7 +146,13 @@ describe('StudentInsightsService', () => {
     it('skips students without enrollment data', async () => {
       selectResults.value = [
         [
-          { id: 'unknown-student', firstName: 'Unknown', lastName: 'Pilot', operatorId: 1001, totalFlightHours: '0' },
+          {
+            id: 'unknown-student',
+            firstName: 'Unknown',
+            lastName: 'Pilot',
+            operatorId: 1001,
+            totalFlightHours: '0',
+          },
         ],
       ];
 
@@ -125,7 +168,15 @@ describe('StudentInsightsService', () => {
 
       selectResults.value = [
         // All students for operator
-        [{ id: 'stu-001', firstName: 'Alice', lastName: 'Smith', operatorId: 1001, totalFlightHours: '50' }],
+        [
+          {
+            id: 'stu-001',
+            firstName: 'Alice',
+            lastName: 'Smith',
+            operatorId: 1001,
+            totalFlightHours: '50',
+          },
+        ],
         // Last flight for stu-001 (30 days ago) - from .orderBy().limit()
         [{ endTime: thirtyDaysAgo }],
         // Upcoming reservations count (0)
@@ -143,7 +194,15 @@ describe('StudentInsightsService', () => {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       selectResults.value = [
-        [{ id: 'stu-001', firstName: 'Alice', lastName: 'Smith', operatorId: 1001, totalFlightHours: '50' }],
+        [
+          {
+            id: 'stu-001',
+            firstName: 'Alice',
+            lastName: 'Smith',
+            operatorId: 1001,
+            totalFlightHours: '50',
+          },
+        ],
         [{ endTime: thirtyDaysAgo }],
         [{ count: 1 }], // Has upcoming reservation
       ];
@@ -154,7 +213,15 @@ describe('StudentInsightsService', () => {
 
     it('returns 999 days for students who never flew', async () => {
       selectResults.value = [
-        [{ id: 'stu-001', firstName: 'Alice', lastName: 'Smith', operatorId: 1001, totalFlightHours: '0' }],
+        [
+          {
+            id: 'stu-001',
+            firstName: 'Alice',
+            lastName: 'Smith',
+            operatorId: 1001,
+            totalFlightHours: '0',
+          },
+        ],
         [], // No flights at all — lastFlight undefined
         [{ count: 0 }],
       ];
@@ -173,7 +240,15 @@ describe('StudentInsightsService', () => {
 
       selectResults.value = [
         // All students
-        [{ id: 'stu-001', firstName: 'Alice', lastName: 'Smith', operatorId: 1001, totalFlightHours: '30' }],
+        [
+          {
+            id: 'stu-001',
+            firstName: 'Alice',
+            lastName: 'Smith',
+            operatorId: 1001,
+            totalFlightHours: '30',
+          },
+        ],
         // Flights in chronological order with increasing gaps: 3d, 5d, 8d
         [
           { startTime: new Date(now - 30 * day), endTime: new Date(now - 30 * day + 3600000) },
@@ -210,7 +285,15 @@ describe('StudentInsightsService', () => {
       const day = 24 * 60 * 60 * 1000;
 
       selectResults.value = [
-        [{ id: 'stu-001', firstName: 'A', lastName: 'B', operatorId: 1001, totalFlightHours: '40' }],
+        [
+          {
+            id: 'stu-001',
+            firstName: 'A',
+            lastName: 'B',
+            operatorId: 1001,
+            totalFlightHours: '40',
+          },
+        ],
         // Gaps: 5d, 3d, 5d — not strictly increasing
         [
           { startTime: new Date(now - 20 * day), endTime: new Date(now - 20 * day + 3600000) },
