@@ -10,10 +10,9 @@
  * reservation_history) and record audit trails in solver_runs.
  */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { db } from '../../../db/index.js';
 import {
-  students,
   instructors,
   aircraft,
   reservationHistory,
@@ -28,6 +27,11 @@ import type {
   FspAvailabilityEntry,
   FspAvailabilityOverride,
 } from '../../fsp/fsp.types.js';
+import { localTimeToUtcDate, getLocalParts } from '../../../core/utils/time.js';
+import {
+  EARLIEST_FLIGHT_START_MINUTES,
+  LATEST_FLIGHT_END_MINUTES,
+} from '../../../core/scheduling/system-policies.js';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -136,6 +140,7 @@ export class ScheduleSolverService {
     operatorId: number,
     query: FindTimeQuery,
     fspToken?: string,
+    timezone = 'America/Los_Angeles',
   ): Promise<FoundSlot[]> {
     const startMs = Date.now();
     this.logger.log(
@@ -144,9 +149,11 @@ export class ScheduleSolverService {
         `fspToken=${fspToken !== undefined ? 'provided' : 'none'}`,
     );
 
-    const rangeStart = new Date(query.dateRangeStart + 'T00:00:00');
-    const rangeEnd = new Date(query.dateRangeEnd + 'T23:59:59');
-    rangeEnd.setHours(23, 59, 59, 999);
+    // IMPORTANT: Date range strings are in the operator's local timezone.
+    // Use localTimeToUtcDate to create proper UTC Dates that represent
+    // the correct wall-clock time in the operator's timezone.
+    const rangeStart = localTimeToUtcDate(query.dateRangeStart, 0, 0, timezone);
+    const rangeEnd = localTimeToUtcDate(query.dateRangeEnd, 23, 59, timezone);
 
     // 1. Load all active instructors for this operator
     const allInstructors = await db
@@ -215,18 +222,39 @@ export class ScheduleSolverService {
     // Track per-instructor last emitted slot end time to prevent overlapping suggestions
     const instructorLastSlotEnd = new Map<string, Date>();
 
-    const currentDate = new Date(rangeStart);
+    // Iterate day-by-day using local date strings to avoid DST issues
+    const startParts = getLocalParts(rangeStart, timezone);
+    const endParts = getLocalParts(rangeEnd, timezone);
+    const startDateStr = `${startParts.year}-${String(startParts.month).padStart(2, '0')}-${String(startParts.day).padStart(2, '0')}`;
+    const endDateStr = `${endParts.year}-${String(endParts.month).padStart(2, '0')}-${String(endParts.day).padStart(2, '0')}`;
+
     this.logger.debug(
-      `[findTime] rangeStart=${rangeStart.toLocaleDateString()} (${rangeStart.getDay()}) ` +
-        `rangeEnd=${rangeEnd.toLocaleDateString()} availMap.size=${availabilityMap.size}`,
+      `[findTime] range=${startDateStr}..${endDateStr} availMap.size=${availabilityMap.size}`,
     );
-    while (currentDate <= rangeEnd && foundSlots.length < DEFAULT_MAX_RESULTS * 3) {
+
+    // Build list of date strings to iterate
+    const datesToSearch: string[] = [];
+    const tempDate = new Date(startParts.year, startParts.month - 1, startParts.day);
+    const endDate = new Date(endParts.year, endParts.month - 1, endParts.day);
+    while (tempDate <= endDate) {
+      const y = tempDate.getFullYear();
+      const m = String(tempDate.getMonth() + 1).padStart(2, '0');
+      const d = String(tempDate.getDate()).padStart(2, '0');
+      datesToSearch.push(`${y}-${m}-${d}`);
+      tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    for (const searchDateStr of datesToSearch) {
+      if (foundSlots.length >= DEFAULT_MAX_RESULTS * 3) break;
+      // Create a Date for this day at noon local time (for getLocalParts day-of-week)
+      const currentDate = localTimeToUtcDate(searchDateStr, 12, 0, timezone);
       for (const instructor of sortedInstructors) {
         // Generate candidates per-instructor based on their availability
         const instructorAvail = availabilityMap.get(instructor.id);
         const dayCandidates = this.generateDayCandidates(
           currentDate,
           query.durationMinutes,
+          timezone,
           instructorAvail,
         );
         if (dayCandidates.length > 0) {
@@ -247,7 +275,7 @@ export class ScheduleSolverService {
           if (candidate.start < instructorBusyUntil) continue;
 
           // Check daylight constraint
-          if (!this.isDaylight(candidate.start, candidate.end)) continue;
+          if (!this.isDaylight(candidate.start, candidate.end, timezone)) continue;
 
           // Check instructor conflict with existing reservations
           if (
@@ -316,7 +344,6 @@ export class ScheduleSolverService {
         }
       }
 
-      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     // Sort by score descending, then by start time ascending
@@ -347,10 +374,9 @@ export class ScheduleSolverService {
     const startMs = Date.now();
     this.logger.log(`[optimizeDay] operator=${operatorId} date=${date}`);
 
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
+    const tz = 'America/Los_Angeles';
+    const dayStart = localTimeToUtcDate(date, 0, 0, tz);
+    const dayEnd = localTimeToUtcDate(date, 23, 59, tz);
 
     // Load all reservations for the day
     const dayReservations = await this.loadReservations(operatorId, dayStart, dayEnd);
@@ -613,18 +639,27 @@ export class ScheduleSolverService {
   private generateDayCandidates(
     date: Date,
     durationMinutes: number,
+    timezone: string,
     availability?: FspAvailability,
   ): Array<{ start: Date; end: Date }> {
     const candidates: Array<{ start: Date; end: Date }> = [];
     const now = new Date();
 
+    // Get date components in the operator's local timezone
+    const localParts = getLocalParts(date, timezone);
+    const dateStr = `${localParts.year}-${String(localParts.month).padStart(2, '0')}-${String(localParts.day).padStart(2, '0')}`;
+
+    // Helper: create a proper UTC Date from local wall-clock minutes
+    const makeSlot = (minutesSinceMidnight: number): { start: Date; end: Date } => {
+      const h = Math.floor(minutesSinceMidnight / 60);
+      const m = minutesSinceMidnight % 60;
+      const start = localTimeToUtcDate(dateStr, h, m, timezone);
+      const end = new Date(start.getTime() + durationMinutes * 60_000);
+      return { start, end };
+    };
+
     if (availability) {
-      const dayOfWeek = date.getDay(); // 0=Sunday
-      // Use local date string (not toISOString which converts to UTC and can shift dates)
-      const y = date.getFullYear();
-      const m2 = String(date.getMonth() + 1).padStart(2, '0');
-      const d2 = String(date.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m2}-${d2}`;
+      const dayOfWeek = localParts.dayOfWeek;
 
       // Check for date overrides (unavailable = skip entire day)
       const override = availability.availabilityOverrides?.find((o: FspAvailabilityOverride) =>
@@ -645,11 +680,8 @@ export class ScheduleSolverService {
           m + durationMinutes <= overrideEnd;
           m += SLOT_INTERVAL_MINUTES
         ) {
-          const start = new Date(date);
-          start.setHours(Math.floor(m / 60), m % 60, 0, 0);
-          const end = new Date(start);
-          end.setMinutes(end.getMinutes() + durationMinutes);
-          if (start > now) candidates.push({ start, end });
+          const slot = makeSlot(m);
+          if (slot.start > now) candidates.push(slot);
         }
         return candidates;
       }
@@ -669,11 +701,8 @@ export class ScheduleSolverService {
         const entryEnd = this.parseTimeToMinutes(entry.endAtTimeUtc);
 
         for (let m = entryStart; m + durationMinutes <= entryEnd; m += SLOT_INTERVAL_MINUTES) {
-          const start = new Date(date);
-          start.setHours(Math.floor(m / 60), m % 60, 0, 0);
-          const end = new Date(start);
-          end.setMinutes(end.getMinutes() + durationMinutes);
-          if (start > now) candidates.push({ start, end });
+          const slot = makeSlot(m);
+          if (slot.start > now) candidates.push(slot);
         }
       }
 
@@ -689,16 +718,12 @@ export class ScheduleSolverService {
       m + durationMinutes <= dayEndMinutes;
       m += SLOT_INTERVAL_MINUTES
     ) {
-      const start = new Date(date);
-      start.setHours(Math.floor(m / 60), m % 60, 0, 0);
-
-      const end = new Date(start);
-      end.setMinutes(end.getMinutes() + durationMinutes);
+      const slot = makeSlot(m);
 
       // Skip slots in the past
-      if (start <= now) continue;
+      if (slot.start <= now) continue;
 
-      candidates.push({ start, end });
+      candidates.push(slot);
     }
 
     return candidates;
@@ -716,17 +741,16 @@ export class ScheduleSolverService {
   }
 
   /**
-   * Check daylight constraint — slot must be within civil twilight boundaries.
-   * Uses hardcoded sunrise 6:30am / sunset 6:00pm as specified.
+   * Check daylight constraint — slot must be within operational daylight hours.
+   * Uses system policy constants (6:00 AM - 6:30 PM).
    */
-  private isDaylight(start: Date, end: Date): boolean {
-    const startMinutes = start.getHours() * 60 + start.getMinutes();
-    const endMinutes = end.getHours() * 60 + end.getMinutes();
+  private isDaylight(start: Date, end: Date, timezone: string): boolean {
+    const startParts = getLocalParts(start, timezone);
+    const endParts = getLocalParts(end, timezone);
+    const startMinutes = startParts.hour * 60 + startParts.minute;
+    const endMinutes = endParts.hour * 60 + endParts.minute;
 
-    const sunriseMinutes = SUNRISE_HOUR * 60 + SUNRISE_MINUTE;
-    const sunsetMinutes = SUNSET_HOUR * 60 + SUNSET_MINUTE;
-
-    return startMinutes >= sunriseMinutes && endMinutes <= sunsetMinutes;
+    return startMinutes >= EARLIEST_FLIGHT_START_MINUTES && endMinutes <= LATEST_FLIGHT_END_MINUTES;
   }
 
   /**
@@ -821,7 +845,7 @@ export class ScheduleSolverService {
    * Calculate total gap minutes across all reservations in a day.
    * A "gap" is time between consecutive reservations on the same aircraft.
    */
-  private calculateGapMinutes(reservations: ReservationConflict[], dayStart: Date): number {
+  private calculateGapMinutes(reservations: ReservationConflict[], _dayStart: Date): number {
     if (reservations.length === 0) return 0;
 
     // Group by aircraft
