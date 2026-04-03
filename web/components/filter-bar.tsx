@@ -27,7 +27,7 @@ const STATUS_OPTIONS: { value: SuggestionStatus | 'all' | ''; label: string }[] 
 
 export default function FilterBar({ initialFilters, onChange }: FilterBarProps) {
   const [type, setType] = useState<SuggestionType | ''>(initialFilters?.type || '');
-  const [status, setStatus] = useState<SuggestionStatus | ''>(initialFilters?.status || 'pending');
+  const [status, setStatus] = useState<SuggestionStatus | 'all' | ''>(initialFilters?.status || 'pending');
   const [dateFrom, setDateFrom] = useState(initialFilters?.dateFrom || '');
   const [dateTo, setDateTo] = useState(initialFilters?.dateTo || '');
   const barRef = useRef<HTMLDivElement>(null);
