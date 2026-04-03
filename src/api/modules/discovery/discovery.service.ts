@@ -258,20 +258,21 @@ export class DiscoveryService {
       slots = this.filterByTimeOfDay(slots, data.timeOfDay, operatorTimezone);
     }
 
-    // Separate slots that match preferred dates from alternatives
+    // Separate slots that match ANY preferred date from alternatives
     let matchedSlots: typeof slots = slots;
     let isAlternative = false;
+    const preferredDateSet = new Set(parsedPreferredDates);
 
-    if (preferredDateStr && slots.length > 0) {
-      const onPreferredDate = slots.filter((s) => toLocalDateStr(s.start) === preferredDateStr);
-      if (onPreferredDate.length > 0) {
-        matchedSlots = onPreferredDate;
+    if (preferredDateSet.size > 0 && slots.length > 0) {
+      const onPreferredDates = slots.filter((s) => preferredDateSet.has(toLocalDateStr(s.start)));
+      if (onPreferredDates.length > 0) {
+        matchedSlots = onPreferredDates;
       } else {
-        // No slots on preferred date — show alternatives with a flag
+        // No slots on any preferred date — show alternatives with a flag
         matchedSlots = slots;
         isAlternative = true;
         this.logger.log(
-          `No slots on preferred date ${preferredDateStr} — showing ${slots.length} alternatives`,
+          `No slots on preferred dates [${[...preferredDateSet].join(', ')}] — showing ${slots.length} alternatives`,
         );
       }
     }
