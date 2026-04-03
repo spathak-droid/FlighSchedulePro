@@ -78,10 +78,38 @@ export class ActivityController {
           (data.reason ? ` (${data.reason})` : '')
         );
 
+      case 'suggestion_auto_approved':
+        return (
+          `Auto-approved ${(data.type as string) ?? ''} suggestion — ` +
+          `risk: ${(data.riskLevel as string) ?? '?'}, ` +
+          `all constraints passed`
+        );
+
+      case 'suggestion_auto_approve_blocked': {
+        const failed = data.failedConstraints as string[] | undefined;
+        const failCount = failed?.length ?? 0;
+        return (
+          `Auto-approve BLOCKED — ${failCount} constraint${failCount === 1 ? '' : 's'} failed` +
+          (failed && failed.length > 0 ? `: ${failed[0]}` : '')
+        );
+      }
+
+      case 'suggestion.expired': {
+        const reason = data.reason as string | undefined;
+        const count = data.count as number | undefined;
+        return (
+          `${count ?? 1} suggestion${(count ?? 1) === 1 ? '' : 's'} expired` +
+          (reason === 'ttl_exceeded' ? ' (TTL exceeded)' :
+           reason === 'slot_filled' ? ' (slot filled by another booking)' :
+           reason === 'constraint_violation' ? ' (constraint no longer met)' : '')
+        );
+      }
+
       case 'suggestion_created':
         return `New suggestion created` + (data.type ? ` (type: ${data.type})` : '');
 
       case 'policy_changed':
+      case 'policy_updated':
         return `${actor} updated scheduling policy`;
 
       case 'prospect_created':

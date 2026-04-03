@@ -72,14 +72,13 @@ export class MockSuggestionsSeeder implements OnModuleInit {
       const now = new Date();
 
       // ── Operator 1001: SkyWest Flight Academy (rich dataset) ──────────
-      const [pending1001] = await db
+      // Check ALL suggestions (not just pending) to avoid duplicates on restart
+      const [total1001] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(
-          and(eq(suggestions.operatorId, MOCK_OPERATOR_ID), eq(suggestions.status, 'pending')),
-        );
+        .where(eq(suggestions.operatorId, MOCK_OPERATOR_ID));
 
-      if ((pending1001?.count ?? 0) === 0) {
+      if ((total1001?.count ?? 0) === 0) {
         const prospect1001 = await this.seedProspect(
           MOCK_OPERATOR_ID,
           'Jane',
@@ -91,16 +90,16 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         await db.insert(suggestions).values(rows1001);
         this.logger.log(`[MOCK] Seeded ${rows1001.length} suggestions for operator 1001`);
       } else {
-        this.logger.log(`[MOCK] Operator 1001 has ${pending1001.count} pending — skipping`);
+        this.logger.log(`[MOCK] Operator 1001 has ${total1001.count} suggestions — skipping`);
       }
 
       // ── Operator 1002: Bay Area Flight Training (medium dataset) ──────
-      const [pending1002] = await db
+      const [total1002] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(and(eq(suggestions.operatorId, 1002), eq(suggestions.status, 'pending')));
+        .where(eq(suggestions.operatorId, 1002));
 
-      if ((pending1002?.count ?? 0) === 0) {
+      if ((total1002?.count ?? 0) === 0) {
         const prospect1002 = await this.seedProspect(
           1002,
           'Tom',
@@ -112,16 +111,16 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         await db.insert(suggestions).values(rows1002);
         this.logger.log(`[MOCK] Seeded ${rows1002.length} suggestions for operator 1002`);
       } else {
-        this.logger.log(`[MOCK] Operator 1002 has ${pending1002.count} pending — skipping`);
+        this.logger.log(`[MOCK] Operator 1002 has ${total1002.count} suggestions — skipping`);
       }
 
       // ── Operator 1003: Pacific Coast Aviation (small dataset) ─────────
-      const [pending1003] = await db
+      const [total1003] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(suggestions)
-        .where(and(eq(suggestions.operatorId, 1003), eq(suggestions.status, 'pending')));
+        .where(eq(suggestions.operatorId, 1003));
 
-      if ((pending1003?.count ?? 0) === 0) {
+      if ((total1003?.count ?? 0) === 0) {
         const prospect1003 = await this.seedProspect(
           1003,
           'Lisa',
@@ -133,7 +132,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
         await db.insert(suggestions).values(rows1003);
         this.logger.log(`[MOCK] Seeded ${rows1003.length} suggestions for operator 1003`);
       } else {
-        this.logger.log(`[MOCK] Operator 1003 has ${pending1003.count} pending — skipping`);
+        this.logger.log(`[MOCK] Operator 1003 has ${total1003.count} suggestions — skipping`);
       }
 
       // ── Seed audit events for all operators ───────────────────────────

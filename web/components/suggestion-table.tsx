@@ -16,17 +16,48 @@ interface SuggestionTableProps {
   actionLoadingId?: string | null;
 }
 
+const OPERATOR_TZ = 'America/Los_Angeles';
+
+type SortField = 'updatedAt' | 'studentName' | 'proposedStart' | 'type' | 'rankingScore';
+type SortDir = 'asc' | 'desc';
+
+function sortSuggestions(list: Suggestion[], field: SortField, dir: SortDir): Suggestion[] {
+  const sorted = [...list].sort((a, b) => {
+    let cmp = 0;
+    switch (field) {
+      case 'updatedAt':
+        cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        break;
+      case 'studentName':
+        cmp = (a.studentName ?? '').localeCompare(b.studentName ?? '');
+        break;
+      case 'proposedStart':
+        cmp = new Date(a.proposedStart).getTime() - new Date(b.proposedStart).getTime();
+        break;
+      case 'type':
+        cmp = a.type.localeCompare(b.type);
+        break;
+      case 'rankingScore':
+        cmp = (Number(a.rankingScore) || 0) - (Number(b.rankingScore) || 0);
+        break;
+    }
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  return sorted;
+}
+
 function formatTimeRange(start: string, end: string): string {
   try {
     const s = new Date(start);
     const e = new Date(end);
     const date = s.toLocaleDateString('en-US', {
+      timeZone: OPERATOR_TZ,
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     });
-    const startTime = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const endTime = e.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const startTime = s.toLocaleTimeString('en-US', { timeZone: OPERATOR_TZ, hour: 'numeric', minute: '2-digit' });
+    const endTime = e.toLocaleTimeString('en-US', { timeZone: OPERATOR_TZ, hour: 'numeric', minute: '2-digit' });
     return `${date}, ${startTime}\u2013${endTime}`;
   } catch {
     return `${start} - ${end}`;
@@ -54,16 +85,61 @@ export default function SuggestionTable({
   actionLoadingId,
 }: SuggestionTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('updatedAt');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const animatedRef = useRef(false);
 
+  const sortedSuggestions = sortSuggestions(suggestions, sortField, sortDir);
   const pendingSuggestions = suggestions.filter((s) => s.status === 'pending');
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir(field === 'studentName' || field === 'type' ? 'asc' : 'desc');
+    }
+  }
+
+  function SortHeader({ field, children }: { field: SortField; children: React.ReactNode }) {
+    const active = sortField === field;
+    return (
+      <th
+        onClick={() => toggleSort(field)}
+        style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          {children}
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            style={{ opacity: active ? 1 : 0.25, transition: 'opacity 0.15s' }}
+          >
+            <path
+              d={sortDir === 'asc' && active ? 'M6 2L10 7H2L6 2Z' : 'M6 10L2 5H10L6 10Z'}
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </th>
+    );
+  }
   const allPendingSelected =
     pendingSuggestions.length > 0 && pendingSuggestions.every((s) => selectedIds.has(s.id));
 
-  // GSAP: stagger rows on data load
+  // GSAP: stagger rows on first data load only
   useEffect(() => {
     if (!tbodyRef.current || suggestions.length === 0 || loading) return;
+    if (animatedRef.current) {
+      // Already animated once — just make rows visible without re-animating
+      const rows = tbodyRef.current.querySelectorAll('tr.suggestion-row');
+      gsap.set(rows, { opacity: 1, y: 0 });
+      return;
+    }
+    animatedRef.current = true;
     const rows = tbodyRef.current.querySelectorAll('tr.suggestion-row');
     gsap.fromTo(
       rows,
@@ -76,7 +152,6 @@ export default function SuggestionTable({
         stagger: 0.03,
       },
     );
-    animatedRef.current = true;
   }, [suggestions, loading]);
 
   if (loading) {
@@ -92,6 +167,7 @@ export default function SuggestionTable({
               <th>Instructor</th>
               <th>Aircraft</th>
               <th style={{ width: '100px' }}>Score</th>
+              <th>Added</th>
               <th style={{ width: '140px' }}>Actions</th>
             </tr>
           </thead>
@@ -118,6 +194,9 @@ export default function SuggestionTable({
                 </td>
                 <td>
                   <div className="skeleton" style={{ width: 60, height: 6, borderRadius: 3 }} />
+                </td>
+                <td>
+                  <div className="skeleton" style={{ width: 80, height: 14, borderRadius: 4 }} />
                 </td>
                 <td>
                   <div className="skeleton" style={{ width: 100, height: 28, borderRadius: 6 }} />
@@ -164,23 +243,30 @@ export default function SuggestionTable({
                 title="Select all pending"
               />
             </th>
-            <th>Type</th>
-            <th>Student</th>
-            <th>Time</th>
+            <SortHeader field="type">Type</SortHeader>
+            <SortHeader field="studentName">Student</SortHeader>
+            <SortHeader field="proposedStart">Time</SortHeader>
             <th>Instructor</th>
             <th>Aircraft</th>
-            <th style={{ width: '100px' }}>Score</th>
+            <SortHeader field="rankingScore">Score</SortHeader>
+            <SortHeader field="updatedAt">Added</SortHeader>
             <th style={{ width: '140px' }}>Actions</th>
           </tr>
         </thead>
         <tbody ref={tbodyRef}>
-          {suggestions.map((s) => {
+          {sortedSuggestions.map((s) => {
             const isExpanded = expandedId === s.id;
             const isPending = s.status === 'pending';
             const isAutoApproved = s.status === 'approved' && s.approvedBy === 'system-auto';
+            const isExpiredStatus = s.status === 'expired';
+            const isDeclinedStatus = s.status === 'declined';
+            const isApprovedStatus = s.status === 'approved' && !isAutoApproved;
             const isActionLoading = actionLoadingId === s.id;
+            const rawScore = s.rankingScore !== undefined ? Number(s.rankingScore) : null;
+            // Waitlist ranker returns 0.0–1.0, slot finder returns 0–100.
+            // Normalize: if score <= 1 treat as 0–1 scale, otherwise 0–100.
             const scorePercent =
-              s.rankingScore !== undefined ? Math.round(Number(s.rankingScore)) : null;
+              rawScore !== null ? Math.round(rawScore <= 1 ? rawScore * 100 : rawScore) : null;
 
             return (
               <Fragment key={s.id}>
@@ -207,6 +293,19 @@ export default function SuggestionTable({
                       {isAutoApproved && (
                         <span style={styles.autoApprovedBadge}>Auto-approved</span>
                       )}
+                      {isApprovedStatus && (
+                        <span style={styles.approvedBadge}>Approved</span>
+                      )}
+                      {isDeclinedStatus && (
+                        <span style={styles.declinedBadge}>Declined</span>
+                      )}
+                      {isExpiredStatus && (
+                        <span style={styles.expiredStatusBadge}>
+                          {s.expiredReason === 'slot_filled' ? 'Slot Filled' :
+                           s.expiredReason === 'ttl_exceeded' ? 'TTL Expired' :
+                           'Expired'}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td style={styles.studentCell}>{s.studentName || '\u2014'}</td>
@@ -229,6 +328,15 @@ export default function SuggestionTable({
                     ) : (
                       <span style={{ color: 'var(--color-text-muted)' }}>{'\u2014'}</span>
                     )}
+                  </td>
+                  <td style={styles.addedCell}>
+                    {new Date(s.updatedAt).toLocaleDateString('en-US', {
+                      timeZone: OPERATOR_TZ,
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
                   </td>
                   <td>
                     <div style={styles.actionCell}>
@@ -303,7 +411,7 @@ export default function SuggestionTable({
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={8} style={styles.expandedRow}>
+                    <td colSpan={9} style={styles.expandedRow}>
                       <RationalePanel rationale={s.rationale} defaultOpen={true} />
                     </td>
                   </tr>
@@ -396,6 +504,11 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px 20px',
     borderBottom: '1px solid var(--color-border)',
   },
+  addedCell: {
+    whiteSpace: 'nowrap' as const,
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+  },
   autoApprovedBadge: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -407,6 +520,48 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#c084fc',
     background: 'rgba(168, 85, 247, 0.15)',
     border: '1px solid rgba(168, 85, 247, 0.25)',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap' as const,
+  },
+  approvedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '2px 8px',
+    fontSize: '0.65rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+    color: '#34d399',
+    background: 'rgba(16, 185, 129, 0.12)',
+    border: '1px solid rgba(16, 185, 129, 0.25)',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap' as const,
+  },
+  declinedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '2px 8px',
+    fontSize: '0.65rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+    color: '#f87171',
+    background: 'rgba(239, 68, 68, 0.12)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap' as const,
+  },
+  expiredStatusBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '2px 8px',
+    fontSize: '0.65rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+    color: '#9ca3af',
+    background: 'rgba(156, 163, 175, 0.12)',
+    border: '1px solid rgba(156, 163, 175, 0.2)',
     borderRadius: '10px',
     whiteSpace: 'nowrap' as const,
   },

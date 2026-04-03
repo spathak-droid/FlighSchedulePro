@@ -68,6 +68,18 @@ function eventMeta(eventType: string): {
       badgeBg: 'rgba(34,197,94,0.1)',
       badgeColor: '#16a34a',
     },
+    suggestion_auto_approve_blocked: {
+      label: 'Auto-Approve Blocked',
+      dotColor: '#f59e0b',
+      badgeBg: 'rgba(245,158,11,0.1)',
+      badgeColor: '#d97706',
+    },
+    'suggestion.expired': {
+      label: 'Expired',
+      dotColor: '#6b7280',
+      badgeBg: 'rgba(100,116,139,0.1)',
+      badgeColor: '#64748b',
+    },
     bulk_approve: {
       label: 'Bulk Approve',
       dotColor: '#22c55e',
@@ -288,6 +300,56 @@ export default function ActivityFeed({
                   <span style={styles.timestamp}>{relativeTime(event.timestamp)}</span>
                 </div>
                 <p style={styles.summary}>{event.summary}</p>
+                {/* Show constraint details for auto-approve events */}
+                {event.details && (event.eventType === 'suggestion_auto_approved' || event.eventType === 'suggestion_auto_approve_blocked') && (
+                  <div style={styles.detailsBox}>
+                    {event.details.riskLevel && (
+                      <span style={{
+                        ...styles.detailTag,
+                        color: event.details.riskLevel === 'low' ? '#16a34a' : event.details.riskLevel === 'medium' ? '#d97706' : '#dc2626',
+                        background: event.details.riskLevel === 'low' ? 'rgba(34,197,94,0.1)' : event.details.riskLevel === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                      }}>
+                        Risk: {event.details.riskLevel as string}
+                      </span>
+                    )}
+                    {event.details.riskThreshold && (
+                      <span style={styles.detailTag}>
+                        Threshold: {event.details.riskThreshold as string}
+                      </span>
+                    )}
+                    {event.details.constraintsPassed && (
+                      <span style={{...styles.detailTag, color: '#16a34a', background: 'rgba(34,197,94,0.08)'}}>
+                        4-layer check passed
+                      </span>
+                    )}
+                    {event.details.layerSummary && (
+                      <>
+                        {(event.details.layerSummary as Record<string, unknown>).regulatory === false && (
+                          <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>
+                            Regulatory: FAIL
+                          </span>
+                        )}
+                        {(event.details.layerSummary as Record<string, unknown>).safety === false && (
+                          <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>
+                            Safety: FAIL
+                          </span>
+                        )}
+                        {(event.details.layerSummary as Record<string, unknown>).operator === false && (
+                          <span style={{...styles.detailTag, color: '#d97706', background: 'rgba(245,158,11,0.08)'}}>
+                            Operator Policy: FAIL
+                          </span>
+                        )}
+                      </>
+                    )}
+                    {event.details.failedConstraints && (event.details.failedConstraints as string[]).length > 0 && (
+                      <div style={styles.failedList2}>
+                        {(event.details.failedConstraints as string[]).slice(0, 3).map((fc: string, i: number) => (
+                          <div key={i} style={styles.failedItem2}>{fc}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {event.actor && <p style={styles.actor}>{event.actor}</p>}
               </div>
             </div>
@@ -443,5 +505,37 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.8rem',
     color: 'var(--color-text-muted)',
     margin: 0,
+  },
+  detailsBox: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '4px',
+    marginTop: '6px',
+  },
+  detailTag: {
+    display: 'inline-block',
+    fontSize: '0.62rem',
+    fontWeight: 600,
+    padding: '1px 6px',
+    borderRadius: '4px',
+    color: 'var(--color-text-muted)',
+    background: 'rgba(100,116,139,0.08)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.03em',
+    whiteSpace: 'nowrap' as const,
+  },
+  failedList2: {
+    width: '100%',
+    marginTop: '4px',
+  },
+  failedItem2: {
+    fontSize: '0.68rem',
+    color: 'var(--color-text-muted)',
+    padding: '2px 0',
+    borderLeft: '2px solid rgba(239,68,68,0.3)',
+    paddingLeft: '8px',
+    marginBottom: '2px',
+    lineHeight: 1.4,
+    wordBreak: 'break-word' as const,
   },
 };

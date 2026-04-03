@@ -468,18 +468,21 @@ export class NotificationService {
         }
       }
 
-      // Build template variables
-      const proposedDate = suggestion.proposedStart.toLocaleDateString('en-US', {
+      // Build template variables — format in operator's local timezone
+      const operatorTimezone = 'America/Los_Angeles';
+      const proposedDate = new Intl.DateTimeFormat('en-US', {
+        timeZone: operatorTimezone,
         weekday: 'long',
         month: 'long',
         day: 'numeric',
         year: 'numeric',
-      });
-      const proposedTime = suggestion.proposedStart.toLocaleTimeString('en-US', {
+      }).format(suggestion.proposedStart);
+      const proposedTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: operatorTimezone,
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-      });
+      }).format(suggestion.proposedStart);
 
       const variables: Record<string, string> = {
         studentName: recipientName,
@@ -496,9 +499,18 @@ export class NotificationService {
       let subject: string;
       let body: string;
 
+      // Type-specific default subjects
+      const defaultSubjects: Record<string, string> = {
+        reschedule: `Flight Rescheduled — ${activityTypeName} on ${proposedDate}`,
+        waitlist: `Slot Available — ${activityTypeName} on ${proposedDate}`,
+        discovery: `Discovery Flight Confirmed — ${proposedDate}`,
+        next_lesson: `Next Lesson Scheduled — ${activityTypeName} on ${proposedDate}`,
+      };
+      const defaultSubject = defaultSubjects[suggestion.type] ?? `Booking Confirmed — ${activityTypeName} on ${proposedDate}`;
+
       if (template) {
         const rendered = this.renderTemplate(
-          template.subject ?? 'Booking Confirmed',
+          template.subject ?? defaultSubject,
           template.bodyTemplate,
           variables,
         );
@@ -514,7 +526,7 @@ export class NotificationService {
           .join('\n');
         body = this.wrapInEmailLayout(htmlBody, variables);
       } else {
-        subject = `Booking Confirmed — ${activityTypeName} on ${proposedDate}`;
+        subject = defaultSubject;
         body = this.getDefaultEmailBody(suggestion.type, variables);
       }
 
@@ -528,7 +540,7 @@ export class NotificationService {
       // Record notification
       const deliveryStatus = emailResult.success ? 'sent' : 'failed';
 
-      const [record] = await db
+      await db
         .insert(notificationRecords)
         .values({
           operatorId,
@@ -564,6 +576,137 @@ export class NotificationService {
         `Failed to send booking confirmation for suggestion ${suggestion.id}: ${msg}`,
       );
       // Don't rethrow — booking should succeed even if email fails
+    }
+  }
+
+  /**
+   * Send a decline notification when a suggestion is rejected by the scheduler.
+   * Informs the student that the proposed slot is no longer available.
+   */
+  async sendDeclineNotification(
+    operatorId: number,
+    suggestion: {
+      id: string;
+      type: string;
+      studentId?: string | null;
+      prospectId?: string | null;
+      instructorId?: string | null;
+      activityTypeId?: string | null;
+      proposedStart: Date;
+      proposedEnd: Date;
+    },
+    reason?: string,
+  ): Promise<void> {
+    try {
+      // Determine recipient
+      let recipientEmail: string | undefined;
+      let recipientName = 'Student';
+
+      if (suggestion.prospectId) {
+        const [prospect] = await db
+          .select()
+          .from(prospects)
+          .where(eq(prospects.id, suggestion.prospectId))
+          .limit(1);
+        if (prospect) {
+          recipientEmail = prospect.email ?? undefined;
+          recipientName = `${prospect.firstName} ${prospect.lastName}`;
+        }
+      } else if (suggestion.studentId) {
+        const [student] = await db
+          .select()
+          .from(students)
+          .where(eq(students.id, suggestion.studentId))
+          .limit(1);
+        if (student) {
+          recipientEmail = student.email ?? undefined;
+          recipientName = `${student.firstName} ${student.lastName}`;
+        }
+      }
+
+      if (!recipientEmail) {
+        this.logger.debug(`No email for decline notification — skipping`);
+        return;
+      }
+
+      // Resolve activity type
+      let activityTypeName = 'Flight';
+      if (suggestion.activityTypeId) {
+        const [at] = await db
+          .select()
+          .from(activityTypes)
+          .where(eq(activityTypes.id, suggestion.activityTypeId))
+          .limit(1);
+        if (at) activityTypeName = at.name;
+      }
+
+      const operatorTimezone = 'America/Los_Angeles';
+      const proposedDate = new Intl.DateTimeFormat('en-US', {
+        timeZone: operatorTimezone,
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      }).format(suggestion.proposedStart);
+      const proposedTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: operatorTimezone,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(suggestion.proposedStart);
+
+      const reasonText = reason
+        ? `<p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 16px 0 0 0;"><strong>Reason:</strong> ${reason}</p>`
+        : '';
+
+      const subject = `Schedule Update — ${activityTypeName} on ${proposedDate}`;
+      const body = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+          <div style="background: #1e40af; padding: 24px 32px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600;">FlightSchedule Pro</h1>
+          </div>
+          <div style="padding: 32px;">
+            <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Schedule Update</h2>
+            <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+              Hi ${recipientName}, the proposed ${activityTypeName} on <strong>${proposedDate}</strong> at <strong>${proposedTime}</strong> is no longer available.
+            </p>
+            <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
+              Your flight school will work on finding an alternative time for you. You'll be notified when a new slot becomes available.
+            </p>
+            ${reasonText}
+          </div>
+          <div style="padding: 16px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+            This is an automated notification from FlightSchedule Pro. Please contact your flight school if you have any questions.
+          </div>
+        </div>
+      `;
+
+      const emailResult = await this.emailService.sendEmail({
+        to: recipientEmail,
+        subject,
+        html: body,
+      });
+
+      // Record notification
+      await db
+        .insert(notificationRecords)
+        .values({
+          operatorId,
+          suggestionId: suggestion.id,
+          recipientType: suggestion.prospectId ? 'prospect' : 'student',
+          recipientId: suggestion.prospectId ?? suggestion.studentId ?? 'unknown',
+          channel: 'email',
+          content: { subject, body } as Record<string, unknown>,
+          deliveryStatus: emailResult.success ? 'sent' : 'failed',
+          deliveryError: emailResult.error ?? null,
+          sentAt: emailResult.success ? new Date() : null,
+        });
+
+      if (emailResult.success) {
+        this.logger.log(`Decline notification sent to ${recipientEmail} for suggestion ${suggestion.id}`);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to send decline notification for suggestion ${suggestion.id}: ${msg}`);
     }
   }
 
@@ -613,39 +756,73 @@ export class NotificationService {
       </div>
     `;
 
+    const detailsTable = `
+      <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Date</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedDate}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Time</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedTime}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Instructor</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.instructorName}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Aircraft</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.aircraftName}</td></tr>
+        </table>
+      </div>
+    `;
+
     switch (notificationType) {
       case 'discovery':
         return wrapper(`
-          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Booking Confirmed!</h2>
+          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Discovery Flight Confirmed!</h2>
           <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
             Hi ${v.studentName}, your discovery flight has been confirmed. Here are the details:
           </p>
-          <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Date</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedDate}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Time</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedTime}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Instructor</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.instructorName}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Aircraft</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.aircraftName}</td></tr>
-            </table>
-          </div>
+          ${detailsTable}
           <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
             We look forward to seeing you! Please arrive 15 minutes early for your briefing.
           </p>
         `);
+
+      case 'reschedule':
+        return wrapper(`
+          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Flight Rescheduled</h2>
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+            Hi ${v.studentName}, your ${v.activityType} has been rescheduled to a new time. Here are the updated details:
+          </p>
+          ${detailsTable}
+          <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
+            If this time doesn't work for you, please contact your flight school to discuss alternatives.
+          </p>
+        `);
+
+      case 'waitlist':
+        return wrapper(`
+          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">A Slot Opened Up For You!</h2>
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+            Hi ${v.studentName}, a training slot has become available and you've been booked in. Here are the details:
+          </p>
+          ${detailsTable}
+          <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
+            You were selected from the waitlist based on your training progress and availability. Contact your flight school if you have any questions.
+          </p>
+        `);
+
+      case 'next_lesson':
+        return wrapper(`
+          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Next Lesson Scheduled</h2>
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+            Hi ${v.studentName}, your next ${v.activityType} lesson has been scheduled. Here are the details:
+          </p>
+          ${detailsTable}
+          <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
+            Make sure to review the lesson plan before your session. Contact your flight school if you need to reschedule.
+          </p>
+        `);
+
       default:
         return wrapper(`
-          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Booking Confirmed!</h2>
+          <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Booking Confirmed</h2>
           <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
             Hi ${v.studentName}, your ${v.activityType} has been confirmed.
           </p>
-          <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Date</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedDate}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Time</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.proposedTime}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Instructor</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.instructorName}</td></tr>
-              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Aircraft</td><td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">${v.aircraftName}</td></tr>
-            </table>
-          </div>
+          ${detailsTable}
           <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
             Contact your flight school if you need to make any changes.
           </p>

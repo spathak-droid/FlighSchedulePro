@@ -70,9 +70,10 @@ export class SuggestionsService {
 
     const conditions: SQL[] = [eq(suggestions.operatorId, params.operatorId)];
 
-    // Default to pending if no status filter provided
-    const statusFilter = params.status ?? 'pending';
-    conditions.push(eq(suggestions.status, statusFilter));
+    // Only filter by status when explicitly provided (not empty / not 'all')
+    if (params.status && params.status !== 'all') {
+      conditions.push(eq(suggestions.status, params.status));
+    }
 
     if (params.type) {
       conditions.push(eq(suggestions.type, params.type));
@@ -476,6 +477,15 @@ export class SuggestionsService {
         proposedEnd: suggestion.proposedEnd.toISOString(),
       },
     });
+
+    // Send decline notification to the student
+    try {
+      await this.notificationService.sendDeclineNotification(operatorId, suggestion, reason);
+    } catch (emailError) {
+      this.logger.warn(
+        `Failed to send decline notification for suggestion ${id}: ${emailError instanceof Error ? emailError.message : emailError}`,
+      );
+    }
 
     this.logger.log(`Suggestion ${id} declined by ${userId}`);
 

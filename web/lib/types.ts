@@ -34,7 +34,9 @@ export interface Suggestion {
   groupId?: string;
   expiresAt: string;
   createdAt: string;
+  updatedAt: string;
   approvedBy?: string;
+  expiredReason?: string;
 }
 
 export interface ActivityEvent {
@@ -149,7 +151,7 @@ export interface SchedulingPolicies {
 }
 
 export interface SuggestionFilters {
-  status?: SuggestionStatus | '';
+  status?: SuggestionStatus | 'all' | '';
   type?: SuggestionType | '';
   dateFrom?: string;
   dateTo?: string;

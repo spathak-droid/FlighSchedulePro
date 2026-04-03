@@ -475,21 +475,29 @@ export class SimulationService {
           passed: true,
           constraint: 'student_availability',
           details: `Student ${candidate.studentId} available for slot`,
+          layer: 'operator',
+          hard: true,
         },
         {
           passed: true,
           constraint: 'instructor_availability',
           details: `Instructor ${instructor.firstName} ${instructor.lastName} available`,
+          layer: 'operator',
+          hard: true,
         },
         {
           passed: true,
           constraint: 'daylight_hours',
           details: `Slot ${slot.start.getHours()}:00-${slot.end.getHours()}:00 within daylight`,
+          layer: 'regulatory',
+          hard: true,
         },
         {
           passed: true,
           constraint: 'activity_type',
           details: activity ? `Activity: ${activity.name}` : 'General flight training',
+          layer: 'operator',
+          hard: true,
         },
       ];
 
@@ -845,6 +853,94 @@ export class SimulationService {
     });
 
     this.logger.log(`SIM maintenance: ${ac.registration} — ${issue.title} (${issue.severity})`);
+
+    // 4. Generate reschedule suggestions for students affected by grounded aircraft
+    //    Find students and reschedule them to a different aircraft
+    if (data.aircraft.length > 1 && data.students.length > 0 && data.instructors.length > 0) {
+      const alternateAircraft = data.aircraft.filter((a) => a.id !== ac.id);
+      if (alternateAircraft.length > 0) {
+        const altAc = this.pick(alternateAircraft);
+        const instructor = this.pick(data.instructors);
+        const activity = data.activityTypes.length > 0 ? this.pick(data.activityTypes) : null;
+
+        // Pick 1-2 students who would have been affected
+        const affectedStudents = data.students
+          .filter(() => Math.random() > 0.5)
+          .slice(0, 2);
+
+        if (affectedStudents.length > 0) {
+          const groupId = randomUUID();
+          const ttlHours = data.policy?.suggestionTtlHours ?? 24;
+          const expiresAt = new Date(Date.now() + ttlHours * 3_600_000);
+          const suggestionIds: string[] = [];
+
+          for (const student of affectedStudents) {
+            const slot = this.randomFutureSlot();
+
+            const rationale = buildRationale({
+              rankingBreakdown: { aircraftSwap: 0.4, timePreference: 0.3, instructorAvail: 0.3 },
+              constraintResults: [
+                {
+                  passed: true,
+                  constraint: 'alternate_aircraft',
+                  details: `Reassigned from grounded ${ac.registration} to ${altAc.registration}`,
+                  layer: 'operator' as const,
+                  hard: true,
+                },
+                {
+                  passed: true,
+                  constraint: 'student_availability',
+                  details: `${student.firstName} ${student.lastName} available`,
+                  layer: 'operator' as const,
+                  hard: true,
+                },
+              ],
+              policyMatches: [
+                `Triggered by: ${ac.registration} grounded — "${issue.title}"`,
+                `Reassigned to: ${altAc.registration} (${altAc.makeModel})`,
+              ],
+              suggestionType: 'reschedule',
+            });
+
+            const [inserted] = await db
+              .insert(suggestions)
+              .values({
+                operatorId,
+                type: 'reschedule',
+                status: 'pending',
+                locationId: 'loc-001',
+                studentId: student.id,
+                instructorId: instructor.id,
+                aircraftId: altAc.id,
+                activityTypeId: activity?.id ?? null,
+                proposedStart: slot.start,
+                proposedEnd: slot.end,
+                rankingScore: String((60 + Math.random() * 30).toFixed(4)),
+                rationale,
+                groupId,
+                expiresAt,
+              })
+              .returning({ id: suggestions.id });
+
+            if (inserted) suggestionIds.push(inserted.id);
+          }
+
+          // Enqueue AI enrichment for each suggestion
+          for (const id of suggestionIds) {
+            const payload = { suggestionId: id, operatorId };
+            await this.aiEnrichQueue.add('ai-enrich-suggestion', payload, {
+              attempts: 2,
+              backoff: { type: 'exponential', delay: 3000 },
+            });
+          }
+
+          this.logger.log(
+            `SIM maintenance reschedule: ${suggestionIds.length} suggestions created ` +
+              `(${ac.registration} → ${altAc.registration})`,
+          );
+        }
+      }
+    }
   }
 
   // ─── Event: Instructor Unavailable ────────────────────────────────────
@@ -933,11 +1029,15 @@ export class SimulationService {
               passed: true,
               constraint: 'alternate_instructor',
               details: `Reassigned to ${altInstructor.firstName} ${altInstructor.lastName}`,
+              layer: 'operator' as const,
+              hard: true,
             },
             {
               passed: true,
               constraint: 'student_availability',
               details: `${student.firstName} ${student.lastName} available`,
+              layer: 'operator' as const,
+              hard: true,
             },
           ],
           policyMatches: [

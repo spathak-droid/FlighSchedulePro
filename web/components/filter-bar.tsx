@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import type { SuggestionFilters, SuggestionType, SuggestionStatus } from '@/lib/types';
 
@@ -17,8 +17,8 @@ const TYPE_OPTIONS: { value: SuggestionType | ''; label: string }[] = [
   { value: 'next_lesson', label: 'Next Lesson' },
 ];
 
-const STATUS_OPTIONS: { value: SuggestionStatus | ''; label: string }[] = [
-  { value: '', label: 'All Statuses' },
+const STATUS_OPTIONS: { value: SuggestionStatus | 'all' | ''; label: string }[] = [
+  { value: 'all', label: 'All Statuses' },
   { value: 'pending', label: 'Pending' },
   { value: 'approved', label: 'Approved' },
   { value: 'declined', label: 'Declined' },
@@ -32,6 +32,20 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
   const [dateTo, setDateTo] = useState(initialFilters?.dateTo || '');
   const barRef = useRef<HTMLDivElement>(null);
 
+  // Auto-apply filters whenever any value changes
+  const applyFilters = useCallback(
+    (t: string, s: string, df: string, dt: string) => {
+      onChange({
+        type: (t || undefined) as SuggestionType | undefined,
+        status: (s || undefined) as SuggestionStatus | 'all' | undefined,
+        dateFrom: df || undefined,
+        dateTo: dt || undefined,
+        page: 1,
+      });
+    },
+    [onChange],
+  );
+
   // GSAP: slide down on mount
   useEffect(() => {
     if (barRef.current) {
@@ -42,16 +56,6 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
       );
     }
   }, []);
-
-  function handleApply() {
-    onChange({
-      type: type || undefined,
-      status: status || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
-      page: 1,
-    });
-  }
 
   function handleReset() {
     setType('');
@@ -69,7 +73,11 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
           id="filter-type"
           className="select"
           value={type}
-          onChange={(e) => setType(e.target.value as SuggestionType | '')}
+          onChange={(e) => {
+            const v = e.target.value as SuggestionType | '';
+            setType(v);
+            applyFilters(v, status, dateFrom, dateTo);
+          }}
           style={styles.filterInput}
         >
           {TYPE_OPTIONS.map((opt) => (
@@ -86,7 +94,11 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
           id="filter-status"
           className="select"
           value={status}
-          onChange={(e) => setStatus(e.target.value as SuggestionStatus | '')}
+          onChange={(e) => {
+            const v = e.target.value as SuggestionStatus | '';
+            setStatus(v);
+            applyFilters(type, v, dateFrom, dateTo);
+          }}
           style={styles.filterInput}
         >
           {STATUS_OPTIONS.map((opt) => (
@@ -104,7 +116,11 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
           className="input"
           type="date"
           value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setDateFrom(v);
+            applyFilters(type, status, v, dateTo);
+          }}
           style={styles.filterInput}
         />
       </div>
@@ -116,15 +132,16 @@ export default function FilterBar({ initialFilters, onChange }: FilterBarProps) 
           className="input"
           type="date"
           value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setDateTo(v);
+            applyFilters(type, status, dateFrom, v);
+          }}
           style={styles.filterInput}
         />
       </div>
 
       <div style={styles.buttonGroup}>
-        <button className="btn btn-primary btn-sm" onClick={handleApply}>
-          Apply
-        </button>
         <button className="btn btn-ghost btn-sm" onClick={handleReset}>
           Reset
         </button>

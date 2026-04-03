@@ -181,16 +181,22 @@ export class MockTriggerService {
           passed: true,
           constraint: 'student_availability',
           details: `Student ${candidate.studentId} assumed available (mock)`,
+          layer: 'operator',
+          hard: true,
         },
         {
           passed: true,
           constraint: 'instructor_availability',
           details: `Instructor ${openingInstructor.id} assumed available (mock)`,
+          layer: 'operator',
+          hard: true,
         },
         {
           passed: true,
           constraint: 'daylight_hours',
           details: 'Proposed time 10:00-12:00 is within daylight hours (mock)',
+          layer: 'regulatory',
+          hard: true,
         },
         {
           passed: true,
@@ -198,6 +204,8 @@ export class MockTriggerService {
           details: openingActivity
             ? `Activity type ${openingActivity.name} specified`
             : 'No activity type (mock)',
+          layer: 'operator',
+          hard: true,
         },
       ];
 

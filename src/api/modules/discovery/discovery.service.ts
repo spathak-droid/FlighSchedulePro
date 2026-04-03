@@ -26,6 +26,7 @@ import { NotificationService } from '../notifications/notification.service.js';
 import { ScheduleSolverService } from '../solver/schedule-solver.service.js';
 import { filterDaylightSlots } from '../../../core/scheduling/constraint-evaluator.js';
 import { buildRationale } from '../../../core/scheduling/rationale-builder.js';
+import { getLocalParts } from '../../../core/utils/time.js';
 import type { FoundSlot } from '../../../core/scheduling/slot-finder.js';
 import type { FspCivilTwilight } from '../../fsp/fsp.types.js';
 
@@ -230,6 +231,9 @@ export class DiscoveryService {
       dateRangeEnd = toLocalDateStr(endDate);
     }
 
+    // Use operator's location timezone for all time operations
+    const operatorTimezone = location.timeZone || 'America/Los_Angeles';
+
     // Find slots in the preferred range (pass fspToken for per-instructor availability)
     let slots = await this.solverService.findTime(
       operatorId,
@@ -241,16 +245,17 @@ export class DiscoveryService {
         durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
       },
       fspToken,
+      operatorTimezone,
     );
 
     // Step 6: Apply civil twilight (daylight) constraint as additional filter
     if (civilTwilight) {
-      slots = filterDaylightSlots(slots, civilTwilight);
+      slots = filterDaylightSlots(slots, civilTwilight, operatorTimezone);
     }
 
     // Apply preferred time-of-day filter if specified
     if (data.timeOfDay && data.timeOfDay !== 'anytime') {
-      slots = this.filterByTimeOfDay(slots, data.timeOfDay);
+      slots = this.filterByTimeOfDay(slots, data.timeOfDay, operatorTimezone);
     }
 
     // Separate slots that match preferred dates from alternatives
@@ -285,12 +290,13 @@ export class DiscoveryService {
           durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
         },
         fspToken,
+        operatorTimezone,
       );
       if (civilTwilight) {
-        matchedSlots = filterDaylightSlots(matchedSlots, civilTwilight);
+        matchedSlots = filterDaylightSlots(matchedSlots, civilTwilight, operatorTimezone);
       }
       if (data.timeOfDay && data.timeOfDay !== 'anytime') {
-        matchedSlots = this.filterByTimeOfDay(matchedSlots, data.timeOfDay);
+        matchedSlots = this.filterByTimeOfDay(matchedSlots, data.timeOfDay, operatorTimezone);
       }
       isAlternative = matchedSlots.length > 0;
     }
@@ -313,19 +319,19 @@ export class DiscoveryService {
       };
     }
 
-    // Step 7: Deduplicate — one slot per instructor+time combo (pick first aircraft)
-    const seen = new Set<string>();
-    const uniqueSlots = slots.filter((slot: FoundSlot) => {
-      const key = `${slot.instructorId}-${slot.start.toISOString()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    // Step 7: Deduplicate — one slot per time (pick highest-scored instructor)
+    const slotsByTime = new Map<string, FoundSlot>();
+    for (const slot of slots) {
+      const key = slot.start.toISOString();
+      const existing = slotsByTime.get(key);
+      if (!existing || slot.matchScore > existing.matchScore) {
+        slotsByTime.set(key, slot);
+      }
+    }
+    const uniqueSlots = Array.from(slotsByTime.values());
 
-    // Cap at configured max (default 5)
-    const maxSuggestions =
-      ((policy as Record<string, unknown>)?.rescheduleAlternatives as number) ?? 5;
-    const cappedSlots = uniqueSlots.slice(0, maxSuggestions);
+    // Cap at configured max (already limited by maxSlots above)
+    const cappedSlots = uniqueSlots.slice(0, maxSlots);
 
     // Create suggestion records
     const groupId = crypto.randomUUID();
@@ -345,6 +351,8 @@ export class DiscoveryService {
                 passed: true,
                 constraint: 'daylight_hours',
                 details: 'Slot is within civil twilight boundaries',
+                layer: 'regulatory' as const,
+                hard: true,
               },
             ]
           : [],
@@ -607,9 +615,10 @@ export class DiscoveryService {
   private filterByTimeOfDay(
     slots: FoundSlot[],
     timeOfDay: 'morning' | 'afternoon' | 'evening',
+    timezone = 'America/Los_Angeles',
   ): FoundSlot[] {
     return slots.filter((slot) => {
-      const hour = slot.start.getHours();
+      const hour = getLocalParts(slot.start, timezone).hour;
 
       switch (timeOfDay) {
         case 'morning':

@@ -54,6 +54,11 @@ export default function QueuePage() {
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [bulkResults, setBulkResults] = useState<BulkActionResponse | null>(null);
 
+  // Recently expired
+  const [expiredSuggestions, setExpiredSuggestions] = useState<Suggestion[]>([]);
+  const [expiredCount, setExpiredCount] = useState(0);
+  const [showExpired, setShowExpired] = useState(true);
+
   // Refs
   const bulkBarRef = useRef<HTMLDivElement>(null);
   const prevHasSelection = useRef(false);
@@ -93,9 +98,25 @@ export default function QueuePage() {
     }
   }, [filters, currentPage, pageSize]);
 
+  // Fetch recently expired suggestions (always, regardless of filter)
+  const fetchExpired = useCallback(async () => {
+    try {
+      const res = await api.get<PaginatedResponse<Suggestion>>('/suggestions', {
+        status: 'expired',
+        pageSize: 5,
+        page: 1,
+      });
+      setExpiredSuggestions(res.data);
+      setExpiredCount(res.pagination.total);
+    } catch {
+      // Silent — expired panel is supplementary
+    }
+  }, []);
+
   useEffect(() => {
     fetchSuggestions();
-  }, [fetchSuggestions]);
+    fetchExpired();
+  }, [fetchSuggestions, fetchExpired]);
 
   // Check simulation status on mount
   useEffect(() => {
@@ -475,6 +496,71 @@ export default function QueuePage() {
         </div>
       )}
 
+      {/* Recently Expired — always visible when viewing pending */}
+      {filters.status !== 'expired' && expiredCount > 0 && (
+        <div style={styles.expiredSection}>
+          <button
+            style={styles.expiredHeader}
+            onClick={() => setShowExpired(!showExpired)}
+            type="button"
+          >
+            <div style={styles.expiredHeaderLeft}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span style={styles.expiredTitle}>Recently Expired</span>
+              <span style={styles.expiredBadge}>{expiredCount}</span>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              style={{ transform: showExpired ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showExpired && (
+            <div style={styles.expiredBody}>
+              {expiredSuggestions.map((s) => (
+                <div key={s.id} style={styles.expiredRow}>
+                  <div style={styles.expiredRowLeft}>
+                    <span style={styles.expiredTypeBadge}>{s.type.replace('_', ' ')}</span>
+                    <span style={styles.expiredStudent}>{s.studentName || s.studentId}</span>
+                  </div>
+                  <div style={styles.expiredRowRight}>
+                    <span style={styles.expiredReason}>
+                      {s.expiredReason === 'slot_filled' ? 'Slot filled' :
+                       s.expiredReason === 'ttl_exceeded' ? 'TTL expired' :
+                       s.expiredReason === 'constraint_violation' ? 'Constraint violated' :
+                       s.expiredReason || 'Expired'}
+                    </span>
+                    <span style={styles.expiredTime}>
+                      {s.updatedAt ? new Date(s.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {expiredCount > 5 && (
+                <button
+                  style={styles.expiredViewAll}
+                  onClick={() => {
+                    setFilters({ status: 'expired', page: 1 });
+                  }}
+                  type="button"
+                >
+                  View all {expiredCount} expired suggestions
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Bulk action toolbar — sticky bottom */}
       {hasSelection && (
         <div ref={bulkBarRef} style={styles.bulkBar}>
@@ -835,5 +921,108 @@ const styles: Record<string, React.CSSProperties> = {
   },
   failedError: {
     color: '#dc2626',
+  },
+  expiredSection: {
+    marginTop: '24px',
+    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    background: 'var(--color-surface)',
+  },
+  expiredHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '12px 16px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'var(--color-text-secondary)',
+  },
+  expiredHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  expiredTitle: {
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    color: 'var(--color-text-secondary)',
+  },
+  expiredBadge: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    background: 'rgba(156,163,175,0.15)',
+    color: '#9ca3af',
+    padding: '2px 8px',
+    borderRadius: '10px',
+  },
+  expiredBody: {
+    borderTop: '1px solid var(--color-border)',
+  },
+  expiredRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px 16px',
+    borderBottom: '1px solid var(--color-border)',
+    fontSize: '0.82rem',
+    opacity: 0.7,
+    flexWrap: 'wrap' as const,
+    gap: '6px',
+  },
+  expiredRowLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  expiredRowRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  expiredTypeBadge: {
+    fontSize: '0.68rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.03em',
+    padding: '2px 8px',
+    borderRadius: '6px',
+    background: 'rgba(156,163,175,0.1)',
+    color: '#9ca3af',
+    border: '1px solid rgba(156,163,175,0.15)',
+    whiteSpace: 'nowrap' as const,
+  },
+  expiredStudent: {
+    fontWeight: 500,
+    color: 'var(--color-text-secondary)',
+  },
+  expiredReason: {
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    color: '#9ca3af',
+    padding: '2px 8px',
+    borderRadius: '6px',
+    background: 'rgba(156,163,175,0.08)',
+    whiteSpace: 'nowrap' as const,
+  },
+  expiredTime: {
+    fontSize: '0.72rem',
+    color: 'var(--color-text-muted)',
+    whiteSpace: 'nowrap' as const,
+    fontVariantNumeric: 'tabular-nums',
+  },
+  expiredViewAll: {
+    display: 'block',
+    width: '100%',
+    padding: '10px 16px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--color-accent)',
+    textAlign: 'center' as const,
   },
 };

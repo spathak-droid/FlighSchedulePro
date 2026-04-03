@@ -1,14 +1,23 @@
 export {
   evaluateConstraints,
+  evaluateAllConstraints,
   evaluateDaylightConstraint,
   filterDaylightSlots,
+  DEFAULT_OPERATOR_POLICY,
 } from './constraint-evaluator.js';
 
 export type {
   SchedulingConstraints,
   ConstraintResult,
   DaylightConstraintResult,
+  EvaluationResult,
+  ExistingReservation,
+  OperatorPolicy,
 } from './constraint-evaluator.js';
+
+export { SYSTEM_POLICIES } from './system-policies.js';
+
+export type { SystemPolicyDefinition } from './system-policies.js';
 
 export { buildRationale } from './rationale-builder.js';
 

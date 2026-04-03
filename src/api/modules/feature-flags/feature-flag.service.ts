@@ -27,7 +27,7 @@ const DEFAULT_FLAGS: Array<{
   },
   {
     flagName: 'auto_approve',
-    enabled: false,
+    enabled: true,
     config: { riskThreshold: 'low' },
     description: 'Autonomous approval of low-risk suggestions',
   },
@@ -171,20 +171,34 @@ export class FeatureFlagService {
 
     const toInsert = DEFAULT_FLAGS.filter((f) => !existingNames.has(f.flagName));
 
-    if (toInsert.length === 0) {
-      return;
+    if (toInsert.length > 0) {
+      await db.insert(featureFlags).values(
+        toInsert.map((f) => ({
+          operatorId,
+          flagName: f.flagName,
+          enabled: f.enabled,
+          config: f.config,
+          description: f.description,
+        })),
+      );
+      this.logger.log(`Seeded ${toInsert.length} default feature flags for operator ${operatorId}`);
     }
 
-    await db.insert(featureFlags).values(
-      toInsert.map((f) => ({
-        operatorId,
-        flagName: f.flagName,
-        enabled: f.enabled,
-        config: f.config,
-        description: f.description,
-      })),
-    );
-
-    this.logger.log(`Seeded ${toInsert.length} default feature flags for operator ${operatorId}`);
+    // Ensure auto_approve is enabled for demo (update if it was seeded as false previously)
+    if (process.env.FSP_MOCK_MODE === 'true') {
+      const autoApproveFlag = existing.find((f) => f.flagName === 'auto_approve');
+      if (autoApproveFlag && !autoApproveFlag.enabled) {
+        await db
+          .update(featureFlags)
+          .set({ enabled: true, updatedAt: new Date() })
+          .where(
+            and(
+              eq(featureFlags.operatorId, operatorId),
+              eq(featureFlags.flagName, 'auto_approve'),
+            ),
+          );
+        this.logger.log(`Enabled auto_approve flag for operator ${operatorId} (mock mode)`);
+      }
+    }
   }
 }
