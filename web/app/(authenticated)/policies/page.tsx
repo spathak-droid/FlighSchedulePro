@@ -48,6 +48,7 @@ export default function PoliciesPage() {
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const saveBtnRef = useRef<HTMLButtonElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedCards = useRef(false);
 
   // Derived state: auto_approve flag
   const autoApproveFlag = flags.find((f) => f.flagName === 'auto_approve');
@@ -95,14 +96,22 @@ export default function PoliciesPage() {
   useEffect(() => {
     if (!loading && cardsRef.current.length > 0) {
       const validCards = cardsRef.current.filter(Boolean);
-      gsap.set(validCards, { opacity: 0, y: 30 });
-      gsap.to(validCards, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: 'power3.out',
-      });
+      if (hasAnimatedCards.current) {
+        gsap.set(validCards, { opacity: 1, y: 0 });
+        return;
+      }
+      hasAnimatedCards.current = true;
+      gsap.fromTo(
+        validCards,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.12,
+          ease: 'power3.out',
+        },
+      );
     }
   }, [loading]);
 

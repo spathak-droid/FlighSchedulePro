@@ -20,6 +20,7 @@ import { FlightAlertsModule } from './modules/alerts/flight-alerts.module.js';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module.js';
 import { SimulationModule } from './modules/simulation/simulation.module.js';
 import { AskModule } from './modules/ask/ask.module.js';
+import { DirectoryModule } from './modules/directory/directory.module.js';
 import { AuthGuard } from './common/guards/auth.guard.js';
 import { TenantGuard } from './common/guards/tenant.guard.js';
 import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
@@ -69,6 +70,7 @@ import { MockSuggestionsSeeder } from './fsp/mock/mock-suggestions-seeder.js';
     FeatureFlagsModule,
     SimulationModule,
     AskModule,
+    DirectoryModule,
   ],
   providers: [
     // Global exception filter — catches all unhandled exceptions

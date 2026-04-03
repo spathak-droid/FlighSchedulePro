@@ -240,6 +240,26 @@ export class AiEnrichSuggestionJob extends WorkerHost {
 
       // All checks passed — auto-approve
       const now = new Date();
+
+      // Load the full suggestion for reservation creation
+      const [suggestionForApproval] = await db
+        .select()
+        .from(suggestions)
+        .where(
+          and(
+            eq(suggestions.id, suggestionId),
+            eq(suggestions.operatorId, operatorId),
+            eq(suggestions.status, 'pending'),
+          ),
+        )
+        .limit(1);
+
+      if (!suggestionForApproval) {
+        this.logger.debug(`Suggestion ${suggestionId.slice(0, 8)} no longer pending — skipping auto-approve`);
+        return;
+      }
+
+      // 1. Update suggestion status
       await db
         .update(suggestions)
         .set({
@@ -248,14 +268,42 @@ export class AiEnrichSuggestionJob extends WorkerHost {
           approvedAt: now,
           updatedAt: now,
         })
-        .where(
-          and(
-            eq(suggestions.id, suggestionId),
-            eq(suggestions.operatorId, operatorId),
-            eq(suggestions.status, 'pending'),
-          ),
-        );
+        .where(eq(suggestions.id, suggestionId));
 
+      // 2. Create reservation in reservation_history so it shows on the schedule
+      try {
+        const { reservationHistory } = await import('../../db/schema/index.js');
+        await db.insert(reservationHistory).values({
+          operatorId,
+          studentId: suggestionForApproval.studentId ?? 'unknown',
+          instructorId: suggestionForApproval.instructorId,
+          aircraftId: suggestionForApproval.aircraftId,
+          activityTypeId: suggestionForApproval.activityTypeId,
+          locationId: suggestionForApproval.locationId,
+          startTime: suggestionForApproval.proposedStart,
+          endTime: suggestionForApproval.proposedEnd,
+          status: 'completed',
+        });
+      } catch (resErr) {
+        this.logger.warn(
+          `Failed to create reservation for auto-approved ${suggestionId.slice(0, 8)}: ${resErr instanceof Error ? resErr.message : resErr}`,
+        );
+      }
+
+      // 3. Expire sibling suggestions in the same group
+      if (suggestionForApproval.groupId) {
+        await db
+          .update(suggestions)
+          .set({ status: 'expired', expiredReason: 'slot_filled', updatedAt: now })
+          .where(
+            and(
+              eq(suggestions.groupId, suggestionForApproval.groupId),
+              eq(suggestions.status, 'pending'),
+            ),
+          );
+      }
+
+      // 4. Audit event
       await db.insert(auditEvents).values({
         operatorId,
         eventType: 'suggestion_auto_approved',
@@ -267,6 +315,7 @@ export class AiEnrichSuggestionJob extends WorkerHost {
           riskThreshold,
           autoApproved: true,
           constraintsPassed: true,
+          reservationCreated: true,
           layerSummary: constraintResult?.layerSummary ?? {
             regulatory: true,
             safety: true,
@@ -276,7 +325,7 @@ export class AiEnrichSuggestionJob extends WorkerHost {
       });
 
       this.logger.log(
-        `Auto-approved suggestion ${suggestionId.slice(0, 8)} (risk: ${riskLevel}, threshold: ${riskThreshold}, all constraints passed)`,
+        `Auto-approved suggestion ${suggestionId.slice(0, 8)} + reservation created (risk: ${riskLevel}, threshold: ${riskThreshold})`,
       );
     } catch (err) {
       this.logger.warn(

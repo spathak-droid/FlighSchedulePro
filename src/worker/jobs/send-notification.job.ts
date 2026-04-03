@@ -50,7 +50,7 @@ export class SendNotificationJob extends WorkerHost {
   }
 
   async process(job: Job<SendNotificationJobData>): Promise<void> {
-    const { operatorId, suggestionId, approvedBy, fspReservationId } = job.data;
+    const { operatorId, suggestionId, fspReservationId } = job.data;
 
     this.logger.log(
       `Send-notification job started for suggestion ${suggestionId} (operator ${operatorId})`,

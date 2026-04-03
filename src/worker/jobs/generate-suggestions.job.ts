@@ -45,10 +45,6 @@ import {
 import type { RankingInput, RankingWeights } from '../../core/ranking/waitlist-ranker.js';
 import { evaluateConstraints } from '../../core/scheduling/constraint-evaluator.js';
 import { buildRationale } from '../../core/scheduling/rationale-builder.js';
-import {
-  detectCancellations,
-  filterStudentCancellations,
-} from '../../core/scheduling/cancellation-detector.js';
 import { findAvailableSlots } from '../../core/scheduling/slot-finder.js';
 import type { SlotFinderConfig, FoundSlot } from '../../core/scheduling/slot-finder.js';
 import {
@@ -56,7 +52,6 @@ import {
   isEnrollmentComplete,
   getProgressPercentage,
 } from '../../core/scheduling/enrollment-analyzer.js';
-import type { NextRequiredEvent } from '../../core/scheduling/enrollment-analyzer.js';
 import { toFspLocalTime } from '../../core/utils/time.js';
 import type { ScheduleChangePayload, NextLessonPayload } from './poll-schedule.job.js';
 import type {
@@ -348,7 +343,7 @@ export class GenerateSuggestionsJob extends WorkerHost {
   private async enrichPreviousReservation(
     operatorId: number,
     prev: NonNullable<ScheduleChangePayload['openings'][number]['previousReservation']>,
-    opening: ScheduleChangePayload['openings'][number],
+    _opening: ScheduleChangePayload['openings'][number],
   ): Promise<void> {
     // Resolve studentId from name if it looks like a name (not an ID)
     if (prev.studentId && !prev.studentId.startsWith('stu-')) {

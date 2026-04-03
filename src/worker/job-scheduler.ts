@@ -106,6 +106,8 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
     const { GenerateSuggestionsJob } = await import('./jobs/generate-suggestions.job.js');
     const { ExpireSuggestionsJob } = await import('./jobs/expire-suggestions.job.js');
     const { AiEnrichSuggestionJob } = await import('./jobs/ai-enrich-suggestion.job.js');
+    const { ResourceLookupService } = await import('../api/modules/resources/resource-lookup.service.js');
+    const resourceLookup = new ResourceLookupService();
 
     // Instantiate processors with correct constructor args
     const pollJob = new PollScheduleJob(
@@ -118,7 +120,7 @@ export class JobScheduler implements OnModuleInit, OnModuleDestroy {
       fspTrainingService,
       fspResourceService,
       fspScheduleService,
-      {} as any,
+      resourceLookup,
       aiEnrichQueue,
     );
     const expireJob = new ExpireSuggestionsJob(fspScheduleService);

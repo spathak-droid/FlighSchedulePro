@@ -22,11 +22,11 @@ import { students } from '../../db/schema/students.js';
 import { suggestions } from '../../db/schema/suggestions.js';
 import { featureFlags } from '../../db/schema/feature-flags.js';
 import { reservationHistory } from '../../db/schema/reservation-history.js';
-import { eq, and, lt, gt, ne, sql } from 'drizzle-orm';
+import { eq, and, gt, ne } from 'drizzle-orm';
 import { FspScheduleService } from '../../api/fsp/fsp-schedule.service.js';
 import { FspAuthService } from '../../api/fsp/fsp-auth.service.js';
 import { FspTrainingService } from '../../api/fsp/fsp-training.service.js';
-import { hashSchedule, detectOpenings } from '../../core/scheduling/change-detector.js';
+import { hashSchedule } from '../../core/scheduling/change-detector.js';
 import { isEnrollmentComplete } from '../../core/scheduling/enrollment-analyzer.js';
 import { toFspLocalTime } from '../../core/utils/time.js';
 import type { FspScheduleEvent, FspReservationListItem } from '../../api/fsp/fsp.types.js';
@@ -376,7 +376,7 @@ export class PollScheduleJob extends WorkerHost {
     const lastCheck = this.lastPendingLessonCheck.get(operatorId);
 
     // Get operator's policy for interval configuration
-    const [policy] = await db
+    await db
       .select()
       .from(schedulingPolicies)
       .where(eq(schedulingPolicies.operatorId, operatorId))

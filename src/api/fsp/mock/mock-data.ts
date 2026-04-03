@@ -206,6 +206,7 @@ export const MOCK_INSTRUCTORS: FspInstructor[] = [
     fullName: 'James Wilson',
     instructorType: 'CFI',
     isActive: true,
+    locationId: 'loc-001',
   },
   {
     id: 'inst-002',
@@ -214,6 +215,7 @@ export const MOCK_INSTRUCTORS: FspInstructor[] = [
     fullName: 'Lisa Park',
     instructorType: 'CFII',
     isActive: true,
+    locationId: 'loc-002',
   },
   {
     id: 'inst-003',
@@ -222,6 +224,7 @@ export const MOCK_INSTRUCTORS: FspInstructor[] = [
     fullName: 'David Kim',
     instructorType: 'CFI',
     isActive: true,
+    locationId: 'loc-003',
   },
   {
     id: 'inst-004',
@@ -230,6 +233,7 @@ export const MOCK_INSTRUCTORS: FspInstructor[] = [
     fullName: 'Tina Nguyen',
     instructorType: 'CFI',
     isActive: true,
+    locationId: 'loc-001',
   },
   {
     id: 'inst-005',
@@ -238,6 +242,7 @@ export const MOCK_INSTRUCTORS: FspInstructor[] = [
     fullName: 'Marcus Rivera',
     instructorType: 'CFII',
     isActive: true,
+    locationId: 'loc-002',
   },
 ];
 
@@ -250,6 +255,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Johnson',
     fullName: 'Alex Johnson',
     email: 'alex.j@email.com',
+    locationId: 'loc-001',
   },
   {
     id: 'stu-002',
@@ -257,6 +263,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Davis',
     fullName: 'Emily Davis',
     email: 'emily.d@email.com',
+    locationId: 'loc-002',
   },
   {
     id: 'stu-003',
@@ -264,6 +271,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Martinez',
     fullName: 'Ryan Martinez',
     email: 'ryan.m@email.com',
+    locationId: 'loc-001',
   },
   {
     id: 'stu-004',
@@ -271,6 +279,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Brown',
     fullName: 'Sophie Brown',
     email: 'sophie.b@email.com',
+    locationId: 'loc-003',
   },
   {
     id: 'stu-005',
@@ -278,6 +287,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Lee',
     fullName: 'Tyler Lee',
     email: 'tyler.l@email.com',
+    locationId: 'loc-002',
   },
   {
     id: 'stu-006',
@@ -285,6 +295,7 @@ export const MOCK_STUDENTS: FspStudent[] = [
     lastName: 'Garcia',
     fullName: 'Mia Garcia',
     email: 'mia.g@email.com',
+    locationId: 'loc-003',
   },
 ];
 

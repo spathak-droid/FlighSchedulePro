@@ -3,13 +3,11 @@ import {
   uuid,
   integer,
   varchar,
-  text,
   timestamp,
   decimal,
   jsonb,
   index,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 
 export const suggestions = pgTable(
   'suggestions',

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlighSchedulePro — Architecture Overview</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2237;
+    --border: #1e293b;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --accent3: #06b6d4;
+    --accent4: #10b981;
+    --accent5: #f59e0b;
+    --accent6: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --radius: 12px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ─── Navigation ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10, 14, 26, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+  }
+  nav .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; gap: 2rem;
+    height: 56px; overflow-x: auto;
+  }
+  nav .logo {
+    font-weight: 700; font-size: 1rem; white-space: nowrap;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  nav a {
+    color: var(--text2); text-decoration: none; font-size: 0.8rem;
+    white-space: nowrap; transition: color 0.2s;
+  }
+  nav a:hover { color: var(--text); }
+
+  /* ─── Sections ─── */
+  section {
+    max-width: 1200px; margin: 0 auto;
+    padding: 5rem 2rem 2rem;
+  }
+  section:first-of-type { padding-top: 7rem; }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  h2 .icon { font-size: 1.4rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent3); }
+  .subtitle { font-size: 1.15rem; color: var(--text2); max-width: 700px; margin-bottom: 2rem; }
+
+  /* ─── Cards ─── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .card .label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); margin-bottom: 0.25rem;
+  }
+  .card .value { font-size: 1.1rem; font-weight: 600; }
+  .card p { color: var(--text2); font-size: 0.88rem; margin-top: 0.5rem; }
+
+  /* ─── Tech Badges ─── */
+  .badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .badge .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  /* ─── Architecture Diagram ─── */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    overflow-x: auto;
+    margin-bottom: 2rem;
+  }
+  .arch-diagram svg { width: 100%; height: auto; min-width: 700px; }
+
+  /* ─── Flow Steps ─── */
+  .flow-steps { display: flex; flex-direction: column; gap: 0; position: relative; }
+  .flow-step {
+    display: grid; grid-template-columns: 60px 1fr; gap: 1rem;
+    position: relative;
+  }
+  .flow-step .step-marker {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .flow-step .step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+  .flow-step .step-line {
+    width: 2px; flex: 1; background: var(--border); min-height: 20px;
+  }
+  .flow-step:last-child .step-line { display: none; }
+  .flow-step .step-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .flow-step .step-body h3 { margin-bottom: 0.4rem; }
+  .flow-step .step-body p { color: var(--text2); font-size: 0.88rem; }
+  .flow-step .step-body .file-ref {
+    display: inline-block; margin-top: 0.5rem;
+    font-size: 0.75rem; color: var(--accent); font-family: 'SF Mono', 'Fira Code', monospace;
+    background: rgba(59, 130, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;
+  }
+
+  /* ─── Tables ─── */
+  .table-wrap {
+    overflow-x: auto; margin-bottom: 2rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  th {
+    text-align: left; padding: 0.75rem 1rem;
+    background: var(--surface2); color: var(--text2);
+    font-weight: 600; font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.05em; white-space: nowrap;
+  }
+  td {
+    padding: 0.65rem 1rem; border-top: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tr:hover td { background: rgba(59, 130, 246, 0.04); }
+  td code {
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem;
+    background: var(--surface2); padding: 0.15rem 0.4rem; border-radius: 4px;
+    color: var(--accent3);
+  }
+
+  /* ─── Tag colors ─── */
+  .tag {
+    display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .tag-purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: #22d3ee; }
+  .tag-green { background: rgba(16,185,129,0.15); color: #34d399; }
+  .tag-amber { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .tag-red { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  /* ─── Columns ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ─── Stats bar ─── */
+  .stat-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.25rem; text-align: center;
+  }
+  .stat .num {
+    font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat .lbl { font-size: 0.72rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+
+  /* ─── Agent Grid ─── */
+  .agent-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+  .agent-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem;
+    transition: border-color 0.2s;
+  }
+  .agent-card:hover { border-color: var(--accent2); }
+  .agent-card .name { font-weight: 700; font-size: 0.95rem; }
+  .agent-card .role { font-size: 0.75rem; color: var(--text3); margin-top: 0.15rem; }
+  .agent-card .desc { font-size: 0.8rem; color: var(--text2); margin-top: 0.4rem; }
+
+  /* ─── Separator ─── */
+  .sep {
+    height: 1px; background: var(--border); margin: 3rem 0;
+  }
+
+  /* ─── Scroll Fade-In ─── */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── Hero ─── */
+  .hero-badge {
+    display: inline-block; padding: 0.3rem 0.8rem; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 500; margin-bottom: 1rem;
+    background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+    color: var(--accent);
+  }
+  .hero-actions { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .hero-actions a {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem;
+    font-weight: 600; text-decoration: none; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ─── Code block ─── */
+  .code-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem;
+    color: var(--text2); overflow-x: auto; margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+  .code-block .comment { color: var(--text3); }
+  .code-block .keyword { color: var(--accent2); }
+  .code-block .string { color: var(--accent4); }
+  .code-block .fn { color: var(--accent); }
+
+  /* ─── Pill row (inline items) ─── */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+  .pill {
+    padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+  }
+
+  footer {
+    text-align: center; padding: 3rem 2rem; color: var(--text3); font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="nav-inner">
+    <span class="logo">FSP</span>
+    <a href="#hero">Overview</a>
+    <a href="#stack">Tech Stack</a>
+    <a href="#arch">Architecture</a>
+    <a href="#flow">Data Flow</a>
+    <a href="#schema">Schema</a>
+    <a href="#seed">Seed Data</a>
+    <a href="#core">Core Engine</a>
+    <a href="#frontend">Frontend</a>
+    <a href="#security">Security</a>
+    <a href="#ai">AI</a>
+    <a href="#agents">Agents</a>
+    <a href="#design">Design Choices</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="reveal">
+    <div class="hero-badge">Interview Reference — FlighSchedulePro</div>
+    <h1>FlighSchedulePro</h1>
+    <p class="subtitle">
+      An <strong>agentic scheduling automation platform</strong> for flight schools.
+      Integrates with Flight Schedule Pro (FSP), detects openings in real-time,
+      generates AI-ranked suggestions, and lets schedulers approve with one click.
+    </p>
+    <div class="stat-bar">
+      <div class="stat"><div class="num">22</div><div class="lbl">DB Tables</div></div>
+      <div class="stat"><div class="num">17</div><div class="lbl">API Modules</div></div>
+      <div class="stat"><div class="num">5</div><div class="lbl">BullMQ Jobs</div></div>
+      <div class="stat"><div class="num">3</div><div class="lbl">Processes</div></div>
+      <div class="stat"><div class="num">8</div><div class="lbl">Frontend Pages</div></div>
+      <div class="stat"><div class="num">10</div><div class="lbl">Agent Personas</div></div>
+    </div>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#flow">See Data Flow &darr;</a>
+      <a class="btn-secondary" href="#design">Design Choices &darr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TECH STACK ═══ -->
+<section id="stack">
+  <div class="reveal">
+    <h2><span class="icon">&#9881;</span> Tech Stack</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="label">Frontend</div>
+        <div class="value">Next.js 15 + React 19</div>
+        <p>App Router, TypeScript strict, GSAP animations, standalone Docker output</p>
+        <div class="pill-row">
+          <span class="pill">TypeScript 5.7</span>
+          <span class="pill">GSAP 3.14</span>
+          <span class="pill">CSP headers</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Backend API</div>
+        <div class="value">NestJS 11 + Fastify</div>
+        <p>17 feature modules, JWT auth, multi-tenant RLS, rate limiting, audit interceptor</p>
+        <div class="pill-row">
+          <span class="pill">Fastify adapter</span>
+          <span class="pill">Zod validation</span>
+          <span class="pill">ESM-first</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Database</div>
+        <div class="value">PostgreSQL 16 + Drizzle</div>
+        <p>22 tables, JSONB for rationale, Row-Level Security, Drizzle ORM 0.39</p>
+        <div class="pill-row">
+          <span class="pill">Drizzle Kit</span>
+          <span class="pill">6 migrations</span>
+          <span class="pill">RLS</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Job Queue</div>
+        <div class="value">BullMQ 5 + Redis 7</div>
+        <p>5 repeatable/triggered jobs, graceful drain on shutdown, 15s timeout</p>
+        <div class="pill-row">
+          <span class="pill">Repeatable jobs</span>
+          <span class="pill">Async pipeline</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">AI / LLM</div>
+        <div class="value">Claude Haiku 4.5</div>
+        <p>Via OpenRouter (primary), GPT-4.1-nano fallback via OpenAI SDK</p>
+        <div class="pill-row">
+          <span class="pill">Rationale gen</span>
+          <span class="pill">Risk scoring</span>
+          <span class="pill">Ask Mode chat</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Deployment</div>
+        <div class="value">Railway + Docker</div>
+        <p>Multi-stage Dockerfile, 2 services (API+Worker, Web), auto-deploy on push</p>
+        <div class="pill-row">
+          <span class="pill">Node 20 LTS</span>
+          <span class="pill">pnpm 9</span>
+          <span class="pill">Tini init</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ARCHITECTURE ═══ -->
+<section id="arch">
+  <div class="reveal">
+    <h2><span class="icon">&#9635;</span> Architecture — 3 Processes</h2>
+    <div class="arch-diagram">
+      <svg viewBox="0 0 800 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background boxes -->
+        <rect x="20" y="30" width="180" height="100" rx="12" fill="#1a2237" stroke="#1e293b"/>
+        <rect x="310" y="30" width="180" height="100" rx="12" fill="#1a2237" stroke="#3b82f6" stroke-width="2"/>
+        <rect x="600" y="30" width="180" height="100" rx="12" fill="#1a2237" stroke="#1e293b"/>
+
+        <rect x="240" y="210" width="150" height="80" rx="12" fill="#1a2237" stroke="#1e293b"/>
+        <rect x="440" y="210" width="150" height="80" rx="12" fill="#1a2237" stroke="#1e293b"/>
+
+        <rect x="310" y="340" width="180" height="60" rx="12" fill="#1a2237" stroke="#8b5cf6" stroke-dasharray="6"/>
+
+        <!-- Labels -->
+        <text x="110" y="68" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Next.js</text>
+        <text x="110" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Frontend :3000</text>
+        <text x="110" y="108" text-anchor="middle" fill="#64748b" font-size="10">React 19 + App Router</text>
+
+        <text x="400" y="68" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">NestJS API</text>
+        <text x="400" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Fastify :3001</text>
+        <text x="400" y="108" text-anchor="middle" fill="#64748b" font-size="10">17 modules, JWT, RLS</text>
+
+        <text x="690" y="68" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">BullMQ Worker</text>
+        <text x="690" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">No HTTP</text>
+        <text x="690" y="108" text-anchor="middle" fill="#64748b" font-size="10">5 job processors</text>
+
+        <text x="315" y="240" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">PostgreSQL</text>
+        <text x="315" y="260" text-anchor="middle" fill="#94a3b8" font-size="10">22 tables + RLS</text>
+
+        <text x="515" y="240" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Redis</text>
+        <text x="515" y="260" text-anchor="middle" fill="#94a3b8" font-size="10">Job queue + cache</text>
+
+        <text x="400" y="376" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="600">FSP API</text>
+        <text x="400" y="392" text-anchor="middle" fill="#64748b" font-size="10">External (or Mock Router)</text>
+
+        <!-- Arrows -->
+        <line x1="200" y1="80" x2="310" y2="80" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="490" y1="80" x2="600" y2="80" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="600" y1="80" x2="490" y2="80" stroke="#64748b" stroke-width="1" stroke-dasharray="4" marker-end="url(#arrowGray)"/>
+
+        <line x1="370" y1="130" x2="330" y2="210" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+        <line x1="430" y1="130" x2="500" y2="210" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+        <line x1="660" y1="130" x2="530" y2="210" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+        <line x1="720" y1="130" x2="330" y2="210" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4" marker-end="url(#arrowGray)"/>
+
+        <line x1="400" y1="130" x2="400" y2="340" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="6" marker-end="url(#arrowPurple)"/>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+          </marker>
+          <marker id="arrowGray" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+          </marker>
+          <marker id="arrowPurple" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/>
+          </marker>
+        </defs>
+
+        <!-- Process labels -->
+        <text x="255" y="20" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="600">REST / JSON</text>
+        <text x="545" y="20" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="600">BullMQ</text>
+        <text x="460" y="180" text-anchor="middle" fill="#8b5cf6" font-size="9">Mock or Real</text>
+      </svg>
+    </div>
+    <div class="code-block">
+      <span class="comment"># Start everything with one command</span><br>
+      <span class="fn">pnpm dev</span><br>
+      <span class="comment"># → concurrently runs: API (:3001) + Worker + Web (:3000)</span><br><br>
+      <span class="comment"># Or individually:</span><br>
+      <span class="fn">pnpm dev:api</span>    <span class="comment"># nest start --watch</span><br>
+      <span class="fn">pnpm dev:worker</span> <span class="comment"># tsx watch src/worker/main.ts</span><br>
+      <span class="fn">pnpm dev:web</span>    <span class="comment"># cd web && next dev --port 3000</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DATA FLOW ═══ -->
+<section id="flow">
+  <div class="reveal">
+    <h2><span class="icon">&#8635;</span> Data Flow — The Core Loop</h2>
+    <p class="subtitle">The system runs autonomously. Schedulers just approve or decline.</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>Schedule Polling</h3>
+          <p>
+            Repeatable BullMQ job runs <strong>every 3 minutes</strong>. For each active operator,
+            fetches schedule from FSP API for next 7 days. <strong>Hashes the schedule</strong> and
+            compares to <code>sync_state.lastScheduleHash</code>. If changed &rarr; detects
+            <span class="tag tag-red">cancellations</span> and
+            <span class="tag tag-amber">gaps</span>. Enqueues generate-suggestions job.
+          </p>
+          <span class="file-ref">src/worker/jobs/poll-schedule.job.ts (24KB)</span>
+          <span class="file-ref">src/core/scheduling/change-detector.ts</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>Suggestion Generation — 3 Parallel Pipelines</h3>
+          <p><strong>Reschedule:</strong> Find alternative slots for cancelled students via progressive window expansion (7 &rarr; 14 &rarr; 28 days)</p>
+          <p><strong>Waitlist:</strong> Rank eligible students by configurable weights (wait time, progress, flight hours), evaluate constraints, pick top 5</p>
+          <p><strong>Next-Lesson:</strong> For students with no upcoming booking but pending lessons — determine next curriculum lesson, find slots</p>
+          <p style="margin-top: 0.5rem">Each pipeline uses: <code>slot-finder</code> &rarr; <code>constraint-evaluator</code> &rarr; <code>waitlist-ranker</code> &rarr; <code>rationale-builder</code></p>
+          <span class="file-ref">src/worker/jobs/generate-suggestions.job.ts (38KB)</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>AI Enrichment</h3>
+          <p>
+            Async job calls <strong>Claude Haiku 4.5</strong> (via OpenRouter). Generates natural-language
+            rationale + risk assessment (low/medium/high). Stores in <code>suggestions.rationale</code> JSONB.
+            GPT-4.1-nano as fallback.
+          </p>
+          <span class="file-ref">src/worker/jobs/ai-enrich-suggestion.job.ts</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>Approval Queue</h3>
+          <p>
+            Scheduler sees pending suggestions in the <strong>Queue</strong> page. Each card shows:
+            student, proposed time, instructor, aircraft, AI rationale, risk score.
+            <span class="tag tag-green">Approve</span> &rarr; sets <code>status=processing</code> (optimistic lock) &rarr; validates with FSP &rarr; creates reservation.
+            <span class="tag tag-red">Decline</span> &rarr; marks declined. Bulk actions supported.
+          </p>
+          <span class="file-ref">src/api/modules/suggestions/suggestions.service.ts</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">5</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>Auto-Expiration</h3>
+          <p>
+            Runs <strong>every 10 minutes</strong>. TTL-based: marks as <code>expired</code> when
+            <code>expiresAt &lt; now</code>. Slot-filled: checks if proposed slot was booked by someone else.
+            Configurable TTL per operator (default 24h).
+          </p>
+          <span class="file-ref">src/worker/jobs/expire-suggestions.job.ts</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-marker"><div class="step-num">6</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <h3>Notifications</h3>
+          <p>
+            Triggered on approval. Resolves email/SMS templates with variables
+            (<code>{{studentName}}</code>, <code>{{proposedDate}}</code>, etc.).
+            Dispatches via <strong>Resend</strong> (email) or <strong>Twilio</strong> (SMS).
+            Records delivery status.
+          </p>
+          <span class="file-ref">src/worker/jobs/send-notification.job.ts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SCHEMA ═══ -->
+<section id="schema">
+  <div class="reveal">
+    <h2><span class="icon">&#9638;</span> Database Schema — 22 Tables</h2>
+    <div class="two-col">
+      <div>
+        <h3>Core Workflow</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Table</th><th>Purpose</th></tr>
+            <tr><td><code>operators</code></td><td>Flight school tenants</td></tr>
+            <tr><td><code>suggestions</code></td><td>AI-generated booking proposals</td></tr>
+            <tr><td><code>reservation_history</code></td><td>Booked flight snapshot</td></tr>
+            <tr><td><code>sync_state</code></td><td>FSP sync cursor + hash</td></tr>
+            <tr><td><code>solver_runs</code></td><td>Solver execution log</td></tr>
+          </table>
+        </div>
+        <h3>Resources (synced from FSP)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Table</th><th>Purpose</th></tr>
+            <tr><td><code>students</code></td><td>Student records + flight hours</td></tr>
+            <tr><td><code>instructors</code></td><td>CFI/CFII instructor records</td></tr>
+            <tr><td><code>aircraft</code></td><td>N-numbers, make/model, sims</td></tr>
+            <tr><td><code>activity_types</code></td><td>Lesson types</td></tr>
+            <tr><td><code>prospects</code></td><td>Discovery flight intake</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>Intelligence & Alerts</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Table</th><th>Purpose</th></tr>
+            <tr><td><code>student_insights</code></td><td>Risk indicators, checkride readiness</td></tr>
+            <tr><td><code>disruption_events</code></td><td>Weather/maintenance/instructor alerts</td></tr>
+            <tr><td><code>weather_observations</code></td><td>METAR cache, VFR/IFR</td></tr>
+            <tr><td><code>flight_alerts</code></td><td>Overdue, safety, maintenance</td></tr>
+            <tr><td><code>cancellation_reasons</code></td><td>Reason codes</td></tr>
+          </table>
+        </div>
+        <h3>Configuration & Audit</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Table</th><th>Purpose</th></tr>
+            <tr><td><code>scheduling_policies</code></td><td>Per-operator weights, windows, TTL</td></tr>
+            <tr><td><code>feature_flags</code></td><td>Feature toggles per operator</td></tr>
+            <tr><td><code>notification_templates</code></td><td>Email/SMS templates</td></tr>
+            <tr><td><code>notification_records</code></td><td>Delivery log</td></tr>
+            <tr><td><code>audit_events</code></td><td>Full audit trail (JSONB)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEED DATA ═══ -->
+<section id="seed">
+  <div class="reveal">
+    <h2><span class="icon">&#9881;</span> Seeded Mock Data</h2>
+    <p class="subtitle">
+      When <code>FSP_MOCK_MODE=true</code>, the <code>MockSuggestionsSeeder</code> populates the DB on startup.
+      All data is idempotent — safe to restart. Login: <strong>sarah@skywest.edu</strong> / any password.
+    </p>
+
+    <h3>3 Operators (Multi-Tenant)</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>ID</th><th>Name</th><th>Dataset</th><th>Prospect</th></tr>
+        <tr><td><code>1001</code></td><td>SkyWest Flight Academy</td><td><span class="tag tag-green">Rich</span></td><td>Jane Smith</td></tr>
+        <tr><td><code>1002</code></td><td>Bay Area Flight Training</td><td><span class="tag tag-amber">Medium</span></td><td>Tom Baker</td></tr>
+        <tr><td><code>1003</code></td><td>Pacific Coast Aviation</td><td><span class="tag tag-blue">Small</span></td><td>Lisa Chang</td></tr>
+      </table>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>Students (6 for SkyWest)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Name</th><th>Hours</th><th>ID</th></tr>
+            <tr><td>Alex Johnson</td><td>42.5</td><td><code>stu-001</code></td></tr>
+            <tr><td>Emily Davis</td><td>28.3</td><td><code>stu-002</code></td></tr>
+            <tr><td>Ryan Martinez</td><td>156.8</td><td><code>stu-003</code></td></tr>
+            <tr><td>Sophie Brown</td><td>15.2</td><td><code>stu-004</code></td></tr>
+            <tr><td>Tyler Lee</td><td>8.7</td><td><code>stu-005</code></td></tr>
+            <tr><td>Mia Garcia</td><td>63.1</td><td><code>stu-006</code></td></tr>
+          </table>
+        </div>
+
+        <h3>Instructors (5)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Name</th><th>Type</th></tr>
+            <tr><td>James Wilson</td><td><span class="tag tag-blue">CFI</span></td></tr>
+            <tr><td>Lisa Park</td><td><span class="tag tag-purple">CFII</span></td></tr>
+            <tr><td>David Kim</td><td><span class="tag tag-blue">CFI</span></td></tr>
+            <tr><td>Tina Nguyen</td><td><span class="tag tag-blue">CFI</span></td></tr>
+            <tr><td>Marcus Rivera</td><td><span class="tag tag-purple">CFII</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>Aircraft (4)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Registration</th><th>Model</th><th>Type</th></tr>
+            <tr><td>N172SP</td><td>Cessna 172S Skyhawk SP</td><td>Aircraft</td></tr>
+            <tr><td>N152AB</td><td>Cessna 152</td><td>Aircraft</td></tr>
+            <tr><td>N182RG</td><td>Cessna 182RG Skylane</td><td>Aircraft</td></tr>
+            <tr><td>SIM-01</td><td>Redbird FMX</td><td><span class="tag tag-amber">Simulator</span></td></tr>
+          </table>
+        </div>
+
+        <h3>Locations (3)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Code</th><th>Name</th></tr>
+            <tr><td>KPAO</td><td>Palo Alto Airport</td></tr>
+            <tr><td>KSQL</td><td>San Carlos Airport</td></tr>
+            <tr><td>KHWD</td><td>Hayward Executive Airport</td></tr>
+          </table>
+        </div>
+
+        <h3>Activity Types (5)</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Type</th></tr>
+            <tr><td>Private Pilot Training</td></tr>
+            <tr><td>Instrument Training</td></tr>
+            <tr><td>Discovery Flight</td></tr>
+            <tr><td>Aircraft Rental</td></tr>
+            <tr><td>Ground School</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:1.5rem">Also Seeded</h3>
+    <div class="badge-row">
+      <span class="badge"><span class="dot" style="background:var(--accent)"></span>18 schedule events (7 days)</span>
+      <span class="badge"><span class="dot" style="background:var(--accent2)"></span>Suggestions (all 4 types & statuses)</span>
+      <span class="badge"><span class="dot" style="background:var(--accent4)"></span>Audit events per operator</span>
+      <span class="badge"><span class="dot" style="background:var(--accent5)"></span>Student insights</span>
+      <span class="badge"><span class="dot" style="background:var(--accent6)"></span>Disruption events</span>
+      <span class="badge"><span class="dot" style="background:var(--accent3)"></span>Flight alerts</span>
+      <span class="badge"><span class="dot" style="background:#94a3b8"></span>Feature flags & policies</span>
+      <span class="badge"><span class="dot" style="background:#94a3b8"></span>Cancellation reasons</span>
+      <span class="badge"><span class="dot" style="background:#94a3b8"></span>Reservation history</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CORE ENGINE ═══ -->
+<section id="core">
+  <div class="reveal">
+    <h2><span class="icon">&#9881;</span> Core Scheduling Engine</h2>
+    <p class="subtitle">Pure TypeScript modules in <code>src/core/</code> — no framework dependencies, fully testable.</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="label">slot-finder.ts — 416 lines</div>
+        <div class="value">Slot Finding</div>
+        <p>Progressive window expansion (7→14→28 days). Filters by daylight hours (6:30am–6pm civil twilight), instructor/aircraft availability. Returns scored candidate slots.</p>
+      </div>
+      <div class="card">
+        <div class="label">constraint-evaluator.ts — 325 lines</div>
+        <div class="value">Constraint Checking</div>
+        <p>Instructor currency + duty time. Aircraft maintenance. Student enrollment prerequisites. Location timezone conversions. Returns pass/fail with reasons.</p>
+      </div>
+      <div class="card">
+        <div class="label">waitlist-ranker.ts — 202 lines</div>
+        <div class="value">Waitlist Ranking</div>
+        <p>Multi-criteria scoring with operator-configurable weights: time on list, curriculum progress, currency, total flight hours, priority level.</p>
+      </div>
+      <div class="card">
+        <div class="label">enrollment-analyzer.ts — 231 lines</div>
+        <div class="value">Enrollment Analysis</div>
+        <p>Determines next required lesson in curriculum. Tracks progress %. Detects completions and pending lessons for next-lesson pipeline.</p>
+      </div>
+      <div class="card">
+        <div class="label">rationale-builder.ts — 142 lines</div>
+        <div class="value">Rationale Building</div>
+        <p>Generates human-readable explanations: why this student, why this slot, what constraints were satisfied. Fed to AI for enrichment.</p>
+      </div>
+      <div class="card">
+        <div class="label">change-detector.ts — 173 lines</div>
+        <div class="value">Change Detection</div>
+        <p>Deterministic hashing of schedule events. Compares to previous hash. Identifies specific cancellations and new gaps.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FRONTEND ═══ -->
+<section id="frontend">
+  <div class="reveal">
+    <h2><span class="icon">&#9635;</span> Frontend Pages</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="value">/dashboard</div>
+        <p>Stats (pending, approved, declined, expired today), acceptance rate chart, weather widget, activity feed, disruption banner</p>
+      </div>
+      <div class="card">
+        <div class="value">/queue</div>
+        <p>Approval queue — filterable by status/type/date. Suggestion cards with AI rationale + risk. Bulk approve/decline.</p>
+      </div>
+      <div class="card">
+        <div class="value">/reservations</div>
+        <p>Schedule view — all reservations enriched with student/instructor/aircraft names. Sortable, paginated.</p>
+      </div>
+      <div class="card">
+        <div class="value">/discovery</div>
+        <p>Discovery flight intake form. Prospect management. Automatic slot recommendations.</p>
+      </div>
+      <div class="card">
+        <div class="value">/ask</div>
+        <p>AI chat interface powered by Claude Haiku. Natural language queries against school data with full DB context.</p>
+      </div>
+      <div class="card">
+        <div class="value">/policies</div>
+        <p>Configure per-operator scheduling rules: waitlist weights, search window days, suggestion TTL, notification prefs.</p>
+      </div>
+      <div class="card">
+        <div class="value">/templates</div>
+        <p>Email/SMS notification template editor with variable placeholders and preview.</p>
+      </div>
+      <div class="card">
+        <div class="value">/alerts</div>
+        <p>Flight alerts: overdue returns, safety events, maintenance holds, weather holds. Real-time badge count in nav.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECURITY ═══ -->
+<section id="security">
+  <div class="reveal">
+    <h2><span class="icon">&#128274;</span> Security Architecture</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="value">Guard Pipeline</div>
+        <p><span class="tag tag-red">RateLimitGuard</span> &rarr; <span class="tag tag-amber">AuthGuard</span> &rarr; <span class="tag tag-green">TenantGuard</span> — applied globally in order. RateLimit: 100 req/min (10 for auth). Auth: JWT HS256, 8h expiry. Tenant: sets PG session var for RLS.</p>
+      </div>
+      <div class="card">
+        <div class="value">Encryption</div>
+        <p>AES-256 for sensitive data at rest (FSP tokens). JWT_SECRET (32+ chars). ENCRYPTION_KEY (64 hex chars). No plaintext secrets in DB.</p>
+      </div>
+      <div class="card">
+        <div class="value">HTTP Headers</div>
+        <p>X-Content-Type-Options: nosniff, X-Frame-Options: DENY, HSTS (1yr), XSS-Protection, Referrer-Policy, Permissions-Policy (no camera/mic/geo).</p>
+      </div>
+      <div class="card">
+        <div class="value">Multi-Tenant Isolation</div>
+        <p>Every table scoped by <code>operatorId</code>. TenantGuard sets PostgreSQL session variable <code>app.current_tenant</code>. Row-Level Security enforces at DB layer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AI ═══ -->
+<section id="ai">
+  <div class="reveal">
+    <h2><span class="icon">&#10024;</span> AI Integration</h2>
+    <div class="two-col">
+      <div>
+        <h3>Models</h3>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="label">Primary</div>
+          <div class="value">Claude Haiku 4.5</div>
+          <p>Via OpenRouter SDK. Fast, cost-effective. Used for rationale generation, risk scoring, and Ask Mode chat.</p>
+        </div>
+        <div class="card">
+          <div class="label">Fallback</div>
+          <div class="value">GPT-4.1-nano</div>
+          <p>Via OpenAI SDK. Automatic fallback if OpenRouter is down. Same prompt format, transparent switching.</p>
+        </div>
+      </div>
+      <div>
+        <h3>Use Cases</h3>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="value">Suggestion Enrichment</div>
+          <p>Every suggestion gets an async AI job. Inputs: student progress, instructor workload, constraints, historical patterns. Outputs: explanation summary, compliance list, risk level + reason.</p>
+        </div>
+        <div class="card">
+          <div class="value">Ask Mode</div>
+          <p>Chat interface at <code>/ask</code>. Claude gets full database context (students, schedule, policies). Users ask natural language questions about their school's data.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:1rem; padding:1rem 1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius)">
+      <strong>Design principle:</strong> AI enhances, humans decide. AI generates rationale + risk scores, but the scheduler always approves or declines. AI enrichment is async — never blocks suggestion creation.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AGENT ORCHESTRATION ═══ -->
+<section id="agents">
+  <div class="reveal">
+    <h2><span class="icon">&#129302;</span> Agent Orchestration — Factory System</h2>
+    <p class="subtitle">
+      Multi-agent SDLC framework at <code>Factory/.claude/skills/</code>. 10 agent personas run presearch &rarr; SDLC &rarr; deploy.
+      Protocol-driven with identity headers, cross-review, and quality gates.
+    </p>
+
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="name">Jordan</div>
+        <div class="role">Researcher</div>
+        <div class="desc">Technology research, live source validation. Must use WebSearch + WebFetch.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Riley</div>
+        <div class="role">Business Analyst</div>
+        <div class="desc">Translate business needs &rarr; specs, acceptance criteria, use cases.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Alex</div>
+        <div class="role">Project Manager</div>
+        <div class="desc">Own timeline & priorities. Roadmap, capacity, decision forcing.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Morgan</div>
+        <div class="role">Architect</div>
+        <div class="desc">System design. Irreversible vs reversible decision gates.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Quinn</div>
+        <div class="role">Designer</div>
+        <div class="desc">UI/UX design with Pencil MCP tools. Design systems.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Sam</div>
+        <div class="role">Developer</div>
+        <div class="desc">Implementation, honest estimates, code quality, push back.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Casey</div>
+        <div class="role">QA Engineer</div>
+        <div class="desc">Test plans, coverage, edge cases. Think in failure modes.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Drew</div>
+        <div class="role">DevOps</div>
+        <div class="desc">Infrastructure as code. Deployments, CI/CD, monitoring.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Taylor</div>
+        <div class="role">Tech Lead</div>
+        <div class="desc">Code review, mentoring, quality gates. Blocking = actionable.</div>
+      </div>
+      <div class="agent-card">
+        <div class="name">Jordan S.</div>
+        <div class="role">Scrum Master</div>
+        <div class="desc">Sprint ceremonies, blockers, velocity tracking. Board is truth.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <h3>Workflow Commands</h3>
+      <div class="code-block">
+        <span class="fn">/factory presearch</span>  <span class="comment"># All agents research in parallel (R0→R4) → PRD + architecture</span><br>
+        <span class="fn">/factory sdlc</span>       <span class="comment"># Execute from PRD through sprints with cross-agent reviews</span><br>
+        <span class="fn">/factory project</span>    <span class="comment"># Full lifecycle: presearch → all sprints → deploy</span>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem">
+      <h3>Protocol Rules</h3>
+      <div class="badge-row">
+        <span class="badge"><span class="dot" style="background:var(--accent)"></span>Identity header on every response</span>
+        <span class="badge"><span class="dot" style="background:var(--accent2)"></span>Cross-review mandatory</span>
+        <span class="badge"><span class="dot" style="background:var(--accent4)"></span>Decisions get locked</span>
+        <span class="badge"><span class="dot" style="background:var(--accent5)"></span>Quality gates enforced</span>
+        <span class="badge"><span class="dot" style="background:var(--accent6)"></span>PM override for reversals</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DESIGN CHOICES ═══ -->
+<section id="design">
+  <div class="reveal">
+    <h2><span class="icon">&#9733;</span> Key Design Choices</h2>
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
+      <div class="card">
+        <div class="value">1. Event-Driven, Not Polling UI</div>
+        <p>BullMQ jobs detect changes → generate suggestions → enrich with AI. The scheduler just sees a ready queue. No manual slot-hunting needed.</p>
+      </div>
+      <div class="card">
+        <div class="value">2. Multi-Tenant Isolation</div>
+        <p>Every table has <code>operatorId</code>. TenantGuard + PostgreSQL RLS. One flight school never sees another's data. Policies configurable per tenant.</p>
+      </div>
+      <div class="card">
+        <div class="value">3. Progressive Search Window</div>
+        <p>Start 7 days → expand to 14 → then 28 max. Avoids overwhelming with distant options while ensuring coverage. Configurable per operator.</p>
+      </div>
+      <div class="card">
+        <div class="value">4. Optimistic Concurrency</div>
+        <p><code>status=processing</code> lock prevents double-approval. If FSP validation fails, reverts to <code>pending</code> with error details stored in JSONB.</p>
+      </div>
+      <div class="card">
+        <div class="value">5. AI as Enhancement, Not Decision-Maker</div>
+        <p>AI generates rationale + risk scores, humans approve. Enrichment is async — never blocks suggestion creation. Fallback model if primary is down.</p>
+      </div>
+      <div class="card">
+        <div class="value">6. Mock Mode for Dev/Demo</div>
+        <p><code>FSP_MOCK_MODE=true</code> replaces all 76 FSP endpoints with canned data. Idempotent seeder populates DB on startup. Full demo without real credentials.</p>
+      </div>
+      <div class="card">
+        <div class="value">7. Separation: API vs Worker</div>
+        <p>Same codebase, different entry points. API is stateless HTTP (Fastify for speed). Worker handles BullMQ jobs (no HTTP). Both in one Docker container in prod.</p>
+      </div>
+      <div class="card">
+        <div class="value">8. Pure Core Engine</div>
+        <p><code>src/core/</code> has zero framework dependencies. Slot finder, constraint evaluator, ranker — all pure TypeScript. Fully unit-testable in isolation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<footer>
+  FlighSchedulePro &mdash; Built by San &mdash; Interview Reference
+</footer>
+
+<script>
+// ─── Scroll Reveal ───
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible')
+    }
+  })
+}, { threshold: 0.08 })
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+// ─── Smooth scroll for nav ───
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const href = a.getAttribute('href')
+    if (href && href.startsWith('#')) {
+      e.preventDefault()
+      const target = document.querySelector(href)
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+})
+</script>
+</body>
+</html>

@@ -21,6 +21,7 @@ import type {
   FspInstructor,
   FspAircraft,
 } from '../../api/fsp/fsp.types.js';
+import { localTimeToUtcDate, getLocalParts } from '../utils/time.js';
 
 // ─── Public Interfaces ──────────────────────────────────────────────────────
 
@@ -109,16 +110,27 @@ function generateCandidateSlots(
   windowStart: Date,
   windowEnd: Date,
   durationMinutes: number,
+  timezone: string,
 ): Array<{ start: Date; end: Date }> {
   const slots: Array<{ start: Date; end: Date }> = [];
   const INTERVAL_MINUTES = 30;
 
+  // Iterate day-by-day in the operator's local timezone
   const current = new Date(windowStart);
-  current.setHours(0, 0, 0, 0);
+
+  // Helper: create a proper UTC Date from local wall-clock minutes on a given date string
+  const makeSlot = (dateStr: string, minutesSinceMidnight: number): { start: Date; end: Date } => {
+    const h = Math.floor(minutesSinceMidnight / 60);
+    const m = minutesSinceMidnight % 60;
+    const start = localTimeToUtcDate(dateStr, h, m, timezone);
+    const end = new Date(start.getTime() + durationMinutes * 60_000);
+    return { start, end };
+  };
 
   while (current <= windowEnd) {
-    const dayOfWeek = current.getDay(); // 0=Sunday
-    const dateStr = toDateString(current);
+    const localParts = getLocalParts(current, timezone);
+    const dayOfWeek = localParts.dayOfWeek;
+    const dateStr = `${localParts.year}-${String(localParts.month).padStart(2, '0')}-${String(localParts.day).padStart(2, '0')}`;
 
     // Check for overrides on this date
     const override = availability.availabilityOverrides?.find((o: FspAvailabilityOverride) =>
@@ -137,14 +149,9 @@ function generateCandidateSlots(
       const overrideEnd = parseTimeToMinutes(override.endTime);
 
       for (let m = overrideStart; m + durationMinutes <= overrideEnd; m += INTERVAL_MINUTES) {
-        const slotStart = new Date(current);
-        slotStart.setHours(Math.floor(m / 60), m % 60, 0, 0);
-
-        const slotEnd = new Date(slotStart);
-        slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);
-
-        if (slotStart >= windowStart) {
-          slots.push({ start: slotStart, end: slotEnd });
+        const slot = makeSlot(dateStr, m);
+        if (slot.start >= windowStart) {
+          slots.push(slot);
         }
       }
     } else {
@@ -159,14 +166,9 @@ function generateCandidateSlots(
         const entryEnd = parseTimeToMinutes(entry.endAtTimeUtc);
 
         for (let m = entryStart; m + durationMinutes <= entryEnd; m += INTERVAL_MINUTES) {
-          const slotStart = new Date(current);
-          slotStart.setHours(Math.floor(m / 60), m % 60, 0, 0);
-
-          const slotEnd = new Date(slotStart);
-          slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);
-
-          if (slotStart >= windowStart) {
-            slots.push({ start: slotStart, end: slotEnd });
+          const slot = makeSlot(dateStr, m);
+          if (slot.start >= windowStart) {
+            slots.push(slot);
           }
         }
       }
@@ -225,6 +227,7 @@ function calculateMatchScore(
   preferredInstructorId?: string,
   preferredAircraftId?: string,
   originalStart?: Date,
+  timezone = 'America/Los_Angeles',
 ): number {
   let score = 50; // Base score
 
@@ -240,8 +243,10 @@ function calculateMatchScore(
 
   // Time-of-day match: +10 if within 2 hours of original time
   if (originalStart) {
-    const originalMinutes = originalStart.getHours() * 60 + originalStart.getMinutes();
-    const slotMinutes = slotStart.getHours() * 60 + slotStart.getMinutes();
+    const origParts = getLocalParts(originalStart, timezone);
+    const slotParts = getLocalParts(slotStart, timezone);
+    const originalMinutes = origParts.hour * 60 + origParts.minute;
+    const slotMinutes = slotParts.hour * 60 + slotParts.minute;
     const timeDiff = Math.abs(originalMinutes - slotMinutes);
     if (timeDiff <= 120) {
       score += 10;
@@ -282,6 +287,7 @@ export async function findAvailableSlots(
   operatorId: number,
   token: string,
   originalStart?: Date,
+  timezone = 'America/Los_Angeles',
 ): Promise<FoundSlot[]> {
   const foundSlots: FoundSlot[] = [];
   const seenSlotKeys = new Set<string>();
@@ -348,6 +354,7 @@ export async function findAvailableSlots(
         windowStart,
         windowEnd,
         config.durationMinutes,
+        timezone,
       );
 
       for (const candidate of candidates) {
@@ -387,6 +394,7 @@ export async function findAvailableSlots(
           config.instructorId,
           config.aircraftId,
           originalStart,
+          timezone,
         );
 
         foundSlots.push({

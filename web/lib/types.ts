@@ -182,6 +182,7 @@ export interface CreateDiscoveryRequest {
   }>;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'anytime';
   notes?: string;
+  locationId?: string;
 }
 
 export interface DiscoveryResponse {

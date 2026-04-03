@@ -58,6 +58,17 @@ function statusColor(status: string): { bg: string; color: string } {
   }
 }
 
+type SortField = 'startTime' | 'studentName' | 'instructorName' | 'status';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'no_show', label: 'No Show' },
+];
+
+
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,15 +81,63 @@ export default function ReservationsPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
+  const filterBarRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRows = useRef(false);
+
+  // Filters
+  const [filterStatus, setFilterStatus] = useState('');
+
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+
+  // Sort
+  const [sortField, setSortField] = useState<SortField>('startTime');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   async function fetchReservations(p: number) {
     setLoading(true);
     try {
-      const res = await api.get<ReservationsResponse>('/reservations', {
+      const params: Record<string, string | number> = {
         page: p,
         pageSize: 20,
+      };
+      if (filterStatus) params.status = filterStatus;
+
+      if (filterDateFrom) params.dateFrom = filterDateFrom;
+      if (filterDateTo) params.dateTo = filterDateTo;
+      if (sortField) params.sortBy = sortField;
+      if (sortDir) params.sortDir = sortDir;
+
+      const res = await api.get<ReservationsResponse>('/reservations', params);
+      // Client-side sort fallback
+      const sorted = [...res.data].sort((a, b) => {
+        let aVal: string;
+        let bVal: string;
+        switch (sortField) {
+          case 'startTime':
+            aVal = a.startTime;
+            bVal = b.startTime;
+            break;
+          case 'studentName':
+            aVal = (a.studentName || a.studentId || '').toLowerCase();
+            bVal = (b.studentName || b.studentId || '').toLowerCase();
+            break;
+          case 'instructorName':
+            aVal = (a.instructorName || a.instructorId || '').toLowerCase();
+            bVal = (b.instructorName || b.instructorId || '').toLowerCase();
+            break;
+          case 'status':
+            aVal = a.status;
+            bVal = b.status;
+            break;
+          default:
+            aVal = '';
+            bVal = '';
+        }
+        const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        return sortDir === 'asc' ? cmp : -cmp;
       });
-      setReservations(res.data);
+      setReservations(sorted);
       setTotal(res.pagination.total);
       setTotalPages(Math.ceil(res.pagination.total / res.pagination.pageSize));
       setPage(res.pagination.page);
@@ -91,12 +150,48 @@ export default function ReservationsPage() {
 
   useEffect(() => {
     fetchReservations(1);
+  }, [filterStatus, filterDateFrom, filterDateTo, sortField, sortDir]);
+
+  // Filter bar animation
+  useEffect(() => {
+    if (filterBarRef.current) {
+      gsap.fromTo(
+        filterBarRef.current,
+        { opacity: 0, y: -12 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+      );
+    }
   }, []);
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir(field === 'startTime' ? 'desc' : 'asc');
+    }
+  }
+
+  function handleResetFilters() {
+    setFilterStatus('');
+
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setSortField('startTime');
+    setSortDir('desc');
+  }
+
+  const hasActiveFilters = filterStatus || filterDateFrom || filterDateTo;
 
   // GSAP table animation
   useEffect(() => {
     if (!loading && tableRef.current) {
       const rows = tableRef.current.querySelectorAll('tr');
+      if (hasAnimatedRows.current) {
+        gsap.set(rows, { opacity: 1, y: 0 });
+        return;
+      }
+      hasAnimatedRows.current = true;
       gsap.fromTo(
         rows,
         { opacity: 0, y: 8 },
@@ -150,6 +245,56 @@ export default function ReservationsPage() {
         <span className="count-badge">{total}</span>
       </div>
 
+      {/* Filter Bar */}
+      <div ref={filterBarRef} style={styles.filterBar}>
+        <div style={styles.filterGroup}>
+          <label htmlFor="res-filter-status">Status</label>
+          <select
+            id="res-filter-status"
+            className="select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={styles.filterInput}
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={styles.filterGroup}>
+          <label htmlFor="res-filter-from">From</label>
+          <input
+            id="res-filter-from"
+            className="input"
+            type="date"
+            value={filterDateFrom}
+            onChange={(e) => setFilterDateFrom(e.target.value)}
+            style={styles.filterInput}
+          />
+        </div>
+
+        <div style={styles.filterGroup}>
+          <label htmlFor="res-filter-to">To</label>
+          <input
+            id="res-filter-to"
+            className="input"
+            type="date"
+            value={filterDateTo}
+            onChange={(e) => setFilterDateTo(e.target.value)}
+            style={styles.filterInput}
+          />
+        </div>
+
+        <div style={styles.filterButtons}>
+          {hasActiveFilters && (
+            <button className="btn btn-ghost btn-sm" onClick={handleResetFilters}>
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
+
       {error && <div style={styles.errorBox}>{error}</div>}
 
       {loading ? (
@@ -187,11 +332,27 @@ export default function ReservationsPage() {
               <thead>
                 <tr>
                   <th style={styles.th}>Source</th>
-                  <th style={styles.th}>Student / Prospect</th>
-                  <th style={styles.th}>Date & Time</th>
-                  <th style={styles.th}>Instructor</th>
+                  <th style={styles.th}>
+                    <button style={styles.sortBtn} onClick={() => handleSort('studentName')}>
+                      Student / Prospect {sortField === 'studentName' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+                    </button>
+                  </th>
+                  <th style={styles.th}>
+                    <button style={styles.sortBtn} onClick={() => handleSort('startTime')}>
+                      Date & Time {sortField === 'startTime' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+                    </button>
+                  </th>
+                  <th style={styles.th}>
+                    <button style={styles.sortBtn} onClick={() => handleSort('instructorName')}>
+                      Instructor {sortField === 'instructorName' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+                    </button>
+                  </th>
                   <th style={styles.th}>Aircraft</th>
-                  <th style={styles.th}>Status</th>
+                  <th style={styles.th}>
+                    <button style={styles.sortBtn} onClick={() => handleSort('status')}>
+                      Status {sortField === 'status' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+                    </button>
+                  </th>
                   <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -430,6 +591,48 @@ export default function ReservationsPage() {
 
 const styles: Record<string, React.CSSProperties> = {
   page: { maxWidth: '1100px', paddingBottom: '48px' },
+  filterBar: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: '16px',
+    padding: '16px 20px',
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
+    flexWrap: 'wrap' as const,
+    boxShadow: 'var(--shadow)',
+    marginBottom: '16px',
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    minWidth: '120px',
+    flex: '1 1 140px',
+  },
+  filterInput: {
+    width: '100%',
+    maxWidth: '200px',
+  },
+  filterButtons: {
+    display: 'flex',
+    gap: '8px',
+    paddingBottom: '1px',
+  },
+  sortBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    color: 'var(--color-text-muted)',
+    whiteSpace: 'nowrap' as const,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',

@@ -95,6 +95,7 @@ export interface FspInstructor {
   fullName: string;
   instructorType: string;
   isActive: boolean;
+  locationId?: string;
 }
 
 // ─── Activity Types ──────────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ export interface FspStudent {
   lastName: string;
   fullName?: string;
   email?: string;
+  locationId?: string;
 }
 
 // ─── Availability ────────────────────────────────────────────────────────────

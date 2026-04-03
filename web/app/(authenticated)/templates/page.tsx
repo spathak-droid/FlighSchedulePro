@@ -16,14 +16,26 @@ const TEMPLATE_TYPE_LABELS: Record<string, string> = {
 
 const TEMPLATE_TYPE_ORDER = ['waitlist', 'reschedule', 'discovery', 'next_lesson'];
 
-const AVAILABLE_PLACEHOLDERS = [
-  { key: '{{studentName}}', label: 'studentName' },
-  { key: '{{proposedDate}}', label: 'proposedDate' },
-  { key: '{{proposedTime}}', label: 'proposedTime' },
-  { key: '{{instructorName}}', label: 'instructorName' },
-  { key: '{{aircraftName}}', label: 'aircraftName' },
-  { key: '{{activityType}}', label: 'activityType' },
+type PlaceholderCategory = 'person' | 'schedule' | 'resource';
+
+const PLACEHOLDER_COLORS: Record<PlaceholderCategory, { bg: string; border: string; text: string }> = {
+  person:   { bg: 'rgba(59, 130, 246, 0.1)',  border: 'rgba(59, 130, 246, 0.3)',  text: '#60a5fa' },
+  schedule: { bg: 'rgba(34, 197, 94, 0.1)',   border: 'rgba(34, 197, 94, 0.3)',   text: '#4ade80' },
+  resource: { bg: 'rgba(168, 85, 247, 0.1)',  border: 'rgba(168, 85, 247, 0.3)',  text: '#c084fc' },
+};
+
+const AVAILABLE_PLACEHOLDERS: Array<{ key: string; label: string; category: PlaceholderCategory }> = [
+  { key: '{{studentName}}', label: 'studentName', category: 'person' },
+  { key: '{{proposedDate}}', label: 'proposedDate', category: 'schedule' },
+  { key: '{{proposedTime}}', label: 'proposedTime', category: 'schedule' },
+  { key: '{{instructorName}}', label: 'instructorName', category: 'person' },
+  { key: '{{aircraftName}}', label: 'aircraftName', category: 'resource' },
+  { key: '{{activityType}}', label: 'activityType', category: 'resource' },
 ];
+
+const PLACEHOLDER_CATEGORY_MAP: Record<string, PlaceholderCategory> = Object.fromEntries(
+  AVAILABLE_PLACEHOLDERS.map((p) => [p.label, p.category]),
+);
 
 const SAMPLE_VARIABLES: Record<string, string> = {
   studentName: 'John Smith',
@@ -35,6 +47,166 @@ const SAMPLE_VARIABLES: Record<string, string> = {
   aircraftName: 'N12345 (Cessna 172)',
   activityType: 'Private Pilot Lesson',
 };
+
+// ─── Chip Editor Component ──────────────────────────────────────────────────
+
+function TemplateChipEditor({
+  value,
+  onChange,
+  placeholder,
+  editorRef,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  editorRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const localRef = useRef<HTMLDivElement>(null);
+  const isComposing = useRef(false);
+
+  // Callback ref that sets both localRef and editorRef
+  const setRef = useCallback((el: HTMLDivElement | null) => {
+    localRef.current = el;
+    if (editorRef) {
+      (editorRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    }
+  }, [editorRef]);
+
+  // Use localRef everywhere internally
+  const ref = localRef;
+
+  // Convert raw template string → HTML with chip spans
+  function toHtml(raw: string): string {
+    const escaped = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    return escaped.replace(/\{\{(\w+)\}\}/g, (_match, varName: string) => {
+      const category = PLACEHOLDER_CATEGORY_MAP[varName] ?? 'resource';
+      const colors = PLACEHOLDER_COLORS[category];
+      return (
+        `<span contenteditable="false" data-placeholder="${varName}" style="` +
+        `display:inline-flex;align-items:center;padding:1px 8px;margin:0 2px;` +
+        `font-size:0.78rem;font-weight:500;font-family:'SF Mono','Fira Code',monospace;` +
+        `background:${colors.bg};border:1px solid ${colors.border};border-radius:4px;` +
+        `color:${colors.text};user-select:all;vertical-align:baseline;line-height:1.6` +
+        `">${varName}</span>`
+      );
+    }).replace(/\n/g, '<br>');
+  }
+
+  // Convert HTML back to raw template string
+  function toRaw(el: HTMLDivElement): string {
+    let result = '';
+    for (const node of Array.from(el.childNodes)) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        result += node.textContent ?? '';
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        const ph = element.getAttribute('data-placeholder');
+        if (ph) {
+          result += `{{${ph}}}`;
+        } else if (element.tagName === 'BR') {
+          result += '\n';
+        } else {
+          // Recurse into other elements (div wraps lines in some browsers)
+          result += element.innerText ?? '';
+        }
+      }
+    }
+    return result;
+  }
+
+  // Sync HTML into the div when value changes externally
+  useEffect(() => {
+    if (!ref.current) return;
+    const currentRaw = toRaw(ref.current);
+    if (currentRaw !== value) {
+      ref.current.innerHTML = value ? toHtml(value) : '';
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  function handleInput() {
+    if (isComposing.current) return;
+    if (!ref.current) return;
+    const raw = toRaw(ref.current);
+    onChange(raw);
+  }
+
+  // Insert a placeholder chip at cursor position
+  function insertAtCursor(varName: string) {
+    if (!ref.current) return;
+    ref.current.focus();
+
+    const category = PLACEHOLDER_CATEGORY_MAP[varName] ?? 'resource';
+    const colors = PLACEHOLDER_COLORS[category];
+
+    const chip = document.createElement('span');
+    chip.contentEditable = 'false';
+    chip.setAttribute('data-placeholder', varName);
+    chip.style.cssText =
+      `display:inline-flex;align-items:center;padding:1px 8px;margin:0 2px;` +
+      `font-size:0.78rem;font-weight:500;font-family:'SF Mono','Fira Code',monospace;` +
+      `background:${colors.bg};border:1px solid ${colors.border};border-radius:4px;` +
+      `color:${colors.text};user-select:all;vertical-align:baseline;line-height:1.6`;
+    chip.textContent = varName;
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(chip);
+      // Move cursor after chip
+      range.setStartAfter(chip);
+      range.setEndAfter(chip);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      ref.current.appendChild(chip);
+    }
+
+    handleInput();
+  }
+
+  // Expose insertAtCursor via a data attribute hack (we'll call it from parent)
+  useEffect(() => {
+    if (ref.current) {
+      (ref.current as unknown as Record<string, unknown>).__insertChip = insertAtCursor;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      ref={setRef}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      onCompositionStart={() => { isComposing.current = true; }}
+      onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
+      data-placeholder={placeholder}
+      style={{
+        background: 'var(--color-bg)',
+        border: '1px solid var(--color-border)',
+        borderRadius: '8px',
+        padding: '12px 14px',
+        fontSize: '0.85rem',
+        color: 'var(--color-text)',
+        lineHeight: 1.8,
+        whiteSpace: 'pre-wrap',
+        minHeight: '100px',
+        outline: 'none',
+        cursor: 'text',
+        transition: 'border-color 0.15s',
+        position: 'relative',
+      }}
+      onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
+      onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+    />
+  );
+}
 
 // ─── Edit State ─────────────────────────────────────────────────────────────
 
@@ -62,7 +234,8 @@ export default function TemplatesPage() {
   const sectionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const contentRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const toastRef = useRef<HTMLDivElement>(null);
-  const textareaRefs = useRef<Map<string, HTMLTextAreaElement | null>>(new Map());
+  const editorRefs = useRef<Map<string, React.RefObject<HTMLDivElement | null>>>(new Map());
+  const hasAnimatedSections = useRef(false);
 
   // Fetch templates
   const fetchTemplates = useCallback(async () => {
@@ -105,14 +278,22 @@ export default function TemplatesPage() {
     if (!loading) {
       const sections = Array.from(sectionRefs.current.values()).filter(Boolean);
       if (sections.length > 0) {
-        gsap.set(sections, { opacity: 0, y: 30 });
-        gsap.to(sections, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          stagger: 0.15,
-          ease: 'power3.out',
-        });
+        if (hasAnimatedSections.current) {
+          gsap.set(sections, { opacity: 1, y: 0 });
+          return;
+        }
+        hasAnimatedSections.current = true;
+        gsap.fromTo(
+          sections,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            stagger: 0.15,
+            ease: 'power3.out',
+          },
+        );
       }
     }
   }, [loading, templates]);
@@ -194,25 +375,18 @@ export default function TemplatesPage() {
     });
   }
 
-  // Insert placeholder at cursor position in textarea
+  // Insert placeholder chip into the contentEditable editor
   function insertPlaceholder(templateId: string, placeholder: string) {
-    const textarea = textareaRefs.current.get(templateId);
-    const state = editStates.get(templateId);
-    if (!textarea || !state) return;
+    const editorRefObj = editorRefs.current.get(templateId);
+    const editorEl = editorRefObj?.current;
+    if (!editorEl) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const currentValue = state.bodyTemplate;
-    const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
-
-    updateEditState(templateId, 'bodyTemplate', newValue);
-
-    // Restore cursor position after React re-render
-    requestAnimationFrame(() => {
-      const newPos = start + placeholder.length;
-      textarea.focus();
-      textarea.setSelectionRange(newPos, newPos);
-    });
+    // Extract variable name from {{varName}}
+    const varName = placeholder.replace(/\{\{|\}\}/g, '');
+    const insertFn = (editorEl as unknown as Record<string, unknown>).__insertChip;
+    if (typeof insertFn === 'function') {
+      (insertFn as (v: string) => void)(varName);
+    }
   }
 
   // Save a template
@@ -251,7 +425,7 @@ export default function TemplatesPage() {
     }
   }
 
-  // Render preview
+  // Render preview with sample values
   function renderPreview(body: string): string {
     let rendered = body;
     for (const [key, value] of Object.entries(SAMPLE_VARIABLES)) {
@@ -396,43 +570,56 @@ export default function TemplatesPage() {
                       </div>
                     )}
 
-                    {/* Body Template */}
+                    {/* Body Template — editable with inline chips */}
                     <div style={styles.fieldGroup}>
                       <label style={styles.fieldLabel}>
                         {template.channel === 'email' ? 'Body' : 'Message'}
                       </label>
-                      <textarea
-                        ref={(el) => {
-                          textareaRefs.current.set(template.id, el);
-                        }}
-                        className="input"
+                      <TemplateChipEditor
                         value={state.bodyTemplate}
-                        onChange={(e) =>
-                          updateEditState(template.id, 'bodyTemplate', e.target.value)
-                        }
-                        rows={5}
-                        placeholder="Template body with {{placeholders}}..."
-                        style={{
-                          fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-                          resize: 'vertical' as const,
-                          lineHeight: 1.6,
-                        }}
+                        onChange={(val) => updateEditState(template.id, 'bodyTemplate', val)}
+                        placeholder="Type your template here..."
+                        editorRef={(() => {
+                          if (!editorRefs.current.has(template.id)) {
+                            editorRefs.current.set(template.id, { current: null });
+                          }
+                          return editorRefs.current.get(template.id)!;
+                        })()}
                       />
                     </div>
 
                     {/* Placeholder Chips */}
                     <div style={styles.chipsRow}>
                       <span style={styles.chipsLabel}>Insert:</span>
-                      {AVAILABLE_PLACEHOLDERS.map((p) => (
-                        <button
-                          key={p.key}
-                          type="button"
-                          className="dark-chip"
-                          onClick={() => insertPlaceholder(template.id, p.key)}
-                        >
-                          {p.key}
-                        </button>
-                      ))}
+                      {AVAILABLE_PLACEHOLDERS.map((p) => {
+                        const colors = PLACEHOLDER_COLORS[p.category];
+                        return (
+                          <button
+                            key={p.key}
+                            type="button"
+                            onClick={() => insertPlaceholder(template.id, p.key)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              fontFamily: "'SF Mono', 'Fira Code', monospace",
+                              background: colors.bg,
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '6px',
+                              color: colors.text,
+                              cursor: 'pointer',
+                              transition: 'opacity 0.15s',
+                            }}
+                            onMouseOver={(e) => { (e.target as HTMLElement).style.opacity = '0.8'; }}
+                            onMouseOut={(e) => { (e.target as HTMLElement).style.opacity = '1'; }}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* Live Preview */}

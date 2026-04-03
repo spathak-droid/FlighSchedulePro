@@ -9,6 +9,7 @@ export const instructors = pgTable(
     lastName: varchar('last_name', { length: 100 }).notNull(),
     instructorType: varchar('instructor_type', { length: 20 }), // CFI, CFII, etc.
     isActive: boolean('is_active').notNull().default(true),
+    locationId: varchar('location_id', { length: 50 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('idx_instructors_operator').on(table.operatorId)],

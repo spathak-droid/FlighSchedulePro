@@ -1,4 +1,4 @@
-import { pgTable, integer, varchar, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, integer, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const operators = pgTable('operators', {
   id: integer('id').primaryKey(), // FSP operatorId

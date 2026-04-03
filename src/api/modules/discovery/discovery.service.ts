@@ -43,6 +43,7 @@ export interface CreateDiscoveryRequestDto {
   }>;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'anytime';
   notes?: string;
+  locationId?: string;
 }
 
 export interface DiscoveryResult {

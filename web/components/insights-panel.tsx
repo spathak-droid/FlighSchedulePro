@@ -16,6 +16,7 @@ export default function InsightsPanel() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedCards = useRef(false);
 
   useEffect(() => {
     fetchInsights();
@@ -49,6 +50,11 @@ export default function InsightsPanel() {
   useEffect(() => {
     if (!insights || !panelRef.current) return;
     const cards = panelRef.current.querySelectorAll('.insight-card');
+    if (hasAnimatedCards.current) {
+      gsap.set(cards, { opacity: 1, y: 0, scale: 1 });
+      return;
+    }
+    hasAnimatedCards.current = true;
     gsap.fromTo(
       cards,
       { opacity: 0, y: 12, scale: 0.95 },

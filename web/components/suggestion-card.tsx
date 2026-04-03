@@ -11,17 +11,20 @@ interface SuggestionCardProps {
   loading?: boolean;
 }
 
+const OPERATOR_TZ = 'America/Los_Angeles';
+
 function formatTimeRange(start: string, end: string): string {
   try {
     const s = new Date(start);
     const e = new Date(end);
     const date = s.toLocaleDateString('en-US', {
+      timeZone: OPERATOR_TZ,
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     });
-    const startTime = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const endTime = e.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const startTime = s.toLocaleTimeString('en-US', { timeZone: OPERATOR_TZ, hour: 'numeric', minute: '2-digit' });
+    const endTime = e.toLocaleTimeString('en-US', { timeZone: OPERATOR_TZ, hour: 'numeric', minute: '2-digit' });
     return `${date}, ${startTime} \u2013 ${endTime}`;
   } catch {
     return `${start} - ${end}`;
@@ -32,9 +35,9 @@ function formatTime(iso: string): string {
   try {
     const d = new Date(iso);
     return (
-      d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+      d.toLocaleDateString('en-US', { timeZone: OPERATOR_TZ, weekday: 'short', month: 'short', day: 'numeric' }) +
       ' ' +
-      d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      d.toLocaleTimeString('en-US', { timeZone: OPERATOR_TZ, hour: 'numeric', minute: '2-digit' })
     );
   } catch {
     return iso;

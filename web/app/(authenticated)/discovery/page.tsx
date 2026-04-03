@@ -5,6 +5,12 @@ import gsap from 'gsap';
 import { api, ApiRequestError } from '@/lib/api';
 import type { CreateDiscoveryRequest, DiscoveryResponse } from '@/lib/types';
 
+interface Location {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export default function DiscoveryPage() {
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -16,6 +22,8 @@ export default function DiscoveryPage() {
     'anytime',
   );
   const [notes, setNotes] = useState('');
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
 
   // Submission state
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +45,18 @@ export default function DiscoveryPage() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const resultCardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const toastRef = useRef<HTMLDivElement>(null);
+
+  // Fetch locations on mount
+  useEffect(() => {
+    api.get<{ data: Location[] }>('/directory/locations').then((res) => {
+      const data = Array.isArray(res) ? res : ((res as { data: Location[] }).data ?? []);
+      const locs = Array.isArray(data) ? data : [];
+      setLocations(locs);
+      if (locs.length > 0 && !selectedLocation) {
+        setSelectedLocation(locs[0].id);
+      }
+    }).catch(() => {});
+  }, []);
 
   // GSAP form entrance on mount
   useEffect(() => {
@@ -137,6 +157,7 @@ export default function DiscoveryPage() {
         preferredDates: preferredDates.filter((d) => d).map((date) => ({ date, timeOfDay })),
         timeOfDay,
         notes: notes || undefined,
+        locationId: selectedLocation || undefined,
       };
 
       const res = await api.post<{ data: DiscoveryResponse }>('/discovery-flights', body);
@@ -213,12 +234,16 @@ export default function DiscoveryPage() {
     setResult(null);
     setConfirmedSuggestion(null);
     setError('');
+    if (locations.length > 0) {
+      setSelectedLocation(locations[0].id);
+    }
   }
 
   function formatSlotTime(isoString: string): string {
     try {
       const d = new Date(isoString);
       return d.toLocaleString('en-US', {
+        timeZone: 'America/Los_Angeles',
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -320,6 +345,22 @@ export default function DiscoveryPage() {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Location */}
+          <div style={styles.fieldFull}>
+            <label style={styles.label}>Location *</label>
+            <select
+              className="select"
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              required
+            >
+              <option value="" disabled>Select a location...</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>{loc.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Preferred Dates */}

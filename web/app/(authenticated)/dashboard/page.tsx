@@ -138,11 +138,17 @@ function StatIcon({ type }: { type: 'pending' | 'approved' | 'declined' | 'expir
 
 function WeeklyFlightHoursChart({ data }: { data: WeeklyFlightHour[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedBars = useRef(false);
   const maxHours = Math.max(...data.map((d) => d.hours), 1);
 
   useEffect(() => {
     if (!chartRef.current) return;
     const bars = chartRef.current.querySelectorAll('.bar-fill');
+    if (hasAnimatedBars.current) {
+      gsap.set(bars, { scaleY: 1 });
+      return;
+    }
+    hasAnimatedBars.current = true;
     gsap.fromTo(
       bars,
       { scaleY: 0 },
@@ -445,6 +451,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const statsGridRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedStats = useRef(false);
+  const hasAnimatedChart = useRef(false);
 
   useEffect(() => {
     async function fetchStats() {
@@ -464,6 +472,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!stats || !statsGridRef.current) return;
     const cards = statsGridRef.current.querySelectorAll('.stat-card');
+    if (hasAnimatedStats.current) {
+      gsap.set(cards, { opacity: 1, y: 0 });
+      return;
+    }
+    hasAnimatedStats.current = true;
     gsap.fromTo(
       cards,
       { opacity: 0, y: 16 },

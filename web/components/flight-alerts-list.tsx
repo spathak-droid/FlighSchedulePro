@@ -99,6 +99,7 @@ export default function FlightAlertsList() {
   const [collapsed, setCollapsed] = useState(false);
   const [resolving, setResolving] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedAlerts = useRef(false);
 
   useEffect(() => {
     fetchAlerts();
@@ -131,6 +132,11 @@ export default function FlightAlertsList() {
   useEffect(() => {
     if (!alerts.length || !listRef.current || collapsed) return;
     const items = listRef.current.querySelectorAll('.alert-item');
+    if (hasAnimatedAlerts.current) {
+      gsap.set(items, { opacity: 1, x: 0 });
+      return;
+    }
+    hasAnimatedAlerts.current = true;
     gsap.fromTo(
       items,
       { opacity: 0, x: -8 },

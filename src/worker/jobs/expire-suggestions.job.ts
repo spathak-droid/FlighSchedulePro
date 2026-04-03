@@ -14,7 +14,7 @@ import { db } from '../../db/index.js';
 import { suggestions } from '../../db/schema/suggestions.js';
 import { operators } from '../../db/schema/operators.js';
 import { auditEvents } from '../../db/schema/audit-events.js';
-import { eq, and, lt, sql } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import { FspScheduleService } from '../../api/fsp/fsp-schedule.service.js';
 import { toFspLocalTime } from '../../core/utils/time.js';
 

@@ -227,10 +227,18 @@ function AlertBell() {
   );
 }
 
-const NAV_ITEMS = [
+type NavItem = { label: string; href: string; icon: string } | { divider: true; label: string };
+
+const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
   { label: 'Queue', href: '/queue', icon: 'queue' },
+  { label: 'Automation', href: '/automation', icon: 'automation' },
   { label: 'Schedule', href: '/reservations', icon: 'reservations' },
+  { divider: true, label: 'Directory' },
+  { label: 'Students', href: '/students', icon: 'students' },
+  { label: 'Instructors', href: '/instructors', icon: 'instructors' },
+  { label: 'Aircraft', href: '/aircraft', icon: 'aircraft' },
+  { divider: true, label: 'Settings' },
   { label: 'Discovery', href: '/discovery', icon: 'discovery' },
   { label: 'Templates', href: '/templates', icon: 'templates' },
   { label: 'Policies', href: '/policies', icon: 'policies' },
@@ -239,6 +247,12 @@ const NAV_ITEMS = [
 
 function NavIcon({ type }: { type: string }) {
   switch (type) {
+    case 'automation':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v4" /><path d="M12 18v4" /><path d="M4.93 4.93l2.83 2.83" /><path d="M16.24 16.24l2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="M4.93 19.07l2.83-2.83" /><path d="M16.24 7.76l2.83-2.83" />
+        </svg>
+      );
     case 'dashboard':
       return (
         <svg
@@ -359,6 +373,28 @@ function NavIcon({ type }: { type: string }) {
           <path d="M16 10h.01" />
         </svg>
       );
+    case 'students':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case 'instructors':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5" />
+        </svg>
+      );
+    case 'aircraft':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -387,8 +423,10 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     setReady(true);
   }, [router]);
 
+  const navAnimated = useRef(false);
   useEffect(() => {
-    if (ready && navRef.current) {
+    if (ready && navRef.current && !navAnimated.current) {
+      navAnimated.current = true;
       const items = navRef.current.querySelectorAll('.sidebar-nav-item');
       gsap.fromTo(
         items,
@@ -407,12 +445,12 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   useEffect(() => {
     if (ready && mainRef.current && prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
       gsap.fromTo(
         mainRef.current,
         { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' },
+        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'transform' },
       );
-      prevPathname.current = pathname;
     }
   }, [pathname, ready]);
 
@@ -444,7 +482,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     );
   }
 
-  const currentPage = NAV_ITEMS.find(
+  const currentPage = NAV_ITEMS.filter((item): item is { label: string; href: string; icon: string } => !('divider' in item)).find(
     (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
   );
 
@@ -481,7 +519,22 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
         </div>
 
         <nav ref={navRef} className="sidebar-nav">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.map((item, idx) => {
+            if ('divider' in item) {
+              return (
+                <div key={`div-${idx}`} style={{
+                  padding: '16px 16px 6px',
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'var(--color-text-muted)',
+                  opacity: 0.6,
+                }}>
+                  {item.label}
+                </div>
+              );
+            }
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link

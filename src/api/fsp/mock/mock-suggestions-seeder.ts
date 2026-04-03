@@ -182,6 +182,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
                 lastName: i.lastName,
                 instructorType: i.instructorType || null,
                 isActive: i.isActive,
+                locationId: i.locationId || null,
               })),
             )
             .onConflictDoNothing();
@@ -258,6 +259,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
               firstName: s.firstName,
               lastName: s.lastName,
               email: s.email || null,
+              locationId: s.locationId || null,
               totalFlightHours: String(flightHoursMap[s.id] ?? 0),
             })),
           )
@@ -277,6 +279,7 @@ export class MockSuggestionsSeeder implements OnModuleInit {
               lastName: i.lastName,
               instructorType: i.instructorType || null,
               isActive: i.isActive,
+              locationId: i.locationId || null,
             })),
           )
           .onConflictDoNothing();

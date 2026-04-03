@@ -132,6 +132,80 @@ export function fromFspTime(fspTime: string, timezone: string): Date {
 }
 
 /**
+ * Get the wall-clock components of a Date in a specific timezone.
+ *
+ * @param date     A Date (UTC-based internally).
+ * @param timezone IANA timezone, e.g. `"America/Los_Angeles"`.
+ * @returns Object with year, month, day, hour, minute, second, dayOfWeek in local time.
+ */
+export function getLocalParts(
+  date: Date,
+  timezone: string,
+): { year: number; month: number; day: number; hour: number; minute: number; second: number; dayOfWeek: number } {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    weekday: 'short',
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((p) => p.type === type)?.value ?? '0';
+
+  let hour = Number(get('hour') === '24' ? '0' : get('hour'));
+
+  const weekdayStr = get('weekday');
+  const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+  return {
+    year: Number(get('year')),
+    month: Number(get('month')),
+    day: Number(get('day')),
+    hour,
+    minute: Number(get('minute')),
+    second: Number(get('second')),
+    dayOfWeek: dayMap[weekdayStr] ?? 0,
+  };
+}
+
+/**
+ * Create a Date (UTC-based) representing a specific wall-clock time
+ * on a specific date in a given timezone.
+ *
+ * @param dateStr  Date as "YYYY-MM-DD".
+ * @param hour     Local hour (0-23).
+ * @param minute   Local minute (0-59).
+ * @param timezone IANA timezone.
+ * @returns A proper UTC Date for that local wall-clock time.
+ */
+export function localTimeToUtcDate(dateStr: string, hour: number, minute: number, timezone: string): Date {
+  const fspTime = `${dateStr}T${pad(hour)}:${pad(minute)}:00`;
+  return fromFspTime(fspTime, timezone);
+}
+
+/**
+ * Format a Date in a specific timezone for display.
+ *
+ * @param date     A Date (UTC-based internally).
+ * @param timezone IANA timezone.
+ * @param options  Intl.DateTimeFormat options.
+ * @returns Formatted string in the given timezone.
+ */
+export function formatInTimezone(
+  date: Date,
+  timezone: string,
+  options: Intl.DateTimeFormatOptions,
+): string {
+  return new Intl.DateTimeFormat('en-US', { timeZone: timezone, ...options }).format(date);
+}
+
+/**
  * Determine whether a given Date falls within civil twilight (daylight) hours.
  *
  * FSP civil twilight comes as two ISO-ish date-time strings representing the

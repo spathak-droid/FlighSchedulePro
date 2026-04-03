@@ -9,6 +9,7 @@ export const students = pgTable(
     lastName: varchar('last_name', { length: 100 }).notNull(),
     email: varchar('email', { length: 255 }),
     phone: varchar('phone', { length: 20 }),
+    locationId: varchar('location_id', { length: 50 }),
     totalFlightHours: decimal('total_flight_hours', { precision: 8, scale: 1 })
       .notNull()
       .default('0'),
