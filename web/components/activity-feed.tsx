@@ -301,55 +301,55 @@ export default function ActivityFeed({
                 </div>
                 <p style={styles.summary}>{event.summary}</p>
                 {/* Show constraint details for auto-approve events */}
-                {event.details && (event.eventType === 'suggestion_auto_approved' || event.eventType === 'suggestion_auto_approve_blocked') && (
-                  <div style={styles.detailsBox}>
-                    {event.details.riskLevel && (
-                      <span style={{
-                        ...styles.detailTag,
-                        color: event.details.riskLevel === 'low' ? '#16a34a' : event.details.riskLevel === 'medium' ? '#d97706' : '#dc2626',
-                        background: event.details.riskLevel === 'low' ? 'rgba(34,197,94,0.1)' : event.details.riskLevel === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                      }}>
-                        Risk: {event.details.riskLevel as string}
-                      </span>
-                    )}
-                    {event.details.riskThreshold && (
-                      <span style={styles.detailTag}>
-                        Threshold: {event.details.riskThreshold as string}
-                      </span>
-                    )}
-                    {event.details.constraintsPassed && (
-                      <span style={{...styles.detailTag, color: '#16a34a', background: 'rgba(34,197,94,0.08)'}}>
-                        4-layer check passed
-                      </span>
-                    )}
-                    {event.details.layerSummary && (
-                      <>
-                        {(event.details.layerSummary as Record<string, unknown>).regulatory === false && (
-                          <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>
-                            Regulatory: FAIL
-                          </span>
-                        )}
-                        {(event.details.layerSummary as Record<string, unknown>).safety === false && (
-                          <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>
-                            Safety: FAIL
-                          </span>
-                        )}
-                        {(event.details.layerSummary as Record<string, unknown>).operator === false && (
-                          <span style={{...styles.detailTag, color: '#d97706', background: 'rgba(245,158,11,0.08)'}}>
-                            Operator Policy: FAIL
-                          </span>
-                        )}
-                      </>
-                    )}
-                    {event.details.failedConstraints && (event.details.failedConstraints as string[]).length > 0 && (
-                      <div style={styles.failedList2}>
-                        {(event.details.failedConstraints as string[]).slice(0, 3).map((fc: string, i: number) => (
-                          <div key={i} style={styles.failedItem2}>{fc}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {event.details && (event.eventType === 'suggestion_auto_approved' || event.eventType === 'suggestion_auto_approve_blocked') && (() => {
+                  const d = event.details as Record<string, unknown>;
+                  const risk = d.riskLevel as string | undefined;
+                  const threshold = d.riskThreshold as string | undefined;
+                  const passed = d.constraintsPassed as boolean | undefined;
+                  const layers = d.layerSummary as Record<string, unknown> | undefined;
+                  const failed = d.failedConstraints as string[] | undefined;
+                  return (
+                    <div style={styles.detailsBox}>
+                      {risk && (
+                        <span style={{
+                          ...styles.detailTag,
+                          color: risk === 'low' ? '#16a34a' : risk === 'medium' ? '#d97706' : '#dc2626',
+                          background: risk === 'low' ? 'rgba(34,197,94,0.1)' : risk === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                        }}>
+                          Risk: {risk}
+                        </span>
+                      )}
+                      {threshold && (
+                        <span style={styles.detailTag}>Threshold: {threshold}</span>
+                      )}
+                      {passed && (
+                        <span style={{...styles.detailTag, color: '#16a34a', background: 'rgba(34,197,94,0.08)'}}>
+                          4-layer check passed
+                        </span>
+                      )}
+                      {layers && (
+                        <>
+                          {layers.regulatory === false && (
+                            <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>Regulatory: FAIL</span>
+                          )}
+                          {layers.safety === false && (
+                            <span style={{...styles.detailTag, color: '#dc2626', background: 'rgba(239,68,68,0.08)'}}>Safety: FAIL</span>
+                          )}
+                          {layers.operator === false && (
+                            <span style={{...styles.detailTag, color: '#d97706', background: 'rgba(245,158,11,0.08)'}}>Operator Policy: FAIL</span>
+                          )}
+                        </>
+                      )}
+                      {failed && failed.length > 0 && (
+                        <div style={styles.failedList2}>
+                          {failed.slice(0, 3).map((fc, i) => (
+                            <div key={i} style={styles.failedItem2}>{fc}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 {event.actor && <p style={styles.actor}>{event.actor}</p>}
               </div>
             </div>
