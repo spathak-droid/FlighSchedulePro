@@ -234,19 +234,41 @@ export class DiscoveryService {
     // Use operator's location timezone for all time operations
     const operatorTimezone = location.timeZone || 'America/Los_Angeles';
 
-    // Find slots in the preferred range (pass fspToken for per-instructor availability)
-    let slots = await this.solverService.findTime(
-      operatorId,
-      {
-        studentId: '',
-        activityTypeId,
-        dateRangeStart,
-        dateRangeEnd,
-        durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
-      },
-      fspToken,
-      operatorTimezone,
-    );
+    // Search for slots — if multiple preferred dates, search each individually
+    // to avoid the solver's max results cap consuming all slots from the first date
+    let slots: Awaited<ReturnType<typeof this.solverService.findTime>> = [];
+
+    if (parsedPreferredDates.length > 1) {
+      // Search each preferred date independently and combine results
+      for (const prefDate of parsedPreferredDates) {
+        const dateSlots = await this.solverService.findTime(
+          operatorId,
+          {
+            studentId: '',
+            activityTypeId,
+            dateRangeStart: prefDate,
+            dateRangeEnd: prefDate,
+            durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
+          },
+          fspToken,
+          operatorTimezone,
+        );
+        slots.push(...dateSlots);
+      }
+    } else {
+      slots = await this.solverService.findTime(
+        operatorId,
+        {
+          studentId: '',
+          activityTypeId,
+          dateRangeStart,
+          dateRangeEnd,
+          durationMinutes: DiscoveryService.DISCOVERY_FLIGHT_DURATION,
+        },
+        fspToken,
+        operatorTimezone,
+      );
+    }
 
     // Step 6: Apply civil twilight (daylight) constraint as additional filter
     if (civilTwilight) {
